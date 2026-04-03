@@ -1,0 +1,44 @@
+/* SHARED CSS */
+
+@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Mono:wght@400;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Bungee+Shade&display=swap");
+
+/* ========================= */
+/* ROOT / GLOBALS            */
+/* ========================= */
+
+:root {
+     --bg-color: #000000;
+     --text-color: #ffffff;
+     --text-muted: rgba(255, 255, 255, 0.5);
+     --accent-color: var(--pink);
+
+     --pink: #ea76cb;
+     --red: #d20f39;
+     --maroon: #e64553;
+     --peach: #fe640b;
+     --flamingo: #dd7878;
+     --yellow: #df8e1d;
+     --green: #40a02b;
+     --teal: #179299;
+     --sky: #04a5e5;
+     --blue: #1e66f5;
+     --lavender: #7287fd;
+     --violet: #8839ef;
+
+     --page-padding: 1rem;
+     --panel-radius: 1rem;
+     --panel-border: 0.25rem solid var(--accent-color);
+
+     /* clamp( MIN , PREFERRED , MAX ) */
+     /* vw = tiny on lil screens, huge on big screens */
+     /* rem = not responsive, but good guardrails */
+     --marquee-size: clamp(2rem, 10vw, 3rem);
+     --tagline-size: clamp(1rem, 4vw, 1rem);
+     --role-size: clamp(1rem, 3vw, 1rem);
+     --menu-size: clamp(2rem, 8vw, 2rem);
+
+     --font-body: "Noto Sans Mono", monospace;
+     --font-fancy: "Bungee Shade", monospace;
+}
+
