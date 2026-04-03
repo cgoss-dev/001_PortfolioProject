@@ -29,7 +29,6 @@
      /* NOTE: MENU CONTROL CENTER */
 
      --menu-button-color: var(--text-color);
-     --menu-button-hover-color: var(--accent-color);
      --menu-button-glow-color: var(--menu-button-color);
      --menu-dropdown-offset-y: 0.5rem;
      --menu-panel-width-min: 12rem;
@@ -64,7 +63,6 @@
      --text-rainbow-transition-style: ease-in-out;
 
      /* NOTE: UNIVERSAL GLOW CONTROL CENTER */
-     /* built like box-shadow: core + soft + wide + max + depth */
 
      --glow-depth: 0 0.75rem 1.75rem rgba(0, 0, 0, 0.5);
      --glow-core: 0 0 0.06rem;
@@ -73,7 +71,6 @@
      --glow-max: 0 0 1.75rem;
 
      /* NOTE: UNIVERSAL GLOW PRESETS */
-     /* same glow family, different strength depending on element */
 
      --glow-text:
           var(--glow-core) currentColor,
@@ -88,7 +85,6 @@
      --glow-particle-blur: 8;
 
      /* NOTE: BUNGEE GLYPH GLOW CONTROL CENTER */
-     /* this is the old trick that makes decorative glyphs like + and X read better */
 
      --bungee-glow-blur: 0 0 0.375rem;
      --bungee-shadow-offset-1: 0.125rem 0.125rem 0 rgba(0, 0, 0, 0.8);
@@ -173,13 +169,9 @@
 
 *,
 *::before,
-*::after {
-     box-sizing: border-box;
-}
+*::after { box-sizing: border-box; }
 
-html {
-     font-size: 16px;
-}
+html { font-size: 16px; }
 
 body {
      margin: 0;
@@ -208,7 +200,6 @@ body {
 }
 
 /* NOTE: MENU POCKET */
-/* this is the little anchor box that keeps the button and popup together */
 
 .menu-pocket {
      position: absolute;
@@ -217,14 +208,9 @@ body {
      z-index: var(--menu-layer-z);
 }
 
-.hero-blob h1 {
-     margin: 0;
-     line-height: 1;
-}
+.hero-blob h1 { margin: 0; line-height: 1; }
 
-.main-squeeze {
-     margin-top: var(--main-top-space-mobile);
-}
+.main-squeeze { margin-top: var(--main-top-space-mobile); }
 
 /* NOTE: MENU */
 
@@ -247,10 +233,13 @@ body {
           -webkit-text-fill-color var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style);
 }
 
+/* NOTE: menu button stays white in all states */
+
 .menu-button:hover,
 .menu-button:focus,
 .menu-button:active {
-     color: var(--menu-button-hover-color);
+     color: var(--menu-button-color);
+     -webkit-text-fill-color: var(--menu-button-color);
 }
 
 .dropdown-low {
@@ -284,10 +273,6 @@ body {
      box-shadow: var(--glow-panel);
 }
 
-.nav-menu li + li {
-     border-top: var(--panel-border);
-}
-
 .nav-menu a {
      display: block;
      padding: var(--menu-item-padding);
@@ -305,7 +290,7 @@ body {
 .nav-menu a:focus,
 .nav-menu a:active {
      background: rgba(255, 255, 255, 0.08);
-     color: var(--accent-color);
+     color: var(--text-color);
      text-shadow: var(--glow-text);
 }
 
@@ -320,15 +305,10 @@ body {
      line-height: 1;
 }
 
-.marquee:hover {
-     color: var(--accent-color);
-}
+.marquee:hover { color: var(--accent-color); }
 
 .tagline,
-.role {
-     margin: 0;
-     line-height: 1;
-}
+.role { margin: 0; line-height: 1; }
 
 .tagline {
      color: var(--text-tagline-color);
@@ -361,7 +341,6 @@ body {
           color var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style),
           text-shadow var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style);
 
-     /* NOTE: fallback glow if JS is late or off */
      text-shadow: var(--glow-text);
 }
 
@@ -390,9 +369,7 @@ body {
           padding: 2rem;
      }
 
-     .hero-blob {
-          gap: var(--hero-gap-wide);
-     }
+     .hero-blob { gap: var(--hero-gap-wide); }
 
      .main-squeeze {
           margin-top: var(--main-top-space-wide);

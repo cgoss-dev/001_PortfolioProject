@@ -171,9 +171,7 @@ function syncMenuButtonGlow() {
           return;
      }
 
-     const currentColor = dropdownLow && dropdownLow.classList.contains("menu-open")
-          ? getCssColor("--menu-button-hover-color", getCssColor("--accent-color", "#ffffff"))
-          : getCssColor("--menu-button-color", getCssColor("--text-color", "#ffffff"));
+     const currentColor = getCssColor("--menu-button-color", getCssColor("--text-color", "#ffffff"));
 
      menuButton.style.color = currentColor;
      menuButton.style.webkitTextFillColor = currentColor;
@@ -194,10 +192,7 @@ if (menuButton && dropdownLow) {
      });
 
      menuButton.addEventListener("mouseenter", function () {
-          const hoverColor = getCssColor("--menu-button-hover-color", getCssColor("--accent-color", "#ffffff"));
-          menuButton.style.color = hoverColor;
-          menuButton.style.webkitTextFillColor = hoverColor;
-          menuButton.style.textShadow = buildBungeeGlyphGlow(hoverColor);
+          syncMenuButtonGlow();
      });
 
      menuButton.addEventListener("mouseleave", function () {
@@ -205,10 +200,7 @@ if (menuButton && dropdownLow) {
      });
 
      menuButton.addEventListener("focus", function () {
-          const hoverColor = getCssColor("--menu-button-hover-color", getCssColor("--accent-color", "#ffffff"));
-          menuButton.style.color = hoverColor;
-          menuButton.style.webkitTextFillColor = hoverColor;
-          menuButton.style.textShadow = buildBungeeGlyphGlow(hoverColor);
+          syncMenuButtonGlow();
      });
 
      menuButton.addEventListener("blur", function () {
