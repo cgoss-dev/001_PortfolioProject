@@ -30,15 +30,263 @@
      --panel-radius: 1rem;
      --panel-border: 0.25rem solid var(--accent-color);
 
+     --panel-glow:
+          0 0 0 rgba(255, 255, 255, 0),
+          0 0.75rem 1.75rem rgba(0, 0, 0, 0.5),
+          0 0 0.75rem var(--accent-color),
+          0 0 1.75rem var(--accent-color);
+
      /* clamp( MIN , PREFERRED , MAX ) */
      /* vw = tiny on lil screens, huge on big screens */
      /* rem = not responsive, but good guardrails */
-     --marquee-size: clamp(2rem, 10vw, 3rem);
-     --tagline-size: clamp(1rem, 4vw, 1rem);
-     --role-size: clamp(1rem, 3vw, 1rem);
-     --menu-size: clamp(2rem, 8vw, 2rem);
+     --menu-size: clamp(2rem, 8vw, 4rem);
+     --marquee-size: var(--menu-size);
+     --tagline-size: clamp(0.75rem, 5vw, 1rem);
+     --role-size: clamp(0.75rem, 5vw, 1rem);
 
      --font-body: "Noto Sans Mono", monospace;
      --font-fancy: "Bungee Shade", monospace;
+
+     /* sparkle rain prep */
+     --bg-canvas-z: -1;
+     --ui-z: 2;
+     --menu-z: 20;
+     --menu-offset-y: 0.5rem;
 }
 
+/* ========================= */
+/* RESET / BASE              */
+/* ========================= */
+
+*,
+*::before,
+*::after {
+     box-sizing: border-box;
+}
+
+html {
+     font-size: 16px;
+}
+
+body {
+     margin: 0;
+     min-height: 100vh;
+     background: var(--bg-color);
+     color: var(--text-color);
+     font-family: var(--font-body);
+     position: relative;
+     overflow-x: hidden;
+}
+
+/* ========================= */
+/* SPARKLE BG PREP           */
+/* ========================= */
+
+/* Add bg canvas in HTML later with: <canvas id="siteBgCanvas" class="site-bg-canvas"></canvas> */
+
+.site-bg-canvas {
+     position: fixed;
+     inset: 0;
+     width: 100vw;
+     height: 100vh;
+     pointer-events: none;
+     z-index: var(--bg-canvas-z);
+     display: block;
+}
+
+/* ========================= */
+/* PAGE LAYOUT               */
+/* ========================= */
+
+.body-ody {
+     width: 100%;
+     max-width: 30rem;
+     margin: 0 auto;
+     padding: var(--page-padding);
+     position: relative;
+     z-index: var(--ui-z);
+}
+
+/* ========================= */
+/* HERO / HEADER             */
+/* ========================= */
+
+.hero-blob {
+     display: flex;
+     flex-direction: column;
+     position: relative;
+     gap: 0.25rem;
+}
+
+.hero-blob h1 {
+     margin: 0;
+     line-height: 1;
+}
+
+.marquee {
+     display: inline-block;
+     color: var(--text-color);
+     text-decoration: none;
+     font-family: var(--font-fancy);
+     font-size: var(--marquee-size);
+     line-height: 1;
+}
+
+.marquee:hover {
+     color: var(--accent-color);
+}
+
+.tagline,
+.role {
+     margin: 0;
+     line-height: 1;
+}
+
+.tagline {
+     color: var(--text-muted);
+     font-size: var(--tagline-size);
+     font-weight: 600;
+}
+
+.role {
+     color: var(--text-color);
+     font-size: var(--role-size);
+}
+
+/* ========================= */
+/* MENU BUTTON               */
+/* ========================= */
+
+.menu-button {
+     position: absolute;
+     top: 0.1rem;
+     right: 0;
+
+     font-family: var(--font-fancy);
+     font-size: var(--menu-size);
+     line-height: 1;
+
+     background: none;
+     border: none;
+     color: var(--text-color);
+
+     cursor: pointer;
+     padding: 0;
+     margin: 0;
+}
+
+.menu-button:hover,
+.menu-button:focus,
+.menu-button:active {
+     color: var(--accent-color);
+}
+
+/* ========================= */
+/* DROPDOWN MENU             */
+/* ========================= */
+
+.dropdown-low {
+     position: absolute;
+     top: calc(100% + var(--menu-offset-y));
+     right: 0;
+     z-index: var(--menu-z);
+
+     opacity: 0;
+     transform: translateY(-0.5rem);
+     pointer-events: none;
+
+     transition:
+          opacity 0.25s ease-in-out,
+          transform 0.25s ease-in-out;
+}
+
+.dropdown-low.menu-open {
+     opacity: 1;
+     transform: translateY(0);
+     pointer-events: auto;
+}
+
+.nav-menu {
+     margin: 0;
+     padding: 0;
+     list-style: none;
+
+     min-width: 12rem;
+     border: var(--panel-border);
+     border-radius: var(--panel-radius);
+     overflow: hidden;
+
+     background: var(--bg-color);
+     box-shadow: var(--panel-glow);
+}
+
+.nav-menu li + li {
+     border-top: 0.25rem solid var(--accent-color);
+}
+
+.nav-menu a {
+     display: block;
+     padding: 1rem;
+
+     text-decoration: none;
+     color: var(--text-color);
+     font-weight: 600;
+     background: var(--bg-color);
+}
+
+.nav-menu a:hover,
+.nav-menu a:focus,
+.nav-menu a:active {
+     background: rgba(255, 255, 255, 0.08);
+     color: var(--accent-color);
+}
+
+/* ========================= */
+/* MAIN / CANVAS             */
+/* ========================= */
+
+.main-squeeze {
+     margin-top: 1rem;
+}
+
+.canvas-crib {
+     width: 100%;
+     border: var(--panel-border);
+     border-radius: var(--panel-radius);
+     overflow: hidden;
+     box-shadow: var(--panel-glow);
+}
+
+#miniGameCanvas {
+     display: block;
+     width: 100%;
+     height: auto;
+     background: transparent;
+}
+
+/* ========================= */
+/* RAINBOW                   */
+/* ========================= */
+
+.marquee span {
+     transition: color 0.2s ease-in-out, text-shadow 0.2s ease-in-out;
+}
+
+/* ========================= */
+/* LARGER SCREENS LATER      */
+/* ========================= */
+
+@media (min-width: 48rem) {
+     .body-ody {
+          max-width: 48rem;
+          padding: 2rem;
+     }
+
+     .hero-blob {
+          gap: 0.75rem;
+     }
+
+     .main-squeeze {
+          margin-top: 1.25rem;
+     }
+}
