@@ -216,6 +216,31 @@ if (menuButton && dropdownLow) {
      });
 }
 
+document.addEventListener("click", function (event) {
+     if (!menuButton || !dropdownLow) {
+          return;
+     }
+
+     const clickedInsideButton = menuButton.contains(event.target);
+     const clickedInsideMenu = dropdownLow.contains(event.target);
+
+     if (!clickedInsideButton && !clickedInsideMenu) {
+          dropdownLow.classList.remove("menu-open");
+          menuButton.textContent = "+";
+          syncMenuButtonGlow();
+     }
+});
+
+document.addEventListener("keydown", function (event) {
+     if (event.key === "Escape") {
+          if (dropdownLow && dropdownLow.classList.contains("menu-open")) {
+               dropdownLow.classList.remove("menu-open");
+               menuButton.textContent = "+";
+               syncMenuButtonGlow();
+          }
+     }
+});
+
 /* NOTE: TEXT */
 
 const marquee = document.querySelector(".marquee");

@@ -207,6 +207,16 @@ body {
      gap: var(--hero-gap-mobile);
 }
 
+/* NOTE: MENU POCKET */
+/* this is the little anchor box that keeps the button and popup together */
+
+.menu-pocket {
+     position: absolute;
+     top: 0;
+     right: 0;
+     z-index: var(--menu-layer-z);
+}
+
 .hero-blob h1 {
      margin: 0;
      line-height: 1;
@@ -219,9 +229,8 @@ body {
 /* NOTE: MENU */
 
 .menu-button {
-     position: absolute;
-     top: 0.1rem;
-     right: 0;
+     position: relative;
+     display: inline-block;
      font-family: var(--font-fancy);
      font-size: var(--text-menu-size);
      line-height: 1;
