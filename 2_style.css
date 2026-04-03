@@ -1,13 +1,13 @@
-/* SHARED CSS */
+/* NOTE: BASE CSS */
 
 @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Mono:wght@400;600&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Bungee+Shade&display=swap");
 
-/* ========================= */
-/* ROOT / GLOBALS            */
-/* ========================= */
+/* NOTE: ROOT */
 
 :root {
+     /* NOTE: COLOR CONTROL CENTER */
+
      --bg-color: #000000;
      --text-color: #ffffff;
      --text-muted: rgba(255, 255, 255, 0.5);
@@ -26,37 +26,150 @@
      --lavender: #7287fd;
      --violet: #8839ef;
 
+     /* NOTE: MENU CONTROL CENTER */
+
+     --menu-button-color: var(--text-color);
+     --menu-button-hover-color: var(--accent-color);
+     --menu-button-glow-color: var(--menu-button-color);
+     --menu-dropdown-offset-y: 0.5rem;
+     --menu-panel-width-min: 12rem;
+     --menu-item-padding: 1rem;
+
+     /* NOTE: RESIZING CONTROL CENTER */
+
      --page-padding: 1rem;
-     --panel-radius: 1rem;
-     --panel-border: 0.25rem solid var(--accent-color);
+     --page-width-mobile: 30rem;
+     --page-width-wide: 48rem;
+     --hero-gap-mobile: 0.25rem;
+     --hero-gap-wide: 0.75rem;
+     --main-top-space-mobile: 1rem;
+     --main-top-space-wide: 1.25rem;
 
-     --panel-glow:
-          0 0 0 rgba(255, 255, 255, 0),
-          0 0.75rem 1.75rem rgba(0, 0, 0, 0.5),
-          0 0 0.75rem var(--accent-color),
-          0 0 1.75rem var(--accent-color);
-
-     /* clamp( MIN , PREFERRED , MAX ) */
-     /* vw = tiny on lil screens, huge on big screens */
-     /* rem = not responsive, but good guardrails */
-     --menu-size: clamp(2rem, 8vw, 4rem);
-     --marquee-size: var(--menu-size);
-     --tagline-size: clamp(0.75rem, 5vw, 1rem);
-     --role-size: clamp(0.75rem, 5vw, 1rem);
+     /* NOTE: TEXT CONTROL CENTER */
 
      --font-body: "Noto Sans Mono", monospace;
      --font-fancy: "Bungee Shade", monospace;
 
-     /* sparkle rain prep */
-     --bg-canvas-z: -1;
-     --ui-z: 2;
-     --menu-z: 20;
-     --menu-offset-y: 0.5rem;
+     --text-menu-size: clamp(2rem, 8vw, 4rem);
+     --text-title-size: var(--text-menu-size);
+     --text-tagline-size: clamp(0.75rem, 5vw, 1rem);
+     --text-role-size: clamp(0.75rem, 5vw, 1rem);
+
+     --text-title-color: var(--text-color);
+     --text-tagline-color: var(--text-muted);
+     --text-role-color: var(--text-color);
+
+     --text-rainbow-cycle-speed: 900;
+     --text-rainbow-transition-speed: 0.2s;
+     --text-rainbow-transition-style: ease-in-out;
+
+     /* NOTE: UNIVERSAL GLOW CONTROL CENTER */
+     /* built like box-shadow: core + soft + wide + max + depth */
+
+     --glow-depth: 0 0.75rem 1.75rem rgba(0, 0, 0, 0.5);
+     --glow-core: 0 0 0.06rem;
+     --glow-soft: 0 0 0.25rem;
+     --glow-wide: 0 0 0.9rem;
+     --glow-max: 0 0 1.75rem;
+
+     /* NOTE: UNIVERSAL GLOW PRESETS */
+     /* same glow family, different strength depending on element */
+
+     --glow-text:
+          var(--glow-core) currentColor,
+          var(--glow-soft) currentColor,
+          var(--glow-wide) currentColor;
+
+     --glow-panel:
+          var(--glow-depth),
+          var(--glow-wide) var(--panel-glow-color),
+          var(--glow-max) var(--panel-glow-color);
+
+     --glow-particle-blur: 8;
+
+     /* NOTE: BUNGEE GLYPH GLOW CONTROL CENTER */
+     /* this is the old trick that makes decorative glyphs like + and X read better */
+
+     --bungee-glow-blur: 0 0 0.375rem;
+     --bungee-shadow-offset-1: 0.125rem 0.125rem 0 rgba(0, 0, 0, 0.8);
+     --bungee-shadow-offset-2: 0.25rem 0.25rem 0 rgba(0, 0, 0, 0.6);
+
+     /* NOTE: STRUCTURE CONTROL CENTER */
+
+     --panel-radius: 1rem;
+     --panel-border-width: 0.25rem;
+     --panel-border-color: var(--accent-color);
+     --panel-border: var(--panel-border-width) solid var(--panel-border-color);
+     --panel-glow-color: var(--accent-color);
+
+     /* NOTE: SPARKLE CONTROL CENTER */
+
+     --sparkle-layer-z: -1;
+     --sparkle-opacity: 1;
+     --sparkle-count-max: 180;
+
+     --sparkle-size-min: 12;
+     --sparkle-size-max: 24;
+
+     --sparkle-speed-min: 0.2;
+     --sparkle-speed-max: 0.7;
+
+     --sparkle-density: 0.00015;
+
+     --sparkle-wobble-speed-min: 0.005;
+     --sparkle-wobble-speed-max: 0.02;
+     --sparkle-wobble-amount-min: 5;
+     --sparkle-wobble-amount-max: 15;
+
+     --sparkle-opacity-min: 0.2;
+     --sparkle-opacity-max: 1;
+
+     --sparkle-respawn-offset-top: -20;
+     --sparkle-respawn-offset-bottom: 24;
+
+     --sparkle-color-1: var(--text-color);
+     --sparkle-color-2: var(--pink);
+     --sparkle-color-3: var(--red);
+     --sparkle-color-4: var(--maroon);
+     --sparkle-color-5: var(--peach);
+     --sparkle-color-6: var(--flamingo);
+     --sparkle-color-7: var(--yellow);
+     --sparkle-color-8: var(--green);
+     --sparkle-color-9: var(--teal);
+     --sparkle-color-10: var(--sky);
+     --sparkle-color-11: var(--blue);
+     --sparkle-color-12: var(--lavender);
+     --sparkle-color-13: var(--violet);
+
+     /* NOTE: RAINBOW CONTROL CENTER */
+
+     --rainbow-color-1: var(--pink);
+     --rainbow-color-2: var(--red);
+     --rainbow-color-3: var(--maroon);
+     --rainbow-color-4: var(--peach);
+     --rainbow-color-5: var(--flamingo);
+     --rainbow-color-6: var(--yellow);
+     --rainbow-color-7: var(--green);
+     --rainbow-color-8: var(--teal);
+     --rainbow-color-9: var(--sky);
+     --rainbow-color-10: var(--blue);
+     --rainbow-color-11: var(--lavender);
+     --rainbow-color-12: var(--violet);
+
+     /* NOTE: CANVAS CONTROL CENTER */
+
+     --canvas-bg: transparent;
+     --canvas-display: block;
+     --canvas-width: 100%;
+     --canvas-height: auto;
+
+     /* NOTE: LAYER CONTROL CENTER */
+
+     --ui-layer-z: 2;
+     --menu-layer-z: 20;
 }
 
-/* ========================= */
-/* RESET / BASE              */
-/* ========================= */
+/* NOTE: STRUCTURE */
 
 *,
 *::before,
@@ -78,44 +191,20 @@ body {
      overflow-x: hidden;
 }
 
-/* ========================= */
-/* SPARKLE BG PREP           */
-/* ========================= */
-
-/* Add bg canvas in HTML later with: <canvas id="siteBgCanvas" class="site-bg-canvas"></canvas> */
-
-.site-bg-canvas {
-     position: fixed;
-     inset: 0;
-     width: 100vw;
-     height: 100vh;
-     pointer-events: none;
-     z-index: var(--bg-canvas-z);
-     display: block;
-}
-
-/* ========================= */
-/* PAGE LAYOUT               */
-/* ========================= */
-
 .body-ody {
      width: 100%;
-     max-width: 30rem;
+     max-width: var(--page-width-mobile);
      margin: 0 auto;
      padding: var(--page-padding);
      position: relative;
-     z-index: var(--ui-z);
+     z-index: var(--ui-layer-z);
 }
-
-/* ========================= */
-/* HERO / HEADER             */
-/* ========================= */
 
 .hero-blob {
      display: flex;
      flex-direction: column;
      position: relative;
-     gap: 0.25rem;
+     gap: var(--hero-gap-mobile);
 }
 
 .hero-blob h1 {
@@ -123,78 +212,46 @@ body {
      line-height: 1;
 }
 
-.marquee {
-     display: inline-block;
-     color: var(--text-color);
-     text-decoration: none;
-     font-family: var(--font-fancy);
-     font-size: var(--marquee-size);
-     line-height: 1;
+.main-squeeze {
+     margin-top: var(--main-top-space-mobile);
 }
 
-.marquee:hover {
-     color: var(--accent-color);
-}
-
-.tagline,
-.role {
-     margin: 0;
-     line-height: 1;
-}
-
-.tagline {
-     color: var(--text-muted);
-     font-size: var(--tagline-size);
-     font-weight: 600;
-}
-
-.role {
-     color: var(--text-color);
-     font-size: var(--role-size);
-}
-
-/* ========================= */
-/* MENU BUTTON               */
-/* ========================= */
+/* NOTE: MENU */
 
 .menu-button {
      position: absolute;
      top: 0.1rem;
      right: 0;
-
      font-family: var(--font-fancy);
-     font-size: var(--menu-size);
+     font-size: var(--text-menu-size);
      line-height: 1;
-
      background: none;
      border: none;
-     color: var(--text-color);
-
+     color: var(--menu-button-color);
+     -webkit-text-fill-color: var(--menu-button-glow-color);
      cursor: pointer;
      padding: 0;
      margin: 0;
+     transition:
+          color var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style),
+          text-shadow var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style),
+          -webkit-text-fill-color var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style);
 }
 
 .menu-button:hover,
 .menu-button:focus,
 .menu-button:active {
-     color: var(--accent-color);
+     color: var(--menu-button-hover-color);
 }
-
-/* ========================= */
-/* DROPDOWN MENU             */
-/* ========================= */
 
 .dropdown-low {
      position: absolute;
-     top: calc(100% + var(--menu-offset-y));
+     top: calc(100% + var(--menu-dropdown-offset-y));
      right: 0;
-     z-index: var(--menu-z);
-
+     z-index: var(--menu-layer-z);
      opacity: 0;
      transform: translateY(-0.5rem);
      pointer-events: none;
-
      transition:
           opacity 0.25s ease-in-out,
           transform 0.25s ease-in-out;
@@ -210,28 +267,29 @@ body {
      margin: 0;
      padding: 0;
      list-style: none;
-
-     min-width: 12rem;
+     min-width: var(--menu-panel-width-min);
      border: var(--panel-border);
      border-radius: var(--panel-radius);
      overflow: hidden;
-
      background: var(--bg-color);
-     box-shadow: var(--panel-glow);
+     box-shadow: var(--glow-panel);
 }
 
 .nav-menu li + li {
-     border-top: 0.25rem solid var(--accent-color);
+     border-top: var(--panel-border);
 }
 
 .nav-menu a {
      display: block;
-     padding: 1rem;
-
+     padding: var(--menu-item-padding);
      text-decoration: none;
      color: var(--text-color);
      font-weight: 600;
      background: var(--bg-color);
+     transition:
+          color var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style),
+          background var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style),
+          text-shadow var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style);
 }
 
 .nav-menu a:hover,
@@ -239,54 +297,95 @@ body {
 .nav-menu a:active {
      background: rgba(255, 255, 255, 0.08);
      color: var(--accent-color);
+     text-shadow: var(--glow-text);
 }
 
-/* ========================= */
-/* MAIN / CANVAS             */
-/* ========================= */
+/* NOTE: TEXT */
 
-.main-squeeze {
-     margin-top: 1rem;
+.marquee {
+     display: inline-block;
+     color: var(--text-title-color);
+     text-decoration: none;
+     font-family: var(--font-fancy);
+     font-size: var(--text-title-size);
+     line-height: 1;
 }
+
+.marquee:hover {
+     color: var(--accent-color);
+}
+
+.tagline,
+.role {
+     margin: 0;
+     line-height: 1;
+}
+
+.tagline {
+     color: var(--text-tagline-color);
+     font-size: var(--text-tagline-size);
+     font-weight: 600;
+}
+
+.role {
+     color: var(--text-role-color);
+     font-size: var(--text-role-size);
+}
+
+/* NOTE: SPARKLE */
+
+.site-bg-canvas {
+     position: fixed;
+     inset: 0;
+     width: 100vw;
+     height: 100vh;
+     pointer-events: none;
+     z-index: var(--sparkle-layer-z);
+     display: block;
+     opacity: var(--sparkle-opacity);
+}
+
+/* NOTE: RAINBOW */
+
+.marquee span {
+     transition:
+          color var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style),
+          text-shadow var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style);
+
+     /* NOTE: fallback glow if JS is late or off */
+     text-shadow: var(--glow-text);
+}
+
+/* NOTE: CANVAS */
 
 .canvas-crib {
      width: 100%;
      border: var(--panel-border);
      border-radius: var(--panel-radius);
      overflow: hidden;
-     box-shadow: var(--panel-glow);
+     box-shadow: var(--glow-panel);
 }
 
 #miniGameCanvas {
-     display: block;
-     width: 100%;
-     height: auto;
-     background: transparent;
+     display: var(--canvas-display);
+     width: var(--canvas-width);
+     height: var(--canvas-height);
+     background: var(--canvas-bg);
 }
 
-/* ========================= */
-/* RAINBOW                   */
-/* ========================= */
-
-.marquee span {
-     transition: color 0.2s ease-in-out, text-shadow 0.2s ease-in-out;
-}
-
-/* ========================= */
-/* LARGER SCREENS LATER      */
-/* ========================= */
+/* NOTE: RESIZING */
 
 @media (min-width: 48rem) {
      .body-ody {
-          max-width: 48rem;
+          max-width: var(--page-width-wide);
           padding: 2rem;
      }
 
      .hero-blob {
-          gap: 0.75rem;
+          gap: var(--hero-gap-wide);
      }
 
      .main-squeeze {
-          margin-top: 1.25rem;
+          margin-top: var(--main-top-space-wide);
      }
 }
