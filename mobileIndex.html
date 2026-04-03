@@ -4,18 +4,42 @@
      <meta charset="UTF-8">
      <meta name="viewport" content="width=device-width, initial-scale=1.0">
      <title>✨Chris Goss | Portfolio✨</title>
+     <link rel="stylesheet" href="style.css">
 </head>
 <body>
      <div class="body-ody">
-          <header class="site-header">
-               <!-- MOBILE FIRST DESIGN! Iphone SE 2016: 640 x 1136 -->
-               <h1 class="marquee">Chris Goss</h1>
-               <h3 class="marquee-subtext">Three raccoons in a raincoat.</h3>
+          <header class="hero-blob">
+               <h1>
+                    <a href="index.html" class="marquee">CHRIS GOSS</a>
+               </h1>
+
+               <p class="tagline">Three raccoons in a trenchcoat.</p>
                <!-- Actually an army of armadillos. Probably a platypus on parade. World's worst wombat wrangler. Retired capybara cowboy. -->
-          </header>
-          <main>
                
+               <p class="role">Beginner Dev with too many ideas and not enough chill.</p>
+               <!-- Making apps like I found HTML in a ditch. Making CSS do weird stuff on purpose. Driving unsupervised through Javascript. -->
+
+               <button class="menu-button" aria-label="open navigation menu">
+               <!-- ARIA is "Accessible Rich Internet Applications". -->
+                    +
+               </button>
+          </header>
+
+          <nav class="dropdown-low" id="dropdownLow">
+               <ul class="nav-menu">
+                    <li><a href="#">Free Trash</a></li>
+                    <li><a href="https://github.com/cgoss-dev" target="_blank">Tiny Crimes</a></li>
+                    <li><a href="https://www.linkedin.com/chrisgoss206" target="_blank">Stalk Me</a></li>
+               </ul>
+          </nav>
+
+          <main class="main-squeeze">
+               <div class="canvas-crib">
+                    <!-- Gotta have actual px dimensions for canvas to operate. -->
+                    <canvas id="miniGameCanvas" width="320" height="320"></canvas>
+               </div>
           </main>
      </div>
+     <script src="script.js"></script>
 </body>
 </html>
