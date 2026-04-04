@@ -3,10 +3,8 @@
 @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Mono:wght@400;600&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Bungee+Shade&display=swap");
 
-/* NOTE: ROOT */
-
 :root {
-     /* NOTE: COLOR CONTROL CENTER */
+     /* NOTE: COLOR */
 
      --bg-color: #000000;
      --text-color: #ffffff;
@@ -26,7 +24,7 @@
      --lavender: #7287fd;
      --violet: #8839ef;
 
-     /* NOTE: MENU CONTROL CENTER */
+     /* NOTE: MENU */
 
      --menu-button-color: var(--text-color);
      --menu-button-glow-color: var(--menu-button-color);
@@ -34,7 +32,7 @@
      --menu-panel-width-min: 12rem;
      --menu-item-padding: 1rem;
 
-     /* NOTE: RESIZING CONTROL CENTER */
+     /* NOTE: RESIZING */
 
      --page-padding: 1rem;
      --page-width-mobile: 30rem;
@@ -44,7 +42,7 @@
      --main-top-space-mobile: 1rem;
      --main-top-space-wide: 1.25rem;
 
-     /* NOTE: TEXT CONTROL CENTER */
+     /* NOTE: TEXT */
 
      --font-body: "Noto Sans Mono", monospace;
      --font-fancy: "Bungee Shade", monospace;
@@ -62,7 +60,7 @@
      --text-rainbow-transition-speed: 0.2s;
      --text-rainbow-transition-style: ease-in-out;
 
-     /* NOTE: UNIVERSAL GLOW CONTROL CENTER */
+     /* NOTE: UNIVERSAL GLOW */
 
      --glow-depth: 0 0.75rem 1.75rem rgba(0, 0, 0, 0.5);
      --glow-core: 0 0 0.06rem;
@@ -84,13 +82,13 @@
 
      --glow-particle-blur: 8;
 
-     /* NOTE: BUNGEE GLYPH GLOW CONTROL CENTER */
+     /* NOTE: BUNGEE GLYPH GLOW */
 
      --bungee-glow-blur: 0 0 0.375rem;
      --bungee-shadow-offset-1: 0.125rem 0.125rem 0 rgba(0, 0, 0, 0.8);
      --bungee-shadow-offset-2: 0.25rem 0.25rem 0 rgba(0, 0, 0, 0.6);
 
-     /* NOTE: STRUCTURE CONTROL CENTER */
+     /* NOTE: STRUCTURE */
 
      --panel-radius: 1rem;
      --panel-border-width: 0.25rem;
@@ -98,7 +96,7 @@
      --panel-border: var(--panel-border-width) solid var(--panel-border-color);
      --panel-glow-color: var(--accent-color);
 
-     /* NOTE: SPARKLE CONTROL CENTER */
+     /* NOTE: SPARKLE */
 
      --sparkle-layer-z: -1;
      --sparkle-opacity: 1;
@@ -124,20 +122,20 @@
      --sparkle-respawn-offset-bottom: 24;
 
      --sparkle-color-1: var(--text-color);
-     --sparkle-color-2: var(--pink);
-     --sparkle-color-3: var(--red);
-     --sparkle-color-4: var(--maroon);
-     --sparkle-color-5: var(--peach);
-     --sparkle-color-6: var(--flamingo);
-     --sparkle-color-7: var(--yellow);
-     --sparkle-color-8: var(--green);
-     --sparkle-color-9: var(--teal);
-     --sparkle-color-10: var(--sky);
-     --sparkle-color-11: var(--blue);
-     --sparkle-color-12: var(--lavender);
-     --sparkle-color-13: var(--violet);
+     --sparkle-color-2: var(--text-color);
+     --sparkle-color-3: var(--text-color);
+     --sparkle-color-4: var(--text-color);
+     --sparkle-color-5: var(--text-color);
+     --sparkle-color-6: var(--text-color);
+     --sparkle-color-7: var(--text-color);
+     --sparkle-color-8: var(--text-color);
+     --sparkle-color-9: var(--text-color);
+     --sparkle-color-10: var(--text-color);
+     --sparkle-color-11: var(--text-color);
+     --sparkle-color-12: var(--text-color);
+     --sparkle-color-13: var(--text-color);
 
-     /* NOTE: RAINBOW CONTROL CENTER */
+     /* NOTE: RAINBOW */
 
      --rainbow-color-1: var(--pink);
      --rainbow-color-2: var(--red);
@@ -152,14 +150,14 @@
      --rainbow-color-11: var(--lavender);
      --rainbow-color-12: var(--violet);
 
-     /* NOTE: CANVAS CONTROL CENTER */
+     /* NOTE: CANVAS */
 
      --canvas-bg: transparent;
      --canvas-display: block;
      --canvas-width: 100%;
      --canvas-height: auto;
 
-     /* NOTE: LAYER CONTROL CENTER */
+     /* NOTE: LAYER */
 
      --ui-layer-z: 2;
      --menu-layer-z: 20;
@@ -233,7 +231,7 @@ body {
           -webkit-text-fill-color var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style);
 }
 
-/* NOTE: menu button stays white in all states */
+/* menu button stays white in all states */
 
 .menu-button:hover,
 .menu-button:focus,
