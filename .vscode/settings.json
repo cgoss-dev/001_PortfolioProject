@@ -1,0 +1,15 @@
+{
+     "customFileOrder.rules": {
+          "/Users/buggs/Desktop/GA/001_PortfolioProject": {
+               "order": [
+                    "index.html",
+                    "style.css",
+                    "script.js",
+                    "README.md",
+                    "wireframe.png",
+                    ".vscode"
+               ],
+               "type": "manual"
+          }
+     }
+}
