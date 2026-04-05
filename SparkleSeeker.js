@@ -1,10 +1,8 @@
-// NOTE: SPARKLE SEEKER - CANVAS SETUP
+// NOTE: SPARKLE SEEKER
 // Meant to be displayed in the homepage canvas window, or on it's own page.
 
 const gameCanvas = document.getElementById("miniGameCanvas");
 const gameCtx = gameCanvas ? gameCanvas.getContext("2d") : null;
-
-// NOTE: PLAYER FACES
 
 const playerFaces = {
      neutral: "😐",
@@ -12,29 +10,50 @@ const playerFaces = {
      obstacle: "😫"
 };
 
-// NOTE: INPUT + PLAYER STATE
-
-const keys = {};
-
 const player = {
      x: 0,
      y: 0,
      char: playerFaces.neutral,
-     size: 48,
-     speed: 3,
-     radius: 20
+     size: 48, // Size of player emoji.
+     speed: 3, // Base player speed.
+     radius: 20 // Size of collision box/circle.
 };
 
-// NOTE: PLAYER POSITION HELPERS
+const keys = {};
 
-function resetPlayerPosition() {
+// NOTE: INPUT HANDLERS
+// Gotta add touchscreen capability later, but no idea how.
+
+function bindKeyboardInput() { // Tracks which keys are currently pressed.
+     window.addEventListener("keydown", (event) => {
+          const key = event.key.toLowerCase();
+
+          if ([
+               "w", "a", "s", "d",
+               "arrowup", "arrowdown", "arrowleft", "arrowright"
+          ].includes(key)) {
+               event.preventDefault();
+          }
+
+          keys[key] = true;
+     });
+
+     window.addEventListener("keyup", (event) => {
+          const key = event.key.toLowerCase();
+          keys[key] = false;
+     });
+}
+
+// NOTE: PLAYER CORE
+
+function resetPlayerPosition() { // Canvas centering.
      player.x = gameCanvas.width / 2;
      player.y = gameCanvas.height / 2;
 }
 
-function clampPlayerToCanvas() {
+function clampPlayerToCanvas() { // So that the player doesnt clip under canvas borders.
      const edgePadding = 3;
-
+     
      player.x = Math.max(
           player.radius + edgePadding,
           Math.min(gameCanvas.width - player.radius - edgePadding, player.x)
@@ -46,10 +65,10 @@ function clampPlayerToCanvas() {
      );
 }
 
-// NOTE: PLAYER MOVEMENT
-// Later gotta add touchscreen recognition
+// PLAYER MOVEMENT
+// Later gotta add touchscreen recognition.
 
-function updatePlayer() { // Moves player based on key definitions in bindKeyboardInput.
+function updatePlayer() { // Acts upon keyboard input.
      if (keys["w"] || keys["arrowup"]) {
           player.y -= player.speed;
      }
@@ -69,7 +88,7 @@ function updatePlayer() { // Moves player based on key definitions in bindKeyboa
      clampPlayerToCanvas();
 }
 
-// NOTE: PLAYER DRAW
+// PLAYER DRAW
 
 function drawPlayer() {
      gameCtx.font = `${player.size}px Arial, Helvetica, sans-serif`;
@@ -97,39 +116,7 @@ function drawGameBackground() {
      gameCtx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
 }
 
-// NOTE: INPUT HANDLERS
-// Gotta add touchscreen capability later, but no idea how.
-
-function bindKeyboardInput() { // Defines what movement keys do.
-     window.addEventListener("keydown", (event) => {
-          const key = event.key.toLowerCase();
-
-          if ([
-               "w", "a", "s", "d",
-               "arrowup", "arrowdown", "arrowleft", "arrowright"
-          ].includes(key)) {
-               event.preventDefault();
-          }
-
-          keys[key] = true;
-     });
-
-     window.addEventListener("keyup", (event) => {
-          const key = event.key.toLowerCase();
-          keys[key] = false;
-     });
-}
-
-// NOTE: RESIZE HANDLING
-// Keeps player centered when window size changes.
-
-function bindResizeHandler() {
-     window.addEventListener("resize", () => {
-          resetPlayerPosition();
-     });
-}
-
-// NOTE: GAME LOOP
+// NOTE: GAME UPDATE DRAW LOOP
 
 function updateGame() {
      updatePlayer();
@@ -146,6 +133,15 @@ function gameLoop() {
      requestAnimationFrame(gameLoop);
 }
 
+// NOTE: RESIZE HANDLING
+// Keeps player centered when window size changes.
+
+function bindResizeHandler() {
+     window.addEventListener("resize", () => {
+          resetPlayerPosition();
+     });
+}
+
 // NOTE: STARTUP
 
 function startSparkleSeeker() {
@@ -155,7 +151,7 @@ function startSparkleSeeker() {
      gameLoop();
 }
 
-// NOTE: STOP IF CANVAS IS MISSING
+// NOTE: FAILSAFE
 // This HAS to come after player + functions.
 
 if (!gameCanvas || !gameCtx) {
