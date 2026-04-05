@@ -37,15 +37,14 @@ const sparkleSpawnDelay = 50; // Lower number = more sparkles, more often.
 const sparkleSpawnCap = 25; // Max number of sparkles allowed on screen at once.
 
 // NOTE: SHARED COLOR ENGINE (HOOK)
-// This is the SAME engine structure that marquee uses. One engine = consistent behavior everywhere.
 
-const sparkleColorEngine = createColorEngine(sparkleColors);
-// Creates a reusable color engine instance using rainbow palette theme. This handles "no immediate repeats" logic internally.
+let sparkleColorEngine = null;
+// Moved engine creation to startup so CSS has time to load before palette is read.
 
 // NOTE: INPUT HANDLERS
 // Gotta add touchscreen capability later, but no idea how.
 
-function bindKeyboardInput() { // Tracks which keys are currently pressed.
+function bindKeyboardInput() {
      window.addEventListener("keydown", (event) => {
           const key = event.key.toLowerCase();
 
@@ -67,12 +66,12 @@ function bindKeyboardInput() { // Tracks which keys are currently pressed.
 
 // NOTE: PLAYER CORE
 
-function resetPlayerPosition() { // Canvas centering.
+function resetPlayerPosition() {
      player.x = gameCanvas.width / 2;
      player.y = gameCanvas.height / 2;
 }
 
-function clampPlayerToCanvas() { // So that the player doesnt clip under canvas borders.
+function clampPlayerToCanvas() {
      const edgePadding = 3;
      
      player.x = Math.max(
@@ -87,9 +86,8 @@ function clampPlayerToCanvas() { // So that the player doesnt clip under canvas 
 }
 
 // NOTE: PLAYER MOVEMENT
-// Later gotta add touchscreen recognition.
 
-function updatePlayer() { // Acts upon keyboard input.
+function updatePlayer() {
      if (keys["w"] || keys["arrowup"]) {
           player.y -= player.speed;
      }
@@ -112,6 +110,9 @@ function updatePlayer() { // Acts upon keyboard input.
 // NOTE: PLAYER DRAW
 
 function drawPlayer() {
+     if (!gameCtx) return;
+     // Defensive guard: prevents crashes if canvas context is missing.
+
      gameCtx.font = `${player.size}px Arial, Helvetica, sans-serif`;
      gameCtx.textAlign = "center";
      gameCtx.textBaseline = "middle";
@@ -127,30 +128,29 @@ function drawPlayer() {
 }
 
 // NOTE: SPARKLE SPAWN
-// Creates one falling sparkle above the canvas. Uses same wobble idea as the base sparkle rain.
 
 function createSparkle() {
+     if (!sparkleColorEngine) {
+          sparkleColorEngine = createColorEngine(getRainbowPalette());
+     }
+     // Safety fallback: if engine somehow wasn’t created yet, build it here instead of crashing.
+
      const x = Math.random() * (gameCanvas.width - 20) + 10;
-     // Pick a random X position across the width of the canvas. The -20/+10 just keeps it slightly away from the edges.
 
      const nextSparkleColor = sparkleColorEngine.next();
-     // Pull next color from the shared engine, guarantees no immediate duplicate colors and keeps behavior consistent with marquee later.
 
      sparkles.push({
-          // Push/create a new sparkle object and add it to the array.
           x: x,
-          // baseX is the "anchor" position for horizontal wobble.
           baseX: x,
-          // Start slightly above the canvas so it falls into view.
           y: -20,
           speed: 0.25 + Math.random() * 0.5,
           size: 16 + Math.random() * 5,
           char: randomItem(sparkleChars),
           color: nextSparkleColor,
 
-          wobbleOffset: Math.random() * Math.PI * 2, // Starting phase of the sine wave (random so they don't sync up).
-          wobbleSpeed: 0.02 + Math.random() * 0.03, // How fast.
-          wobbleAmount: 5 + Math.random() * 10 // How far.
+          wobbleOffset: Math.random() * Math.PI * 2,
+          wobbleSpeed: 0.02 + Math.random() * 0.03,
+          wobbleAmount: 5 + Math.random() * 10
      });
 }
 
@@ -167,7 +167,6 @@ function updateSparkleSpawns() {
 }
 
 // NOTE: SPARKLE MOVEMENT
-// Moves sparkles downward and side-to-side, then removes them once they leave the bottom of the canvas.
 
 function updateSparkles() {
      for (let i = sparkles.length - 1; i >= 0; i -= 1) {
@@ -177,7 +176,6 @@ function updateSparkles() {
 
           sparkle.wobbleOffset += sparkle.wobbleSpeed;
           sparkle.x = sparkle.baseX + Math.sin(sparkle.wobbleOffset) * sparkle.wobbleAmount;
-          // Same wobble logic as the base js sparkle rain background.
 
           if (sparkle.y > gameCanvas.height + 30) {
                sparkles.splice(i, 1);
@@ -186,9 +184,11 @@ function updateSparkles() {
 }
 
 // NOTE: SPARKLE DRAW
-// Draws the falling sparkles in theme rainbow colors.
 
 function drawSparkles() {
+     if (!gameCtx) return;
+     // Defensive guard: prevents drawing errors if context is missing.
+
      const glowSettings = getGlowSettings();
 
      gameCtx.textAlign = "center";
@@ -208,15 +208,14 @@ function drawSparkles() {
 }
 
 // NOTE: SIMPLE BACKGROUND
-// Only paints inside the game canvas, not the site background.
 
 function drawGameBackground() {
+     if (!gameCtx) return;
+     // Defensive guard for safety.
+
      gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
 
      gameCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
-     // Do I want the canvas to have a solid black backround?
-     // If it's transparent, I can reuse the white particles as extra visual noise in the game.
-     // But if it's solid, it's more versatile in future games that have no use for falling particles.
      gameCtx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
 }
 
@@ -241,7 +240,6 @@ function gameLoop() {
 }
 
 // NOTE: RESIZE HANDLING
-// Keeps player centered when window size changes.
 
 function bindResizeHandler() {
      window.addEventListener("resize", () => {
@@ -252,6 +250,9 @@ function bindResizeHandler() {
 // NOTE: STARTUP
 
 function startSparkleSeeker() {
+     sparkleColorEngine = createColorEngine(getRainbowPalette());
+     // Create engine here so CSS + DOM are ready BEFORE colors are read.
+
      resetPlayerPosition();
      bindKeyboardInput();
      bindResizeHandler();
@@ -259,7 +260,6 @@ function startSparkleSeeker() {
 }
 
 // NOTE: FAILSAFE
-// This HAS to come after player + functions.
 
 if (!gameCanvas || !gameCtx) {
      console.warn("Sparkle Seeker could not find #miniGameCanvas.");

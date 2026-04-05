@@ -265,7 +265,7 @@ function createColorEngine(colorsOrFactory) {
      };
 }
 
-/* NOTE: GLOW BUILDERS */
+/* NOTE: GLOW */
 /* Marquee uses universal box-shadow style glow. Menu glyph uses old shadow trick because bungee font needs extra help. */
 
 function buildUniversalTextGlow(color) {
@@ -365,12 +365,15 @@ document.addEventListener("keydown", function (event) {
 const marquee = document.querySelector(".marquee");
 const marqueeOriginalText = marquee ? marquee.textContent : "";
 let marqueeSpans = [];
+let visibleMarqueeSpans = [];
+// Cache visible letters once so we do not rebuild the same filtered list every color cycle.
+
 let headerColorCycleTimer = null;
 let previousMarqueeColors = [];
 // Stores the last color used for each visible letter position.
 
-const marqueeColorEngine = createColorEngine(getRainbowPalette);
-// Marquee now uses the shared color engine instead of its own one-off color logic.
+let marqueeColorEngine = null;
+// Moved engine creation later so CSS has time to load before the palette gets read.
 
 function buildMarqueeSpans() {
      if (!marquee) {
@@ -379,6 +382,9 @@ function buildMarqueeSpans() {
 
      marquee.innerHTML = "";
      marqueeSpans = [];
+     visibleMarqueeSpans = [];
+     // Reset both the full span list and the visible-letter list whenever the marquee gets rebuilt.
+
      previousMarqueeColors = [];
      // Reset old span/color memory whenever we rebuild the marquee.
 
@@ -391,6 +397,11 @@ function buildMarqueeSpans() {
 
           marquee.appendChild(span);
           marqueeSpans.push(span);
+
+          if (span.textContent !== "\u00A0") {
+               visibleMarqueeSpans.push(span);
+          }
+          // Store real letters once here, so later color cycles can reuse this list instead of filtering every time.
      }
 }
 
@@ -404,38 +415,22 @@ function applyGlowToElement(element, color) {
 }
 
 function cycleMarqueeColors() {
-     if (!marqueeSpans.length) {
+     if (!marqueeSpans.length || !visibleMarqueeSpans.length || !marqueeColorEngine) {
           return;
      }
 
-     const visibleSpans = marqueeSpans.filter(function (span) {
-          return span.textContent !== "\u00A0";
-     });
-     // We only hand real letters to the color engine, spaces stay uncolored and do not consume a color slot.
-
      const nextMarqueeColors = marqueeColorEngine.nextCycle(
-          visibleSpans.length,
+          visibleMarqueeSpans.length,
           previousMarqueeColors
      );
      // Shared engine builds one full marquee cycle, keeps each visible letter from immediately repeating last color.
 
-     let colorIndex = 0;
-     // Tracks which generated color belongs to the next visible letter.
-
-     for (let i = 0; i < marqueeSpans.length; i += 1) {
-          const span = marqueeSpans[i];
-
-          if (span.textContent === "\u00A0") {
-               continue;
-          }
-          // Spaces do not get colored and do not consume a rainbow color.
-
-          const nextColor = nextMarqueeColors[colorIndex];
-          colorIndex += 1;
-          // Move to the next generated color for the next visible letter.
+     for (let i = 0; i < visibleMarqueeSpans.length; i += 1) {
+          const span = visibleMarqueeSpans[i];
+          const nextColor = nextMarqueeColors[i];
 
           applyGlowToElement(span, nextColor);
-          // Apply color to current letter.
+          // Apply each generated color directly to the matching visible letter.
      }
 
      previousMarqueeColors = nextMarqueeColors;
@@ -446,6 +441,9 @@ function startHeaderColorCycle() {
      if (!marquee) {
           return;
      }
+
+     marqueeColorEngine = createColorEngine(getRainbowPalette);
+     // Moved engine creation into startup so the browser has already loaded the page/CSS before colors get read.
 
      buildMarqueeSpans();
      cycleMarqueeColors();
@@ -468,10 +466,8 @@ let bgHeight = 0;
 let bgParticleCount = 0;
 let resizeTimer = null;
 
-const sparkleColorEngine = createColorEngine(getSparklePalette);
-// Base sparkle rain now uses the same shared engine pattern too.
-
-/* NOTE: CANVAS */
+let sparkleColorEngine = null;
+// Moved engine creation into setup so the sparkle palette is read later, after CSS is ready.
 
 function resizeBgCanvasFromCss(canvas) {
      if (!canvas) {
@@ -510,6 +506,11 @@ function createBgParticle() {
      const sparkleSettings = getSparkleSettings();
      const x = Math.random() * bgWidth;
 
+     if (!sparkleColorEngine) {
+          sparkleColorEngine = createColorEngine(getSparklePalette);
+     }
+     // Safety check: if this runs before setup for any reason, build the engine here instead of crashing.
+
      return {
           x: x,
           baseX: x,
@@ -539,6 +540,9 @@ function setupSparkleRain() {
           return;
      }
 
+     sparkleColorEngine = createColorEngine(getSparklePalette);
+     // Rebuild the engine during setup so it reads the latest sparkle palette after the page styles are in place.
+
      resizeBgCanvasFromCss(bgCanvas);
      setBgParticleCount();
      initBgParticles(bgParticleCount);
@@ -562,10 +566,20 @@ function updateBgParticles() {
 }
 
 function drawBackground() {
+     if (!bgCtx) {
+          return;
+     }
+     // Defensive guard: if the canvas context is missing, stop here instead of trying to draw on "nothing".
+
      bgCtx.clearRect(0, 0, bgWidth, bgHeight);
 }
 
 function drawBgParticles() {
+     if (!bgCtx) {
+          return;
+     }
+     // Same idea here: bail out safely if the drawing context does not exist.
+
      const glowSettings = getGlowSettings();
 
      for (let i = 0; i < bgParticles.length; i += 1) {
