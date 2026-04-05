@@ -104,21 +104,9 @@ function getRainbowPalette() {
 function getSparklePalette() {
      const theme = getThemeColors();
 
-     return [
-          getCssColor("--sparkle-color-1", theme.white),
-          getCssColor("--sparkle-color-2", theme.pink),
-          getCssColor("--sparkle-color-3", theme.red),
-          getCssColor("--sparkle-color-4", theme.maroon),
-          getCssColor("--sparkle-color-5", theme.peach),
-          getCssColor("--sparkle-color-6", theme.flamingo),
-          getCssColor("--sparkle-color-7", theme.yellow),
-          getCssColor("--sparkle-color-8", theme.green),
-          getCssColor("--sparkle-color-9", theme.teal),
-          getCssColor("--sparkle-color-10", theme.sky),
-          getCssColor("--sparkle-color-11", theme.blue),
-          getCssColor("--sparkle-color-12", theme.lavender),
-          getCssColor("--sparkle-color-13", theme.violet)
-     ];
+     return [theme.white];
+     // Background sparkles only need one real color choice.
+     // A single-item palette is cleaner than storing a bunch of duplicate whites.
 }
 
 /* NOTE: UTILITIES */
