@@ -258,6 +258,7 @@ const marqueeOriginalText = marquee ? marquee.textContent : "";
 let marqueeSpans = [];
 let headerColorCycleTimer = null;
 let previousMarqueeColors = [];
+// Stores the last color used for each letter position.
 
 function buildMarqueeSpans() {
      if (!marquee) {
@@ -266,12 +267,15 @@ function buildMarqueeSpans() {
 
      marquee.innerHTML = "";
      marqueeSpans = [];
+     previousMarqueeColors = [];
+     // Reset old span/color memory whenever we rebuild the marquee.
 
      for (let i = 0; i < marqueeOriginalText.length; i += 1) {
           const char = marqueeOriginalText[i];
           const span = document.createElement("span");
 
           span.textContent = char === " " ? "\u00A0" : char;
+          // Convert normal spaces between words into non-breaking spaces so spacing stays visible in spans.
 
           marquee.appendChild(span);
           marqueeSpans.push(span);
@@ -292,27 +296,68 @@ function cycleMarqueeColors() {
           return;
      }
 
-     const rainbowColors = getRainbowPalette();
+     let availableColors = shuffleArray(getRainbowPalette());
+     // Shuffle once at the start of each cycle.
+
      const nextMarqueeColors = [];
+     // New storage array for next cycle.
+
+     let colorIndex = 0;
+     // Tracks which color from availableColors we are currently assigning.
 
      for (let i = 0; i < marqueeSpans.length; i += 1) {
+          const span = marqueeSpans[i];
+
+          if (span.textContent === "\u00A0") {
+               nextMarqueeColors[i] = null;
+               continue;
+          }
+          // Spaces do not get colored and do not consume a rainbow color.
+
+          if (colorIndex >= availableColors.length) {
+               availableColors = shuffleArray(getRainbowPalette());
+               colorIndex = 0;
+          }
+          // If we run out of rainbow colors, reshuffle and start a new batch, incase colors<letters.
+
           const previousColor = previousMarqueeColors[i] || null;
           // Get previous color for this exact letter position.
 
-          const nextColor = randomItemExcept(rainbowColors, previousColor);
-          // Pick a new random color, but NOT same one as last time.
+          if (availableColors[colorIndex] === previousColor) {
+               let swapIndex = -1;
+               // If next color would repeat this letter's previous color, LOOK for a different color later in the shuffled list...
 
-          nextMarqueeColors.push(nextColor);
+               for (let j = colorIndex + 1; j < availableColors.length; j += 1) {
+                    if (availableColors[j] !== previousColor) {
+                         swapIndex = j;
+                         break;
+                    }
+               }
+
+               if (swapIndex !== -1) {
+                    const temp = availableColors[colorIndex];
+                    availableColors[colorIndex] = availableColors[swapIndex];
+                    availableColors[swapIndex] = temp;
+               }
+               // Then, SWAP repeated color with a later one to avoid same-letter immediate repeats.
+          }
+
+          const nextColor = availableColors[colorIndex];
+          // Take the current color from this cycle's shuffled rainbow list.
+
+          colorIndex += 1;
+          // Move to the next unused color for the next visible letter.
+
+          nextMarqueeColors[i] = nextColor;
           // Save new color into this cycle's memory array.
 
-          applyGlowToElement(marqueeSpans[i], nextColor);
-          // Apply color to current letter span.
+          applyGlowToElement(span, nextColor);
+          // Apply color to current letter.
      }
 
      previousMarqueeColors = nextMarqueeColors;
      // Replace old memory with new cycle's colors.
 }
-
 function startHeaderColorCycle() {
      if (!marquee) {
           return;
