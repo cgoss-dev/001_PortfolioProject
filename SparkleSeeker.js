@@ -1,4 +1,10 @@
 // NOTE: SPARKLE SEEKER
+
+// TROUBLESHOOTING
+
+alert("top of game js");
+console.log("top of game js");
+
 // Meant to be displayed in the homepage canvas window, or on it's own page.
 
 const gameCanvas = document.getElementById("miniGameCanvas");
@@ -259,10 +265,18 @@ function startSparkleSeeker() {
      gameLoop();
 }
 
-// NOTE: FAILSAFE
+// // NOTE: FAILSAFE
+
+// if (!gameCanvas || !gameCtx) {
+//      console.warn("Sparkle Seeker could not find #miniGameCanvas.");
+// } else {
+//      startSparkleSeeker();
+// }
 
 if (!gameCanvas || !gameCtx) {
+     alert("game canvas not found");
      console.warn("Sparkle Seeker could not find #miniGameCanvas.");
 } else {
+     alert("starting game");
      startSparkleSeeker();
 }
