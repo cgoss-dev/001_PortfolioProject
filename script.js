@@ -126,6 +126,24 @@ function randomItem(array) {
      return array[randomWholeNumber(0, array.length - 1)];
 }
 
+function randomItemExcept(array, previousItem) {
+     if (!array.length) {
+          return undefined;
+     }
+
+     if (array.length === 1) {
+          return array[0];
+     }
+
+     let nextItem = randomItem(array);
+
+     while (nextItem === previousItem) {
+          nextItem = randomItem(array);
+     }
+
+     return nextItem;
+}
+
 function shuffleArray(array) {
      const shuffled = [...array];
 
@@ -239,6 +257,7 @@ const marquee = document.querySelector(".marquee");
 const marqueeOriginalText = marquee ? marquee.textContent : "";
 let marqueeSpans = [];
 let headerColorCycleTimer = null;
+let previousMarqueeColors = [];
 
 function buildMarqueeSpans() {
      if (!marquee) {
@@ -273,12 +292,25 @@ function cycleMarqueeColors() {
           return;
      }
 
-     const shuffledColors = shuffleArray(getRainbowPalette());
+     const rainbowColors = getRainbowPalette();
+     const nextMarqueeColors = [];
 
      for (let i = 0; i < marqueeSpans.length; i += 1) {
-          const color = shuffledColors[i % shuffledColors.length];
-          applyGlowToElement(marqueeSpans[i], color);
+          const previousColor = previousMarqueeColors[i] || null;
+          // Get previous color for this exact letter position.
+
+          const nextColor = randomItemExcept(rainbowColors, previousColor);
+          // Pick a new random color, but NOT same one as last time.
+
+          nextMarqueeColors.push(nextColor);
+          // Save new color into this cycle's memory array.
+
+          applyGlowToElement(marqueeSpans[i], nextColor);
+          // Apply color to current letter span.
      }
+
+     previousMarqueeColors = nextMarqueeColors;
+     // Replace old memory with new cycle's colors.
 }
 
 function startHeaderColorCycle() {

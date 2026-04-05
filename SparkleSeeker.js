@@ -35,6 +35,8 @@ let sparkleSpawnTimer = 0;
 const sparkleSpawnDelay = 50; // Lower number = more sparkles, more often.
 const sparkleSpawnCap = 25; // Max number of sparkles allowed on screen at once.
 
+let previousSparkleColor = null; // Gotta store previous color somewhere, to prevent dupes.
+
 // NOTE: INPUT HANDLERS
 // Gotta add touchscreen capability later, but no idea how.
 
@@ -125,21 +127,29 @@ function drawPlayer() {
 
 function createSparkle() {
      const x = Math.random() * (gameCanvas.width - 20) + 10;
+     // Pick a random X position across the width of the canvas. The -20/+10 just keeps it slightly away from the edges.
+
+     const nextSparkleColor = randomItemExcept(sparkleColors, previousSparkleColor);
+     // Pick a random color from the rainbow palette, but NOT same color as the last sparkle.
+
+     previousSparkleColor = nextSparkleColor;
+     // Store this color so the NEXT sparkle can avoid repeating it.
 
      sparkles.push({
+          // Push/create a new sparkle object and add it to the array.
           x: x,
-          baseX: x, // Starting x position that the wobble swings around.
+          // baseX is the "anchor" position for horizontal wobble.
+          baseX: x,
+          // Start slightly above the canvas so it falls into view.
           y: -20,
-
-          speed: 0.25 + Math.random() * 0.5, // Falling speed.
-          size: 16 + Math.random() * 5, // Size and magnify.
-
+          speed: 0.25 + Math.random() * 0.5,
+          size: 16 + Math.random() * 5,
           char: randomItem(sparkleChars),
-          color: randomItem(sparkleColors),
+          color: nextSparkleColor,
 
-          wobbleOffset: Math.random() * Math.PI * 2,
-          wobbleSpeed: 0.02 + Math.random() * 0.03,
-          wobbleAmount: 5 + Math.random() * 10
+          wobbleOffset: Math.random() * Math.PI * 2, // Starting phase of the sine wave (random so they don't sync up).
+          wobbleSpeed: 0.02 + Math.random() * 0.03, // How fast.
+          wobbleAmount: 5 + Math.random() * 10 // How far.
      });
 }
 
