@@ -1,3 +1,10 @@
+// NOTE: TROUBLESHOOTING
+alert("top of script");
+console.log("top of script");
+document.body.style.outline = "4px solid lime";
+
+
+
 // NOTE: BASE JS
 
 /* NOTE: THEME */
@@ -631,3 +638,27 @@ if (bgCanvas && bgCtx) {
      drawSparkleRain();
      window.addEventListener("resize", handleResize);
 }
+
+
+
+// /* NOTE: TROUBLESHOOTING */
+
+// console.log("before header");
+// startHeaderColorCycle();
+// console.log("after header");
+
+// console.log("before menu");
+// syncMenuButtonGlow();
+// console.log("after menu");
+
+// if (bgCanvas && bgCtx) {
+//      console.log("before sparkle setup");
+//      setupSparkleRain();
+//      console.log("after sparkle setup");
+
+//      console.log("before sparkle draw");
+//      drawSparkleRain();
+//      console.log("after sparkle draw");
+
+//      window.addEventListener("resize", handleResize);
+// }
