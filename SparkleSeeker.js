@@ -4,7 +4,7 @@
 const gameCanvas = document.getElementById("miniGameCanvas");
 const gameCtx = gameCanvas ? gameCanvas.getContext("2d") : null;
 
-// PLAYER CONST
+// NOTE: PLAYER CONST
 
 const playerFaces = {
      neutral: "😐",
@@ -23,17 +23,17 @@ const player = {
 
 const keys = {};
 
-// SPARKLE CONST
+// NOTE: SPARKLE CONST
 // Add obstacles and collisions later.
 
 const sparkles = [];
 
 const sparkleChars = ["✦", "✧"];
-const sparkleColors = getSparklePalette();
+const sparkleColors = getRainbowPalette();
 
 let sparkleSpawnTimer = 0;
 const sparkleSpawnDelay = 50; // Lower number = more sparkles, more often.
-const sparkleSpawnCap = 10; // Max number of sparkles allowed on screen at once.
+const sparkleSpawnCap = 25; // Max number of sparkles allowed on screen at once.
 
 // NOTE: INPUT HANDLERS
 // Gotta add touchscreen capability later, but no idea how.
@@ -134,8 +134,8 @@ function createSparkle() {
           speed: 0.25 + Math.random() * 0.5, // Falling speed.
           size: 16 + Math.random() * 5, // Size and magnify.
 
-          char: sparkleChars[Math.floor(Math.random() * sparkleChars.length)],
-          color: sparkleColors[Math.floor(Math.random() * sparkleColors.length)],
+          char: randomItem(sparkleChars),
+          color: randomItem(sparkleColors),
 
           wobbleOffset: Math.random() * Math.PI * 2,
           wobbleSpeed: 0.02 + Math.random() * 0.03,
@@ -165,9 +165,9 @@ function updateSparkles() {
 
           sparkle.y += sparkle.speed;
 
-          // Same wobble logic as the base sparkle rain.
           sparkle.wobbleOffset += sparkle.wobbleSpeed;
           sparkle.x = sparkle.baseX + Math.sin(sparkle.wobbleOffset) * sparkle.wobbleAmount;
+          // Same wobble logic as the base sparkle rain.
 
           if (sparkle.y > gameCanvas.height + 30) {
                sparkles.splice(i, 1);
@@ -176,7 +176,7 @@ function updateSparkles() {
 }
 
 // NOTE: SPARKLE DRAW
-// Draws the falling sparkles in theme colors.
+// Draws the falling sparkles in theme rainbow colors.
 
 function drawSparkles() {
      const glowSettings = getGlowSettings();
