@@ -1,21 +1,8 @@
 // NOTE: SPARKLE SEEKER - CANVAS SETUP
 // Meant to be displayed in the homepage canvas window, or on it's own page.
 
-console.log("SparkleSeeker.js loaded");
-
 const gameCanvas = document.getElementById("miniGameCanvas");
 const gameCtx = gameCanvas ? gameCanvas.getContext("2d") : null;
-
-//NOTE: STOP IF CANVAS IS MISSING
-
-if (!gameCanvas || !gameCtx) {
-     console.warn("Sparkle Seeker could not find #miniGameCanvas.");
-} else {
-     startSparkleSeeker();
-}
-
-console.log("gameCanvas:", gameCanvas);
-console.log("gameCtx:", gameCtx);
 
 // NOTE: PLAYER FACES
 
@@ -38,7 +25,7 @@ const player = {
      radius: 20
 };
 
-//    NOTE: PLAYER POSITION HELPERS
+// NOTE: PLAYER POSITION HELPERS
 
 function resetPlayerPosition() {
      player.x = gameCanvas.width / 2;
@@ -62,7 +49,7 @@ function clampPlayerToCanvas() {
 // NOTE: PLAYER MOVEMENT
 // Later gotta add touchscreen recognition
 
-function updatePlayer() {
+function updatePlayer() { // Moves player based on key definitions in bindKeyboardInput.
      if (keys["w"] || keys["arrowup"]) {
           player.y -= player.speed;
      }
@@ -99,18 +86,21 @@ function drawPlayer() {
      gameCtx.fillText(player.char, player.x, player.y + playerYOffset);
 }
 
-//    NOTE: SIMPLE BACKGROUND
+// NOTE: SIMPLE BACKGROUND
 // Only paints inside the game canvas, not the site background.
 
 function drawGameBackground() {
      gameCtx.clearRect(0, 0, gameCanvas.width, gameCanvas.height);
      gameCtx.fillStyle = "#000000";
+     // Do I want the canvas to have a solid black backround?
+     // If it's transparent, then I can reuse the white particles as extra visual noise in the game.
      gameCtx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
 }
 
-//    NOTE: INPUT HANDLERS
+// NOTE: INPUT HANDLERS
+// Gotta add touchscreen capability later, but no idea how.
 
-function bindKeyboardInput() {
+function bindKeyboardInput() { // Defines what movement keys do.
      window.addEventListener("keydown", (event) => {
           const key = event.key.toLowerCase();
 
@@ -163,4 +153,13 @@ function startSparkleSeeker() {
      bindKeyboardInput();
      bindResizeHandler();
      gameLoop();
+}
+
+// NOTE: STOP IF CANVAS IS MISSING
+// This HAS to come after player + functions.
+
+if (!gameCanvas || !gameCtx) {
+     console.warn("Sparkle Seeker could not find #miniGameCanvas.");
+} else {
+     startSparkleSeeker();
 }
