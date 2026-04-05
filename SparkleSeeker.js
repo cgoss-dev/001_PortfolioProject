@@ -44,11 +44,9 @@ const sparkleSpawnCap = 25; // Max number of sparkles allowed on screen at once.
 
 // NOTE: SHARED COLOR ENGINE (HOOK)
 
-let sparkleColorEngine = null;
-// Moved engine creation to startup so CSS has time to load before palette is read.
-
-// NOTE: INPUT HANDLERS
-// Gotta add touchscreen capability later, but no idea how.
+let gameSparkleColorEngine = null;
+// Renamed this so it does not collide with the background sparkle engine in script.js.
+// Both files share the same page scope, so duplicate let names will crash the second file.
 
 function bindKeyboardInput() {
      window.addEventListener("keydown", (event) => {
@@ -136,14 +134,14 @@ function drawPlayer() {
 // NOTE: SPARKLE SPAWN
 
 function createSparkle() {
-     if (!sparkleColorEngine) {
-          sparkleColorEngine = createColorEngine(getRainbowPalette());
+     if (!gameSparkleColorEngine) {
+          gameSparkleColorEngine = createColorEngine(getRainbowPalette());
      }
      // Safety fallback: if engine somehow wasn’t created yet, build it here instead of crashing.
 
      const x = Math.random() * (gameCanvas.width - 20) + 10;
 
-     const nextSparkleColor = sparkleColorEngine.next();
+     const nextSparkleColor = gameSparkleColorEngine.next();
 
      sparkles.push({
           x: x,
@@ -256,8 +254,8 @@ function bindResizeHandler() {
 // NOTE: STARTUP
 
 function startSparkleSeeker() {
-     sparkleColorEngine = createColorEngine(getRainbowPalette());
-     // Create engine here so CSS + DOM are ready BEFORE colors are read.
+     gameSparkleColorEngine = createColorEngine(getRainbowPalette());
+     // Create the game's own color engine here so CSS + DOM are ready BEFORE colors are read.
 
      resetPlayerPosition();
      bindKeyboardInput();
