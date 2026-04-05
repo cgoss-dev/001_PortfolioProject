@@ -1,7 +1,9 @@
 // NOTE: TROUBLESHOOTING
 alert("top of script");
 console.log("top of script");
-document.body.style.outline = "4px solid lime";
+
+document.body.style.background = "lime";
+document.body.innerHTML = "<h1 style='color:black; font-size:48px;'>SCRIPT IS RUNNING</h1>";
 
 
 
