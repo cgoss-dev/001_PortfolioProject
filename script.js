@@ -1,9 +1,9 @@
-// NOTE: TROUBLESHOOTING
-alert("top of script");
-console.log("top of script");
+// // NOTE: TROUBLESHOOTING
+// alert("top of script");
+// console.log("top of script");
 
-document.body.style.background = "lime";
-document.body.innerHTML = "<h1 style='color:black; font-size:48px;'>SCRIPT IS RUNNING</h1>";
+// document.body.style.background = "lime";
+// document.body.innerHTML = "<h1 style='color:black; font-size:48px;'>SCRIPT IS RUNNING</h1>";
 
 
 
@@ -630,37 +630,41 @@ function handleResize() {
      }, 150);
 }
 
-/* NOTE: STARTUP */
+// /* NOTE: STARTUP */
 
+// startHeaderColorCycle();
+// syncMenuButtonGlow();
+
+// if (bgCanvas && bgCtx) {
+//      setupSparkleRain();
+//      drawSparkleRain();
+//      window.addEventListener("resize", handleResize);
+// }
+
+
+
+/* NOTE: TROUBLESHOOTING */
+
+alert("before header");
 startHeaderColorCycle();
+alert("after header");
+
+alert("before menu");
 syncMenuButtonGlow();
+alert("after menu");
+
+alert("before canvas check");
 
 if (bgCanvas && bgCtx) {
+     alert("before sparkle setup");
      setupSparkleRain();
+     alert("after sparkle setup");
+
+     alert("before sparkle draw");
      drawSparkleRain();
+     alert("after sparkle draw");
+
      window.addEventListener("resize", handleResize);
 }
 
-
-
-// /* NOTE: TROUBLESHOOTING */
-
-// console.log("before header");
-// startHeaderColorCycle();
-// console.log("after header");
-
-// console.log("before menu");
-// syncMenuButtonGlow();
-// console.log("after menu");
-
-// if (bgCanvas && bgCtx) {
-//      console.log("before sparkle setup");
-//      setupSparkleRain();
-//      console.log("after sparkle setup");
-
-//      console.log("before sparkle draw");
-//      drawSparkleRain();
-//      console.log("after sparkle draw");
-
-//      window.addEventListener("resize", handleResize);
-// }
+alert("end of startup");
