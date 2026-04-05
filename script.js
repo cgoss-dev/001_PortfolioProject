@@ -1,13 +1,11 @@
-// // NOTE: TROUBLESHOOTING
+// NOTE: BASE JS
+
+// TROUBLESHOOTING
 // alert("top of script");
 // console.log("top of script");
 
 // document.body.style.background = "lime";
 // document.body.innerHTML = "<h1 style='color:black; font-size:48px;'>SCRIPT IS RUNNING</h1>";
-
-
-
-// NOTE: BASE JS
 
 /* NOTE: THEME */
 /* Read control-center values from CSS so visual settings only live in one place */
@@ -618,41 +616,41 @@ function handleResize() {
      }, 150);
 }
 
-// /* NOTE: STARTUP */
+/* NOTE: STARTUP */
 
-// startHeaderColorCycle();
-// syncMenuButtonGlow();
-
-// if (bgCanvas && bgCtx) {
-//      setupSparkleRain();
-//      drawSparkleRain();
-//      window.addEventListener("resize", handleResize);
-// }
-
-
-
-/* NOTE: TROUBLESHOOTING */
-
-alert("before header");
 startHeaderColorCycle();
-alert("after header");
-
-alert("before menu");
 syncMenuButtonGlow();
-alert("after menu");
-
-alert("before canvas check");
 
 if (bgCanvas && bgCtx) {
-     alert("before sparkle setup");
      setupSparkleRain();
-     alert("after sparkle setup");
-
-     alert("before sparkle draw");
      drawSparkleRain();
-     alert("after sparkle draw");
-
      window.addEventListener("resize", handleResize);
 }
 
-alert("end of startup");
+
+
+// /* TROUBLESHOOTING */
+
+// alert("before header");
+// startHeaderColorCycle();
+// alert("after header");
+
+// alert("before menu");
+// syncMenuButtonGlow();
+// alert("after menu");
+
+// alert("before canvas check");
+
+// if (bgCanvas && bgCtx) {
+//      alert("before sparkle setup");
+//      setupSparkleRain();
+//      alert("after sparkle setup");
+
+//      alert("before sparkle draw");
+//      drawSparkleRain();
+//      alert("after sparkle draw");
+
+//      window.addEventListener("resize", handleResize);
+// }
+
+// alert("end of startup");
