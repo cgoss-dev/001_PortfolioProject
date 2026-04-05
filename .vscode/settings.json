@@ -5,9 +5,9 @@
                     "index.html",
                     "style.css",
                     "script.js",
+                    "SparkleSeeker.js",
                     "README.md",
                     "wireframe.png",
-                    "SparkleSeeker.js",
                     ".vscode"
                ],
                "type": "manual"

@@ -155,9 +155,118 @@ function shuffleArray(array) {
      return shuffled;
 }
 
+function createColorEngine(colorsOrFactory) {
+     // Shared color engine for marquee + sparkles, uses either an array of colors OR a function that returns an array of colors.
+
+     let previousColor = null;
+     // This remembers the most recent single color used by .next().
+
+     function resolvePalette() {
+          const rawPalette = typeof colorsOrFactory === "function"
+               ? colorsOrFactory()
+               : colorsOrFactory;
+          // This lets the engine work with live CSS-driven palettes OR fixed arrays.
+
+          if (!Array.isArray(rawPalette)) {
+               return [];
+          }
+
+          return rawPalette.filter(Boolean);
+          // Removes empty/invalid color entries just in case.
+     }
+
+     function avoidImmediateRepeatInBatch(colorBatch, previousColorForSlot, startIndex = 0) {
+          if (colorBatch.length <= startIndex) {
+               return;
+          }
+
+          if (colorBatch[startIndex] !== previousColorForSlot) {
+               return;
+          }
+
+          let swapIndex = -1;
+          // If the first available color would repeat, find a later color to swap in.
+
+          for (let i = startIndex + 1; i < colorBatch.length; i += 1) {
+               if (colorBatch[i] !== previousColorForSlot) {
+                    swapIndex = i;
+                    break;
+               }
+          }
+
+          if (swapIndex !== -1) {
+               const temp = colorBatch[startIndex];
+               colorBatch[startIndex] = colorBatch[swapIndex];
+               colorBatch[swapIndex] = temp;
+          }
+     }
+
+     return {
+          next() {
+               const palette = resolvePalette();
+
+               if (!palette.length) {
+                    return undefined;
+               }
+
+               if (palette.length === 1) {
+                    previousColor = palette[0];
+                    return palette[0];
+               }
+
+               const nextColor = randomItemExcept(palette, previousColor);
+               // Same simple rule for sparkles, do not repeat the last color immediately.
+
+               previousColor = nextColor;
+               return nextColor;
+          },
+
+          nextCycle(count, previousCycleColors = []) {
+               const palette = resolvePalette();
+
+               if (!palette.length || count <= 0) {
+                    return [];
+               }
+
+               if (palette.length === 1) {
+                    return Array(count).fill(palette[0]);
+               }
+
+               const nextColors = [];
+               let availableColors = shuffleArray(palette);
+               // Start each cycle with a shuffled copy of the palette.
+
+               let colorIndex = 0;
+
+               for (let i = 0; i < count; i += 1) {
+                    if (colorIndex >= availableColors.length) {
+                         availableColors = shuffleArray(palette);
+                         colorIndex = 0;
+                    }
+                    // If there are more letters than colors, start a fresh shuffled batch.
+
+                    const previousColorForSlot = previousCycleColors[i] || null;
+
+                    avoidImmediateRepeatInBatch(availableColors, previousColorForSlot, colorIndex);
+                    // This keeps the same letter position from getting the same color twice in a row.
+
+                    const nextColor = availableColors[colorIndex];
+                    colorIndex += 1;
+                    nextColors.push(nextColor);
+               }
+
+               return nextColors;
+          },
+
+          reset() {
+               previousColor = null;
+               // If ever need to clear the engine's memory.
+          }
+     };
+}
+
 /* NOTE: GLOW BUILDERS */
-/* marquee can use the universal box-shadow style glow */
-/* menu glyph uses the old bungee-style shadow trick because that font needs extra help */
+/* Marquee uses universal box-shadow style glow. Menu glyph uses old shadow trick because bungee font needs extra help. */
 
 function buildUniversalTextGlow(color) {
      const textSettings = getTextSettings();
@@ -258,7 +367,10 @@ const marqueeOriginalText = marquee ? marquee.textContent : "";
 let marqueeSpans = [];
 let headerColorCycleTimer = null;
 let previousMarqueeColors = [];
-// Stores the last color used for each letter position.
+// Stores the last color used for each visible letter position.
+
+const marqueeColorEngine = createColorEngine(getRainbowPalette);
+// Marquee now uses the shared color engine instead of its own one-off color logic.
 
 function buildMarqueeSpans() {
      if (!marquee) {
@@ -296,60 +408,31 @@ function cycleMarqueeColors() {
           return;
      }
 
-     let availableColors = shuffleArray(getRainbowPalette());
-     // Shuffle once at the start of each cycle.
+     const visibleSpans = marqueeSpans.filter(function (span) {
+          return span.textContent !== "\u00A0";
+     });
+     // We only hand real letters to the color engine, spaces stay uncolored and do not consume a color slot.
 
-     const nextMarqueeColors = [];
-     // New storage array for next cycle.
+     const nextMarqueeColors = marqueeColorEngine.nextCycle(
+          visibleSpans.length,
+          previousMarqueeColors
+     );
+     // Shared engine builds one full marquee cycle, keeps each visible letter from immediately repeating last color.
 
      let colorIndex = 0;
-     // Tracks which color from availableColors we are currently assigning.
+     // Tracks which generated color belongs to the next visible letter.
 
      for (let i = 0; i < marqueeSpans.length; i += 1) {
           const span = marqueeSpans[i];
 
           if (span.textContent === "\u00A0") {
-               nextMarqueeColors[i] = null;
                continue;
           }
           // Spaces do not get colored and do not consume a rainbow color.
 
-          if (colorIndex >= availableColors.length) {
-               availableColors = shuffleArray(getRainbowPalette());
-               colorIndex = 0;
-          }
-          // If we run out of rainbow colors, reshuffle and start a new batch, incase colors<letters.
-
-          const previousColor = previousMarqueeColors[i] || null;
-          // Get previous color for this exact letter position.
-
-          if (availableColors[colorIndex] === previousColor) {
-               let swapIndex = -1;
-               // If next color would repeat this letter's previous color, LOOK for a different color later in the shuffled list...
-
-               for (let j = colorIndex + 1; j < availableColors.length; j += 1) {
-                    if (availableColors[j] !== previousColor) {
-                         swapIndex = j;
-                         break;
-                    }
-               }
-
-               if (swapIndex !== -1) {
-                    const temp = availableColors[colorIndex];
-                    availableColors[colorIndex] = availableColors[swapIndex];
-                    availableColors[swapIndex] = temp;
-               }
-               // Then, SWAP repeated color with a later one to avoid same-letter immediate repeats.
-          }
-
-          const nextColor = availableColors[colorIndex];
-          // Take the current color from this cycle's shuffled rainbow list.
-
+          const nextColor = nextMarqueeColors[colorIndex];
           colorIndex += 1;
-          // Move to the next unused color for the next visible letter.
-
-          nextMarqueeColors[i] = nextColor;
-          // Save new color into this cycle's memory array.
+          // Move to the next generated color for the next visible letter.
 
           applyGlowToElement(span, nextColor);
           // Apply color to current letter.
@@ -358,6 +441,7 @@ function cycleMarqueeColors() {
      previousMarqueeColors = nextMarqueeColors;
      // Replace old memory with new cycle's colors.
 }
+
 function startHeaderColorCycle() {
      if (!marquee) {
           return;
@@ -383,6 +467,9 @@ let bgWidth = 0;
 let bgHeight = 0;
 let bgParticleCount = 0;
 let resizeTimer = null;
+
+const sparkleColorEngine = createColorEngine(getSparklePalette);
+// Base sparkle rain now uses the same shared engine pattern too.
 
 /* NOTE: CANVAS */
 
@@ -421,7 +508,6 @@ function setBgParticleCount() {
 
 function createBgParticle() {
      const sparkleSettings = getSparkleSettings();
-     const sparklePalette = getSparklePalette();
      const x = Math.random() * bgWidth;
 
      return {
@@ -429,7 +515,8 @@ function createBgParticle() {
           baseX: x,
           y: Math.random() * bgHeight,
           char: Math.random() < 0.5 ? "✦" : "✧",
-          color: randomItem(sparklePalette),
+          color: sparkleColorEngine.next(),
+          // Pull next sparkle color from shared engine, avoid repeats.
           size: randomNumber(sparkleSettings.sizeMin, sparkleSettings.sizeMax),
           speed: randomNumber(sparkleSettings.speedMin, sparkleSettings.speedMax),
           wobbleOffset: randomNumber(0, Math.PI * 2),

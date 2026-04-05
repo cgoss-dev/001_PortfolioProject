@@ -30,12 +30,17 @@ const sparkles = [];
 
 const sparkleChars = ["✦", "✧"];
 const sparkleColors = getRainbowPalette();
+// This comes from CSS/theme system, and feeds this INTO the shared color engine below.
 
 let sparkleSpawnTimer = 0;
 const sparkleSpawnDelay = 50; // Lower number = more sparkles, more often.
 const sparkleSpawnCap = 25; // Max number of sparkles allowed on screen at once.
 
-let previousSparkleColor = null; // Gotta store previous color somewhere, to prevent dupes.
+// NOTE: SHARED COLOR ENGINE (HOOK)
+// This is the SAME engine structure that marquee uses. One engine = consistent behavior everywhere.
+
+const sparkleColorEngine = createColorEngine(sparkleColors);
+// Creates a reusable color engine instance using rainbow palette theme. This handles "no immediate repeats" logic internally.
 
 // NOTE: INPUT HANDLERS
 // Gotta add touchscreen capability later, but no idea how.
@@ -122,18 +127,14 @@ function drawPlayer() {
 }
 
 // NOTE: SPARKLE SPAWN
-// Creates one falling sparkle above the canvas.
-// Uses the same wobble idea as the base sparkle rain.
+// Creates one falling sparkle above the canvas. Uses same wobble idea as the base sparkle rain.
 
 function createSparkle() {
      const x = Math.random() * (gameCanvas.width - 20) + 10;
      // Pick a random X position across the width of the canvas. The -20/+10 just keeps it slightly away from the edges.
 
-     const nextSparkleColor = randomItemExcept(sparkleColors, previousSparkleColor);
-     // Pick a random color from the rainbow palette, but NOT same color as the last sparkle.
-
-     previousSparkleColor = nextSparkleColor;
-     // Store this color so the NEXT sparkle can avoid repeating it.
+     const nextSparkleColor = sparkleColorEngine.next();
+     // Pull next color from the shared engine, guarantees no immediate duplicate colors and keeps behavior consistent with marquee later.
 
      sparkles.push({
           // Push/create a new sparkle object and add it to the array.
@@ -166,8 +167,7 @@ function updateSparkleSpawns() {
 }
 
 // NOTE: SPARKLE MOVEMENT
-// Moves sparkles downward and side-to-side.
-// Removes them once they leave the bottom of the canvas.
+// Moves sparkles downward and side-to-side, then removes them once they leave the bottom of the canvas.
 
 function updateSparkles() {
      for (let i = sparkles.length - 1; i >= 0; i -= 1) {
@@ -177,7 +177,7 @@ function updateSparkles() {
 
           sparkle.wobbleOffset += sparkle.wobbleSpeed;
           sparkle.x = sparkle.baseX + Math.sin(sparkle.wobbleOffset) * sparkle.wobbleAmount;
-          // Same wobble logic as the base sparkle rain.
+          // Same wobble logic as the base js sparkle rain background.
 
           if (sparkle.y > gameCanvas.height + 30) {
                sparkles.splice(i, 1);
@@ -216,7 +216,7 @@ function drawGameBackground() {
      gameCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
      // Do I want the canvas to have a solid black backround?
      // If it's transparent, I can reuse the white particles as extra visual noise in the game.
-     // If it's solid, it's more versatile in future games that have no use for falling particles.
+     // But if it's solid, it's more versatile in future games that have no use for falling particles.
      gameCtx.fillRect(0, 0, gameCanvas.width, gameCanvas.height);
 }
 
