@@ -1,5 +1,4 @@
 <!-- NOTE: BASE HTML -->
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -9,17 +8,16 @@
      <link rel="stylesheet" href="style.css">
 </head>
 <body>
-     <canvas id="siteBgCanvas" class="site-bg-canvas"></canvas>
      <div class="body-ody">
 
           <header>
-               <div class="menu-pocket">
-                    <button class="menu-button" aria-label="navigation menu">
+               <div class="dropdown-low">
+                    <button class="nav-button" aria-label="Menu button.">
                     <!-- ARIA is "Accessible Rich Internet Applications". -->
                          +
                     </button>
-                    <nav class="dropdown-low" id="dropdownLow">
-                         <ul class="nav-menu">
+                    <nav class="nav-menu">
+                         <ul>
                               <li><a href="#">Free Trash</a></li>
                               <li><a href="https://github.com/cgoss-dev" target="_blank" rel="noopener noreferrer">Tiny Crimes</a></li>
                               <li><a href="https://www.linkedin.com/chrisgoss206" target="_blank" rel="noopener noreferrer">Stalk Me</a></li>
@@ -27,22 +25,19 @@
                     </nav>
                </div>
                <h1>
-                    <a href="index.html" class="marquee">CHRIS GOSS</a>
+                    <a href="index.html" id="marquee">CHRIS GOSS</a>
                </h1>
                <div class="hero-blurb">
-                    <p class="tagline">Three raccoons in a trenchcoat.</p>
-                    <!-- Actually an army of armadillos. Probably a platypus on parade. World's worst wombat wrangler. Retired capybara cowboy. -->
-                    <p class="role">Seattle developer with too many ideas and not enough skill... or chill.</p>
+                    <p class="tagline">Seattle developer... too many ideas, not enough chill.</p>
                     <!-- Building apps with HTML I found in a ditch. Making CSS do weird stuff on purpose. Driving unsupervised through Javascript. -->
                </div>
           </header>
 
           <main class="main-squeeze">
-               <div class="canvas-crib">
+               <div>
                     <canvas id="miniGameCanvas" width="480" height="480"></canvas>
                     <!-- Gotta have actual px dimensions for canvas to operate. Iphone SE is 640x1136. Keep this at multiples of 16px. -->
                </div>
-               <!-- <a href="https://www.xkcd.com/137/" target="_blank" rel="noopener noreferrer">xkcd#137</a> -->
           </main>
 
      </div>
