@@ -31,7 +31,8 @@
      /* NOTE: PAGE LAYOUT */
 
      --page-width-wide: 72rem;
-     --page-padding: clamp(1rem, 4vw, 2rem);
+     --page-padding-y: clamp(0.75rem, 4vw, 2rem);
+     --page-padding-x: calc(var(--page-padding-y) * 3);
      --page-section-gap: clamp(0.75rem, 3vw, 1.5rem);
 
      --menu-button-color: var(--text-color);
@@ -40,6 +41,8 @@
      --menu-canvasboard-width-min: 12rem;
      --menu-item-padding: 1rem;
      --menu-opacity-open: 0.92;
+     --menu-edge-gap-y: 1rem;
+     --menu-stack-gap: calc(var(--menu-edge-gap-y) / 2);
 
      /* NOTE: TEXT */
 
@@ -52,7 +55,7 @@
 
      --text-color-marquee: var(--text-color);
      --text-color-dropdown: var(--text-color);
-     --text-color-tagline: var(--text-muted);
+     --text-color-tagline: var(--text-color);
 
      /* JS TEXT COLOR CYCLE CONTROL */
      /* Core JS reads this exact variable name. */
@@ -66,9 +69,9 @@
      --glow-depth: 0 0.75rem 1.75rem rgba(0, 0, 0, 0.5);
      /* offset-x   offset-y   blur-radius   color */
 
-     --glow-core: 0 0 0.05rem;
-     --glow-soft: 0 0 0.25rem;
-     --glow-wide: 0 0 0.75rem;
+     --glow-core: 0 0 clamp(0.02rem, 0.08vw, 0.05rem);
+     --glow-soft: 0 0 clamp(0.08rem, 0.3vw, 0.25rem);
+     --glow-wide: 0 0 clamp(0.25rem, 0.9vw, 0.75rem);
      --glow-max: 0 0 1rem;
 
      --glow-text:
@@ -82,7 +85,8 @@
           var(--glow-max) var(--canvasboard-glow-color);
 
      /* Core JS reads these exact names for the bungee-style +/- glow. */
-     --glow-particle-blur: 8;
+     --glow-bg-particle-blur: 12;
+     --glow-game-particle-blur: 16;
      --bungee-glow-blur: 0 0 0.05rem;
      --bungee-shadow-offset-1: 0.125rem 0.125rem 0 rgba(0, 0, 0, 0.8);
      --bungee-shadow-offset-2: 0.25rem 0.25rem 0 rgba(0, 0, 0, 0.6);
@@ -113,8 +117,8 @@
      --sparkle-count-max: 180;
      --sparkle-density: 0.00015;
 
-     --sparkle-size-min: 12;
-     --sparkle-size-max: 24;
+     --sparkle-size-min: 20;
+     --sparkle-size-max: 25;
 
      --sparkle-speed-min: 0.2;
      --sparkle-speed-max: 0.7;
@@ -147,21 +151,25 @@ html {
 
 body {
      margin: 0;
-     min-height: 100vh;
+     height: 100svh;
      background: var(--bg-color);
      color: var(--text-color);
      font-family: var(--font-body);
      position: relative;
-     overflow-x: hidden;
+     overflow: hidden; /* Stop scroll function */
 }
 
 .body-ody {
      width: 100%;
      max-width: var(--page-width-wide);
+     height: 100svh;
      margin: 0 auto;
-     padding: var(--page-padding);
+     padding: var(--page-padding-y) var(--page-padding-x);
      position: relative;
      z-index: var(--ui-layer-z);
+
+     display: flex;
+     flex-direction: column;
 }
 
 /* NOTE: HEADER */
@@ -202,6 +210,8 @@ h1 {
      display: flex;
      flex-direction: column;
      align-items: flex-end;
+     padding-top: var(--menu-stack-gap);
+     gap: var(--menu-stack-gap);
 }
 
 .nav-button {
@@ -241,14 +251,14 @@ h1 {
 
 .nav-menu {
      list-style: none;
-     margin: var(--menu-dropdown-offset-y) 0 0;
+     margin: 0;
      padding: 0;
 
      min-width: var(--menu-canvasboard-width-min);
      border: var(--canvasboard-border);
      border-radius: var(--canvasboard-radius);
      overflow: hidden;
-     background: rgba(0, 0, 0, 0.92);
+     background: rgba(0, 0, 0, 0.9);
      box-shadow: var(--glow-canvasboard);
 
      opacity: 0;
@@ -323,10 +333,20 @@ h1 {
 
 .main-squeeze {
      width: 100%;
+     flex: 1;
+     min-height: 0;
+
+     display: flex;
+     align-items: flex-end;
 }
 
 .game-shell {
      width: 100%;
+     min-height: 0;
+
+     display: flex;
+     align-items: flex-end;
+     justify-content: center;
 }
 
 /* NOTE: BACKGROUND SPARKLE CANVAS */
@@ -345,10 +365,12 @@ h1 {
 /* NOTE: MAIN GAME CANVAS */
 
 #miniGameCanvas {
-     display: var(--canvas-display);
-     width: var(--canvas-width);
-     height: var(--canvas-height);
+     display: block;
+     width: auto;
+     height: 100%;
      max-width: 100%;
+     max-height: 100%;
+     aspect-ratio: 1 / 1;
      background: var(--canvas-bg);
 
      border: var(--canvasboard-border);

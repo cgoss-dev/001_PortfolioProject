@@ -36,7 +36,8 @@ function getTextSettings() {
 
 function getGlowSettings() {
      return {
-          particleBlur: getCssNumber("--glow-particle-blur", 8),
+          bgParticleBlur: getCssNumber("--glow-bg-particle-blur", 12),
+          gameParticleBlur: getCssNumber("--glow-game-particle-blur", 16),
           bungeeGlowBlur: getCssValue("--bungee-glow-blur") || "0 0 0.05rem",
           bungeeShadowOffset1: getCssValue("--bungee-shadow-offset-1") || "0.125rem 0.125rem 0 rgba(0, 0, 0, 0.8)",
           bungeeShadowOffset2: getCssValue("--bungee-shadow-offset-2") || "0.25rem 0.25rem 0 rgba(0, 0, 0, 0.6)"
@@ -582,7 +583,7 @@ function drawBgParticles() {
           siteBgCtx.textAlign = "center";
           siteBgCtx.textBaseline = "middle";
           siteBgCtx.fillStyle = p.color;
-          siteBgCtx.shadowBlur = glowSettings.particleBlur;
+          siteBgCtx.shadowBlur = glowSettings.bgParticleBlur;
           siteBgCtx.shadowColor = p.color;
           siteBgCtx.fillText(p.char, p.x, p.y);
           siteBgCtx.restore();

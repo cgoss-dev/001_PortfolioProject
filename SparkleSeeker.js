@@ -282,11 +282,29 @@ function drawSparkles() {
           const sparkle = sparkles[i];
 
           miniGameCtx.save();
+
           miniGameCtx.font = `${sparkle.size}px Arial, Helvetica, sans-serif`;
+
+          // NOTE: COLOR BOOST
+          // Brighten colored sparkles slightly so they compete with white sparkles visually.
           miniGameCtx.fillStyle = sparkle.color;
-          miniGameCtx.shadowBlur = glowSettings.particleBlur;
+
+          // NOTE: GLOW BOOST
+          // Multiply blur slightly so colored sparkles read brighter.
+          miniGameCtx.shadowBlur = glowSettings.gameParticleBlur * 1.2;
+
           miniGameCtx.shadowColor = sparkle.color;
+
+          // NOTE: DOUBLE DRAW FOR INTENSITY
+          // First pass (glow)
+          miniGameCtx.globalAlpha = 0.9;
           miniGameCtx.fillText(sparkle.char, sparkle.x, sparkle.y);
+
+          // Second pass (core brightness)
+          miniGameCtx.globalAlpha = 1;
+          miniGameCtx.shadowBlur = 0;
+          miniGameCtx.fillText(sparkle.char, sparkle.x, sparkle.y);
+
           miniGameCtx.restore();
      }
 }
@@ -302,7 +320,7 @@ function drawMiniGameBackground() {
      miniGameCtx.clearRect(0, 0, miniGameWidth, miniGameHeight);
      // Clear using the visible canvas size so drawing lines up with what the user sees.
 
-     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
+     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.75)"; // Canvas opacity.
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 }
 
