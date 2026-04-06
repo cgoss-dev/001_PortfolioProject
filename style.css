@@ -47,10 +47,10 @@
      --font-body: "Noto Sans Mono", monospace;
      --font-fancy: "Bungee Shade", monospace;
 
-     --text-menu-size: clamp(2rem, 8vw, 4rem);
+     --text-menu-size: clamp(1rem, 4vw, 2rem);
      --text-title-size: var(--text-menu-size);
-     --text-tagline-size: clamp(0.75rem, 5vw, 1rem);
-     --text-role-size: clamp(0.75rem, 5vw, 1rem);
+     --text-tagline-size: clamp(0.75rem, 3vw, 1rem);
+     --text-role-size: clamp(0.75rem, 3vw, 1rem);
 
      --text-title-color: var(--text-color);
      --text-tagline-color: var(--text-muted);
@@ -127,11 +127,10 @@
      --sparkle-respawn-offset-bottom: 24;
 
      /* NOTE: SHARED COLOR ENGINE PALETTES */
-     /* These variables are the color lists your JS color engine reads from.
-        Rainbow is mainly for marquee text, and sparkle colors are for falling particles/game sparkles. */
+     /* These variables the color engine reads from. */
 
      --sparkle-color-1: var(--text-color);
-     --sparkle-color-2: var(--text-color);
+     /* --sparkle-color-2: var(--text-color);
      --sparkle-color-3: var(--text-color);
      --sparkle-color-4: var(--text-color);
      --sparkle-color-5: var(--text-color);
@@ -141,8 +140,7 @@
      --sparkle-color-9: var(--text-color);
      --sparkle-color-10: var(--text-color);
      --sparkle-color-11: var(--text-color);
-     --sparkle-color-12: var(--text-color);
-     --sparkle-color-13: var(--text-color);
+     --sparkle-color-12: var(--text-color); */
 
      /* NOTE: RAINBOW */
 
@@ -172,13 +170,14 @@
      --menu-layer-z: 20;
 }
 
-/* NOTE: STRUCTURE */
+/* NOTE: CORE */
 
 *,
 *::before,
 *::after { box-sizing: border-box; }
 
-html { font-size: 16px; }
+html { font-size: 12px; }
+/* BASE FONT SIZE */
 
 body {
      margin: 0;
