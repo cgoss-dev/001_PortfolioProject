@@ -44,11 +44,15 @@
      --font-body: "Noto Sans Mono", monospace;
      --font-fancy: "Bungee Shade", monospace;
 
-     --text-title-size: clamp(2rem, 3vw, 2.5rem);
+     /* --text-title-size: clamp(2rem, 3vw, 2.5rem);
      --text-menu-size: clamp(2rem, 3vw, 2.5rem);
      --text-tagline-size: clamp(0.75rem, 1vw, 1rem);
-     --text-role-size: clamp(0.75rem, 1vw, 1rem);
+     --text-role-size: clamp(0.75rem, 1vw, 1rem); */
      /* clamp(MINIMUM, FLEXIBLE, MAXIMUM) */
+     --text-title-size: clamp(2rem, 4vw, 3.5rem);
+     --text-menu-size: clamp(2rem, 4vw, 3.5rem);
+     --text-tagline-size: clamp(0.75rem, 1.2vw, 1.25rem);
+     --text-role-size: clamp(0.75rem, 1.2vw, 1.25rem);
 
      --text-title-color: var(--text-color);
      --text-tagline-color: var(--text-muted);
