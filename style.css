@@ -47,7 +47,7 @@
      --font-body: "Noto Sans Mono", monospace;
      --font-fancy: "Bungee Shade", monospace;
 
-     --text-menu-size: clamp(1rem, 3vw, 2rem);
+     --text-menu-size: clamp(2rem, 4vw, 3rem);
      --text-title-size: var(--text-menu-size);
      --text-tagline-size: clamp(0.75rem, 2vw, 1rem);
      --text-role-size: clamp(0.75rem, 2vw, 1rem);
@@ -95,7 +95,7 @@
 
      /* NOTE: PANEL */
 
-     --panel-radius: 1rem;
+     --panel-radius: 2rem;
      --panel-border-width: 0.5rem;
      --panel-border-color: var(--accent-color);
      --panel-border: var(--panel-border-width) solid var(--panel-border-color);
