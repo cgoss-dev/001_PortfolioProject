@@ -46,8 +46,8 @@
 
      --text-title-size: clamp(2rem, 3vw, 2.5rem);
      --text-menu-size: clamp(2rem, 3vw, 2.5rem);
-     --text-tagline-size: clamp(1rem, 1.5vw, 1.25rem);
-     --text-role-size: clamp(1rem, 1.5vw, 1.25rem);
+     --text-tagline-size: clamp(0.75rem, 1.25vw, 1rem);
+     --text-role-size: clamp(0.75rem, 1.25vw, 1rem);
 
      --text-title-color: var(--text-color);
      --text-tagline-color: var(--text-muted);
