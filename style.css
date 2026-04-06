@@ -44,10 +44,10 @@
      --font-body: "Noto Sans Mono", monospace;
      --font-fancy: "Bungee Shade", monospace;
 
-     --text-menu-size: clamp(2rem, 4vw, 3rem);
-     --text-title-size: var(--text-menu-size);
-     --text-tagline-size: clamp(1rem, 2vw, 1.25rem);
-     --text-role-size: clamp(1rem, 2vw, 1.25rem);
+     --text-title-size: clamp(2rem, 3vw, 2.5rem);
+     --text-menu-size: clamp(2rem, 3vw, 2.5rem);
+     --text-tagline-size: clamp(1rem, 1.5vw, 1.25rem);
+     --text-role-size: clamp(1rem, 1.5vw, 1.25rem);
 
      --text-title-color: var(--text-color);
      --text-tagline-color: var(--text-muted);
@@ -164,7 +164,7 @@ html { font-size: 16px; }
 /* BASE FONT SIZE, KEEP THIS AT 16px! */
 
 body {
-     margin: 0;
+     margin: 1;
      min-height: 100vh;
      background: var(--bg-color);
      color: var(--text-color);
