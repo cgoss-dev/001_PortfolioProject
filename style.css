@@ -35,12 +35,12 @@
      /* NOTE: RESIZING */
 
      --page-padding: 1rem;
-     --page-width-mobile: 30rem;
+     --page-width-mobile: 32rem;
      --page-width-wide: 48rem;
      --hero-gap-mobile: 0.25rem;
      --hero-gap-wide: 0.75rem;
      --main-top-space-mobile: 1rem;
-     --main-top-space-wide: 1.25rem;
+     --main-top-space-wide: 2rem;
 
      /* NOTE: TEXT */
 
@@ -176,8 +176,8 @@
 *::before,
 *::after { box-sizing: border-box; }
 
-html { font-size: 10px; }
-/* BASE FONT SIZE */
+html { font-size: 16px; }
+/* BASE FONT SIZE, KEEP THIS AT 16px! */
 
 body {
      margin: 0;
