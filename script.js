@@ -28,16 +28,16 @@ function getCssColor(variableName, fallback = "#ffffff") {
 function getTextSettings() {
      return {
           rainbowCycleSpeed: getCssNumber("--text-rainbow-cycle-speed", 900),
-          glowCore: getCssValue("--glow-core") || "0 0 0.06rem",
+          glowCore: getCssValue("--glow-core") || "0 0 0.05rem",
           glowSoft: getCssValue("--glow-soft") || "0 0 0.25rem",
-          glowWide: getCssValue("--glow-wide") || "0 0 0.9rem"
+          glowWide: getCssValue("--glow-wide") || "0 0 0.75rem"
      };
 }
 
 function getGlowSettings() {
      return {
           particleBlur: getCssNumber("--glow-particle-blur", 8),
-          bungeeGlowBlur: getCssValue("--bungee-glow-blur") || "0 0 0.375rem",
+          bungeeGlowBlur: getCssValue("--bungee-glow-blur") || "0 0 0.05rem",
           bungeeShadowOffset1: getCssValue("--bungee-shadow-offset-1") || "0.125rem 0.125rem 0 rgba(0, 0, 0, 0.8)",
           bungeeShadowOffset2: getCssValue("--bungee-shadow-offset-2") || "0.25rem 0.25rem 0 rgba(0, 0, 0, 0.6)"
      };
@@ -60,6 +60,28 @@ function getSparkleSettings() {
           respawnOffsetTop: getCssNumber("--sparkle-respawn-offset-top", -20),
           respawnOffsetBottom: getCssNumber("--sparkle-respawn-offset-bottom", 24)
      };
+}
+
+function getRainbowPalette() {
+     return [
+          getCssColor("--rainbow-pink"),
+          getCssColor("--rainbow-red"),
+          getCssColor("--rainbow-maroon"),
+          getCssColor("--rainbow-peach"),
+          getCssColor("--rainbow-flamingo"),
+          getCssColor("--rainbow-yellow"),
+          getCssColor("--rainbow-green"),
+          getCssColor("--rainbow-teal"),
+          getCssColor("--rainbow-sky"),
+          getCssColor("--rainbow-blue"),
+          getCssColor("--rainbow-lavender"),
+          getCssColor("--rainbow-violet")
+     ].filter(Boolean);
+}
+
+function getSparklePalette() {
+     return ["#ffffff"];
+     // Background sparkles stay white, and game sparkles can still use the rainbow palette separately.
 }
 
 /* NOTE: UTILITIES */
@@ -216,7 +238,7 @@ function createColorEngine(colorsOrFactory) {
 }
 
 /* NOTE: GLOW */
-/* Marquee uses universal box-shadow style glow. Menu glyph uses old shadow trick because bungee font needs extra help. */
+/* Marquee uses universal text-shadow style glow. Menu glyph uses old shadow trick because bungee font needs extra help. */
 
 function buildUniversalTextGlow(color) {
      const textSettings = getTextSettings();
@@ -240,79 +262,99 @@ function buildBungeeGlyphGlow(color) {
 
 /* NOTE: MENU */
 
-const menuButton = document.querySelector(".menu-button");
-const dropdownLow = document.getElementById("dropdownLow");
+const navButton = document.querySelector(".nav-button");
+const dropdownLow = document.querySelector(".dropdown-low");
+const navMenu = document.getElementById("navMenu");
 
-function syncMenuButtonGlow() {
-     if (!menuButton) {
+function syncNavButtonGlow() {
+     if (!navButton) {
           return;
      }
 
-     const currentColor = getCssColor("--menu-button-color", getCssColor("--text-color", "#ffffff"));
+     const currentColor = getCssColor("--menu-button-glow-color", getCssColor("--menu-button-color", getCssColor("--text-color", "#ffffff")));
 
-     menuButton.style.color = currentColor;
-     menuButton.style.webkitTextFillColor = currentColor;
-     menuButton.style.textShadow = buildBungeeGlyphGlow(currentColor);
+     navButton.style.color = getCssColor("--menu-button-color", "#ffffff");
+     navButton.style.webkitTextFillColor = currentColor;
+     navButton.style.textShadow = buildBungeeGlyphGlow(currentColor);
 }
 
-if (menuButton && dropdownLow) {
-     menuButton.addEventListener("click", function () {
-          dropdownLow.classList.toggle("menu-open");
+function openMenu() {
+     if (!dropdownLow || !navButton) {
+          return;
+     }
 
-          if (dropdownLow.classList.contains("menu-open")) {
-               menuButton.textContent = "×";
-          } else {
-               menuButton.textContent = "+";
-          }
+     dropdownLow.classList.add("menu-open");
+     navButton.textContent = "×";
+     navButton.setAttribute("aria-expanded", "true");
+     syncNavButtonGlow();
+}
 
-          syncMenuButtonGlow();
+function closeMenu() {
+     if (!dropdownLow || !navButton) {
+          return;
+     }
+
+     dropdownLow.classList.remove("menu-open");
+     navButton.textContent = "+";
+     navButton.setAttribute("aria-expanded", "false");
+     syncNavButtonGlow();
+}
+
+function toggleMenu() {
+     if (!dropdownLow) {
+          return;
+     }
+
+     if (dropdownLow.classList.contains("menu-open")) {
+          closeMenu();
+     } else {
+          openMenu();
+     }
+}
+
+if (navButton && dropdownLow) {
+     navButton.addEventListener("click", function () {
+          toggleMenu();
      });
 
-     menuButton.addEventListener("mouseenter", function () {
-          syncMenuButtonGlow();
+     navButton.addEventListener("mouseenter", function () {
+          syncNavButtonGlow();
      });
 
-     menuButton.addEventListener("mouseleave", function () {
-          syncMenuButtonGlow();
+     navButton.addEventListener("mouseleave", function () {
+          syncNavButtonGlow();
      });
 
-     menuButton.addEventListener("focus", function () {
-          syncMenuButtonGlow();
+     navButton.addEventListener("focus", function () {
+          syncNavButtonGlow();
      });
 
-     menuButton.addEventListener("blur", function () {
-          syncMenuButtonGlow();
+     navButton.addEventListener("blur", function () {
+          syncNavButtonGlow();
      });
 }
 
 document.addEventListener("click", function (event) {
-     if (!menuButton || !dropdownLow) {
+     if (!navButton || !dropdownLow) {
           return;
      }
 
-     const clickedInsideButton = menuButton.contains(event.target);
-     const clickedInsideMenu = dropdownLow.contains(event.target);
+     const clickedInsideDropdown = dropdownLow.contains(event.target);
 
-     if (!clickedInsideButton && !clickedInsideMenu) {
-          dropdownLow.classList.remove("menu-open");
-          menuButton.textContent = "+";
-          syncMenuButtonGlow();
+     if (!clickedInsideDropdown) {
+          closeMenu();
      }
 });
 
 document.addEventListener("keydown", function (event) {
      if (event.key === "Escape") {
-          if (dropdownLow && dropdownLow.classList.contains("menu-open")) {
-               dropdownLow.classList.remove("menu-open");
-               menuButton.textContent = "+";
-               syncMenuButtonGlow();
-          }
+          closeMenu();
      }
 });
 
 /* NOTE: TEXT */
 
-const marquee = document.querySelector(".marquee");
+const marquee = document.getElementById("marquee");
 const marqueeOriginalText = marquee ? marquee.textContent : "";
 let marqueeSpans = [];
 let visibleMarqueeSpans = [];
@@ -407,8 +449,8 @@ function startHeaderColorCycle() {
 
 /* NOTE: CANVAS */
 
-const bgCanvas = document.getElementById("siteBgCanvas");
-const bgCtx = bgCanvas ? bgCanvas.getContext("2d") : null;
+const siteBgCanvas = document.getElementById("siteBgCanvas");
+const siteBgCtx = siteBgCanvas ? siteBgCanvas.getContext("2d") : null;
 
 const bgParticles = [];
 let bgWidth = 0;
@@ -450,9 +492,7 @@ function setBgParticleCount() {
      );
 }
 
-/* NOTE: PARTICLES */
-
-function createBgParticle() {
+function createBgParticle(startAboveScreen = false) {
      const sparkleSettings = getSparkleSettings();
      const x = Math.random() * bgWidth;
 
@@ -464,9 +504,11 @@ function createBgParticle() {
      return {
           x: x,
           baseX: x,
-          y: Math.random() * bgHeight,
+          y: startAboveScreen
+               ? sparkleSettings.respawnOffsetTop
+               : Math.random() * bgHeight,
           char: Math.random() < 0.5 ? "✦" : "✧",
-          color: sparkleColorEngine.next(),
+          color: sparkleColorEngine.next() || getCssColor("--text-color", "#ffffff"),
           // Pull next sparkle color from shared engine, avoid repeats.
           size: randomNumber(sparkleSettings.sizeMin, sparkleSettings.sizeMax),
           speed: randomNumber(sparkleSettings.speedMin, sparkleSettings.speedMax),
@@ -486,14 +528,14 @@ function initBgParticles(count) {
 }
 
 function setupSparkleRain() {
-     if (!bgCanvas || !bgCtx) {
+     if (!siteBgCanvas || !siteBgCtx) {
           return;
      }
 
      sparkleColorEngine = createColorEngine(getSparklePalette);
      // Rebuild the engine during setup so it reads the latest sparkle palette after the page styles are in place.
 
-     resizeBgCanvasFromCss(bgCanvas);
+     resizeBgCanvasFromCss(siteBgCanvas);
      setBgParticleCount();
      initBgParticles(bgParticleCount);
 }
@@ -509,23 +551,22 @@ function updateBgParticles() {
           p.x = p.baseX + Math.sin(p.wobbleOffset) * p.wobbleAmount;
 
           if (p.y > bgHeight + sparkleSettings.respawnOffsetBottom) {
-               bgParticles[i] = createBgParticle();
-               bgParticles[i].y = sparkleSettings.respawnOffsetTop;
+               bgParticles[i] = createBgParticle(true);
           }
      }
 }
 
 function drawBackground() {
-     if (!bgCtx) {
+     if (!siteBgCtx) {
           return;
      }
      // Defensive guard: if the canvas context is missing, stop here instead of trying to draw on "nothing".
 
-     bgCtx.clearRect(0, 0, bgWidth, bgHeight);
+     siteBgCtx.clearRect(0, 0, bgWidth, bgHeight);
 }
 
 function drawBgParticles() {
-     if (!bgCtx) {
+     if (!siteBgCtx) {
           return;
      }
      // Same idea here: bail out safely if the drawing context does not exist.
@@ -535,21 +576,21 @@ function drawBgParticles() {
      for (let i = 0; i < bgParticles.length; i += 1) {
           const p = bgParticles[i];
 
-          bgCtx.save();
-          bgCtx.globalAlpha = p.opacity;
-          bgCtx.font = `${p.size}px Arial, Helvetica, sans-serif`;
-          bgCtx.textAlign = "center";
-          bgCtx.textBaseline = "middle";
-          bgCtx.fillStyle = p.color;
-          bgCtx.shadowBlur = glowSettings.particleBlur;
-          bgCtx.shadowColor = p.color;
-          bgCtx.fillText(p.char, p.x, p.y);
-          bgCtx.restore();
+          siteBgCtx.save();
+          siteBgCtx.globalAlpha = p.opacity;
+          siteBgCtx.font = `${p.size}px Arial, Helvetica, sans-serif`;
+          siteBgCtx.textAlign = "center";
+          siteBgCtx.textBaseline = "middle";
+          siteBgCtx.fillStyle = p.color;
+          siteBgCtx.shadowBlur = glowSettings.particleBlur;
+          siteBgCtx.shadowColor = p.color;
+          siteBgCtx.fillText(p.char, p.x, p.y);
+          siteBgCtx.restore();
      }
 }
 
 function drawSparkleRain() {
-     if (!bgCanvas || !bgCtx) {
+     if (!siteBgCanvas || !siteBgCtx) {
           return;
      }
 
@@ -567,16 +608,18 @@ function handleResize() {
 
      resizeTimer = window.setTimeout(function () {
           setupSparkleRain();
-          syncMenuButtonGlow();
+          syncNavButtonGlow();
+          cycleMarqueeColors();
      }, 150);
 }
 
 /* NOTE: STARTUP */
 
 startHeaderColorCycle();
-syncMenuButtonGlow();
+syncNavButtonGlow();
+closeMenu();
 
-if (bgCanvas && bgCtx) {
+if (siteBgCanvas && siteBgCtx) {
      setupSparkleRain();
      drawSparkleRain();
      window.addEventListener("resize", handleResize);
@@ -591,12 +634,12 @@ if (bgCanvas && bgCtx) {
 // alert("after header");
 
 // alert("before menu");
-// syncMenuButtonGlow();
+// syncNavButtonGlow();
 // alert("after menu");
 
 // alert("before canvas check");
 
-// if (bgCanvas && bgCtx) {
+// if (siteBgCanvas && siteBgCtx) {
 //      alert("before sparkle setup");
 //      setupSparkleRain();
 //      alert("after sparkle setup");

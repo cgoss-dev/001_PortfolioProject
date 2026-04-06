@@ -7,11 +7,11 @@
 
 // NOTE: BASE CONST
 
-const gameCanvas = document.getElementById("miniGameCanvas");
-const gameCtx = gameCanvas ? gameCanvas.getContext("2d") : null;
+const miniGameCanvas = document.getElementById("miniGameCanvas");
+const miniGameCtx = miniGameCanvas ? miniGameCanvas.getContext("2d") : null;
 
-let gameWidth = 0;
-let gameHeight = 0;
+let miniGameWidth = 0;
+let miniGameHeight = 0;
 // These store the canvas size in CSS pixels.
 // We use these for gameplay math so movement/drawing matches the canvas as it appears on screen.
 
@@ -25,11 +25,34 @@ const player = {
      x: 0,
      y: 0,
      char: playerFaces.neutral,
-     size: 64, // Size of player emoji. Recommended 40-60px for finger size.
-     speed: 3, // Base player speed.
-     radius: 30, // Size of collision box/circle.
-     sparkleFaceTimer: 0 // Counts down how long the sparkle face should stay active after collecting a sparkle.
+     size: 64,
+     // Size of player emoji. Recommended 40-60px for finger size.
+     speed: 3,
+     // Base player speed.
+     radius: 30,
+     // Size of collision box/circle.
+     sparkleFaceTimer: 0
+     // Counts down how long the sparkle face should stay active after collecting a sparkle.
 };
+
+const keys = {};
+const sparkles = [];
+
+const sparkleChars = ["✦", "✧"];
+
+let sparkleSpawnTimer = 0;
+const sparkleSpawnDelay = 50;
+const sparkleSpawnCap = 25;
+// Lower number = more sparkles, more often.
+// Max number of sparkles allowed on screen at once.
+
+let gameSparkleColorEngine = null;
+
+let keyboardInputBound = false;
+let resizeHandlerBound = false;
+// These stop us from attaching the same listeners more than once if the game ever gets restarted.
+
+// NOTE: UTILITIES
 
 function isCollidingWithSparkle(playerObject, sparkleObject) {
      const dx = playerObject.x - sparkleObject.x;
@@ -37,51 +60,39 @@ function isCollidingWithSparkle(playerObject, sparkleObject) {
      const distance = Math.sqrt(dx * dx + dy * dy);
 
      return distance < playerObject.radius + (sparkleObject.size * 0.25);
-     // Collision circle, so we don't have to rely on glyphs being the exact same size.
+     // Collision circle, so we do not have to rely on glyphs being the exact same size.
 }
 
-const keys = {};
-
-const sparkles = [];
-
-const sparkleChars = ["✦", "✧"];
-const sparkleColors = getRainbowPalette();
-// This comes from CSS/theme system, and feeds this INTO the shared color engine below.
-
-let sparkleSpawnTimer = 0;
-const sparkleSpawnDelay = 50; // Lower number = more sparkles, more often.
-const sparkleSpawnCap = 25; // Max number of sparkles allowed on screen at once.
-
-// NOTE: SHARED COLOR ENGINE
-
-let gameSparkleColorEngine = null;
-
-function resizeGameCanvasFromCss() {
-     if (!gameCanvas || !gameCtx) {
+function resizeMiniGameCanvasFromCss() {
+     if (!miniGameCanvas || !miniGameCtx) {
           return;
      }
 
-     const rect = gameCanvas.getBoundingClientRect();
+     const rect = miniGameCanvas.getBoundingClientRect();
      // This reads the canvas size as it is ACTUALLY being displayed by CSS on the page.
 
      const dpr = window.devicePixelRatio || 1;
      // DPR = device pixel ratio. Helps the canvas stay sharp on retina/high-density screens.
 
-     gameCanvas.width = Math.round(rect.width * dpr);
-     gameCanvas.height = Math.round(rect.height * dpr);
+     miniGameCanvas.width = Math.round(rect.width * dpr);
+     miniGameCanvas.height = Math.round(rect.height * dpr);
      // The canvas has an internal drawing size and a visual CSS size.
      // We resize the internal drawing size to match the displayed size more accurately.
 
-     gameCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+     miniGameCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
      // This makes our drawing coordinates behave like CSS pixels instead of raw device pixels.
 
-     gameWidth = rect.width;
-     gameHeight = rect.height;
+     miniGameWidth = rect.width;
+     miniGameHeight = rect.height;
      // Store the visible canvas size separately so gameplay math uses screen-sized values.
 }
 
 function bindKeyboardInput() {
-     window.addEventListener("keydown", (event) => {
+     if (keyboardInputBound) {
+          return;
+     }
+
+     window.addEventListener("keydown", function (event) {
           const key = event.key.toLowerCase();
 
           if ([
@@ -94,32 +105,34 @@ function bindKeyboardInput() {
           keys[key] = true;
      });
 
-     window.addEventListener("keyup", (event) => {
+     window.addEventListener("keyup", function (event) {
           const key = event.key.toLowerCase();
           keys[key] = false;
      });
+
+     keyboardInputBound = true;
 }
 
 // NOTE: PLAYER
 
 function resetPlayerPosition() {
-     player.x = gameWidth / 2;
-     player.y = gameHeight / 2;
+     player.x = miniGameWidth / 2;
+     player.y = miniGameHeight / 2;
      // Use visible canvas size here, not the raw internal canvas size.
      // Keeps player centered where the user actually sees the canvas.
 }
 
 function clampPlayerToCanvas() {
      const edgePadding = 3;
-     
+
      player.x = Math.max(
           player.radius + edgePadding,
-          Math.min(gameWidth - player.radius - edgePadding, player.x)
+          Math.min(miniGameWidth - player.radius - edgePadding, player.x)
      );
 
      player.y = Math.max(
           player.radius + edgePadding,
-          Math.min(gameHeight - player.radius - edgePadding, player.y)
+          Math.min(miniGameHeight - player.radius - edgePadding, player.y)
      );
      // Clamp against the visible game area so the player stays inside the on-screen canvas.
 }
@@ -155,13 +168,15 @@ function updatePlayerFaceState() {
 }
 
 function drawPlayer() {
-     if (!gameCtx) return;
+     if (!miniGameCtx) {
+          return;
+     }
      // Defensive guard: prevents crashes if canvas context is missing.
 
-     gameCtx.font = `${player.size}px Arial, Helvetica, sans-serif`;
-     gameCtx.textAlign = "center";
-     gameCtx.textBaseline = "middle";
-     gameCtx.fillStyle = "#ffffff";
+     miniGameCtx.font = `${player.size}px Arial, Helvetica, sans-serif`;
+     miniGameCtx.textAlign = "center";
+     miniGameCtx.textBaseline = "middle";
+     miniGameCtx.fillStyle = "#ffffff";
 
      let playerYOffset = 0;
 
@@ -169,24 +184,28 @@ function drawPlayer() {
           playerYOffset = 3;
      }
 
-     gameCtx.fillText(player.char, player.x, player.y + playerYOffset);
+     miniGameCtx.fillText(player.char, player.x, player.y + playerYOffset);
 }
 
 // NOTE: SPARKLES
 
 function createSparkle() {
      if (!gameSparkleColorEngine) {
-          gameSparkleColorEngine = createColorEngine(getRainbowPalette());
+          gameSparkleColorEngine = createColorEngine(getRainbowPalette);
      }
-     // Safety fallback: if engine somehow wasn’t created yet, build it here instead of crashing.
+     // Safety fallback: if engine somehow was not created yet, build it here instead of crashing.
+     // Pass the palette FUNCTION, same pattern the updated core script uses.
 
      const sparkleSettings = getSparkleSettings();
-     // Pulls the same sparkle size settings the background particle system uses, keeps both systems reading from the same control center.
+     // Pulls the same sparkle size settings the background particle system uses.
+     // Keeps both systems reading from the same control center.
 
-     const x = Math.random() * (gameWidth - 20) + 10;
+     const x = Math.random() * (miniGameWidth - 20) + 10;
      // Spawn across the visible canvas width instead of the raw internal width.
 
-     const nextSparkleColor = gameSparkleColorEngine.next();
+     const nextSparkleColor = gameSparkleColorEngine.next() || "#ffffff";
+     // Ask the shared color engine for the next color.
+     // Fallback keeps sparkles visible if the palette ever fails.
 
      sparkles.push({
           x: x,
@@ -197,7 +216,6 @@ function createSparkle() {
           // This now matches the same size range logic used by the background sparkles.
           char: randomItem(sparkleChars),
           color: nextSparkleColor,
-
           wobbleOffset: Math.random() * Math.PI * 2,
           wobbleSpeed: 0.02 + Math.random() * 0.03,
           wobbleAmount: 5 + Math.random() * 10
@@ -225,7 +243,7 @@ function updateSparkles() {
           sparkle.wobbleOffset += sparkle.wobbleSpeed;
           sparkle.x = sparkle.baseX + Math.sin(sparkle.wobbleOffset) * sparkle.wobbleAmount;
 
-          if (sparkle.y > gameHeight + 30) {
+          if (sparkle.y > miniGameHeight + 30) {
                sparkles.splice(i, 1);
           }
           // Remove sparkles when they move below the visible canvas height.
@@ -250,42 +268,46 @@ function collectSparkles() {
 }
 
 function drawSparkles() {
-     if (!gameCtx) return;
+     if (!miniGameCtx) {
+          return;
+     }
      // Defensive guard: prevents drawing errors if context is missing.
 
      const glowSettings = getGlowSettings();
 
-     gameCtx.textAlign = "center";
-     gameCtx.textBaseline = "middle";
+     miniGameCtx.textAlign = "center";
+     miniGameCtx.textBaseline = "middle";
 
      for (let i = 0; i < sparkles.length; i += 1) {
           const sparkle = sparkles[i];
 
-          gameCtx.save();
-          gameCtx.font = `${sparkle.size}px Arial, Helvetica, sans-serif`;
-          gameCtx.fillStyle = sparkle.color;
-          gameCtx.shadowBlur = glowSettings.particleBlur;
-          gameCtx.shadowColor = sparkle.color;
-          gameCtx.fillText(sparkle.char, sparkle.x, sparkle.y);
-          gameCtx.restore();
+          miniGameCtx.save();
+          miniGameCtx.font = `${sparkle.size}px Arial, Helvetica, sans-serif`;
+          miniGameCtx.fillStyle = sparkle.color;
+          miniGameCtx.shadowBlur = glowSettings.particleBlur;
+          miniGameCtx.shadowColor = sparkle.color;
+          miniGameCtx.fillText(sparkle.char, sparkle.x, sparkle.y);
+          miniGameCtx.restore();
      }
 }
 
 // NOTE: BACKGROUND
 
-function drawGameBackground() {
-     if (!gameCtx) return;
+function drawMiniGameBackground() {
+     if (!miniGameCtx) {
+          return;
+     }
      // Defensive guard for safety.
 
-     gameCtx.clearRect(0, 0, gameWidth, gameHeight);
+     miniGameCtx.clearRect(0, 0, miniGameWidth, miniGameHeight);
      // Clear using the visible canvas size so drawing lines up with what the user sees.
 
-     gameCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
-     gameCtx.fillRect(0, 0, gameWidth, gameHeight);
+     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
+     miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 }
 
-function updateGameCanvasSize() {
-     resizeGameCanvasFromCss();
+function updateMiniGameCanvasSize() {
+     resizeMiniGameCanvasFromCss();
      // Recalculate the internal canvas size so the drawing space matches the CSS display size.
 }
 
@@ -300,7 +322,7 @@ function updateGame() {
 }
 
 function drawGame() {
-     drawGameBackground();
+     drawMiniGameBackground();
      drawSparkles();
      drawPlayer();
 }
@@ -308,26 +330,33 @@ function drawGame() {
 function gameLoop() {
      updateGame();
      drawGame();
-     requestAnimationFrame(gameLoop);
+     window.requestAnimationFrame(gameLoop);
 }
 
 // NOTE: RESIZE HANDLING
 
 function bindResizeHandler() {
-     window.addEventListener("resize", () => {
-          updateGameCanvasSize();
+     if (resizeHandlerBound) {
+          return;
+     }
+
+     window.addEventListener("resize", function () {
+          updateMiniGameCanvasSize();
           resetPlayerPosition();
      });
      // On resize, first update the canvas drawing space, then re-center the player inside the new visible area.
+
+     resizeHandlerBound = true;
 }
 
 // NOTE: STARTUP
 
 function startSparkleSeeker() {
-     gameSparkleColorEngine = createColorEngine(getRainbowPalette());
+     gameSparkleColorEngine = createColorEngine(getRainbowPalette);
      // Create the game's own color engine here so CSS + DOM are ready BEFORE colors are read.
+     // Pass the palette function itself so it can always pull the latest theme colors.
 
-     updateGameCanvasSize();
+     updateMiniGameCanvasSize();
      // Match the game canvas drawing size to the CSS display size before the game starts drawing.
 
      resetPlayerPosition();
@@ -336,7 +365,7 @@ function startSparkleSeeker() {
      gameLoop();
 }
 
-if (!gameCanvas || !gameCtx) {
+if (!miniGameCanvas || !miniGameCtx) {
      console.warn("Sparkle Seeker could not find #miniGameCanvas.");
 } else {
      startSparkleSeeker();

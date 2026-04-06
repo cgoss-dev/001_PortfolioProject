@@ -4,7 +4,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Bungee+Shade&display=swap");
 
 :root {
-     /* NOTE: COLOR */
+     /* COLOR */
 
      --bg-color: #000000;
      --bg-accent: #ffffff;
@@ -12,7 +12,7 @@
      --text-muted: rgba(255, 255, 255, 0.5);
      --accent-color: var(--rainbow-pink);
 
-     /* NOTE: SHARED RAINBOW COLOR ENGINE PALETTE */
+     /* SHARED RAINBOW COLOR ENGINE PALETTE */
      /* Core JS + game JS both pull from these. */
 
      --rainbow-pink: #ea76cb;
@@ -28,13 +28,11 @@
      --rainbow-lavender: #7287fd;
      --rainbow-violet: #8839ef;
 
-     /* NOTE: PAGE */
+     /* NOTE: PAGE LAYOUT */
 
-     --page-padding: clamp(1rem, 2vw, 1.5rem);
      --page-width-wide: 72rem;
-     --page-gap: 1.5rem;
-
-     /* NOTE: MENU */
+     --page-padding: clamp(1rem, 4vw, 2rem);
+     --page-section-gap: clamp(0.75rem, 3vw, 1.5rem);
 
      --menu-button-color: var(--text-color);
      --menu-button-glow-color: var(--text-color);
@@ -49,14 +47,14 @@
      --font-fancy: "Bungee Shade", monospace;
 
      --text-size-marquee: clamp(2rem, 6vw, 4.25rem);
-     --text-size-dropdown: clamp(1.9rem, 4vw, 3rem);
+     --text-size-dropdown: var(--text-size-marquee);
      --text-size-tagline: clamp(0.8rem, 1.3vw, 1.15rem);
 
      --text-color-marquee: var(--text-color);
      --text-color-dropdown: var(--text-color);
      --text-color-tagline: var(--text-muted);
 
-     /* NOTE: JS TEXT COLOR CYCLE CONTROL */
+     /* JS TEXT COLOR CYCLE CONTROL */
      /* Core JS reads this exact variable name. */
 
      --text-rainbow-cycle-speed: 900;
@@ -89,7 +87,7 @@
      --bungee-shadow-offset-1: 0.125rem 0.125rem 0 rgba(0, 0, 0, 0.8);
      --bungee-shadow-offset-2: 0.25rem 0.25rem 0 rgba(0, 0, 0, 0.6);
 
-     /* NOTE: CANVASBOARD */
+     /* CANVASBOARD */
 
      --canvasboard-radius: 1rem;
      --canvasboard-border-width: 0.25rem;
@@ -102,13 +100,13 @@
      --canvas-width: 100%;
      --canvas-height: auto;
 
-     /* NOTE: LAYERS */
+     /* LAYERS */
 
      --sparkle-layer-z: -1;
      --ui-layer-z: 2;
      --menu-layer-z: 20;
 
-     /* NOTE: SPARKLE CONTROL CENTER */
+     /* SPARKLE CONTROL CENTER */
      /* Core JS + game JS both read these exact variables. */
 
      --sparkle-opacity: 1;
@@ -172,7 +170,7 @@ header {
      position: relative;
      display: flex;
      flex-direction: column;
-     gap: 0.5rem;
+     gap: var(--page-section-gap);
      padding-top: 0.25rem;
 }
 
@@ -206,15 +204,13 @@ h1 {
      align-items: flex-end;
 }
 
-/* NOTE: MENU BUTTON */
-
 .nav-button {
      position: relative;
      display: inline-flex;
      align-items: center;
      justify-content: center;
-     min-width: 2.25rem;
-     min-height: 2.25rem;
+     min-width: max(2.75rem, 1em);
+     min-height: max(2.75rem, 1em);
      padding: 0;
      margin: 0;
      background: none;
@@ -224,7 +220,7 @@ h1 {
 
      font-family: var(--font-fancy);
      font-size: var(--text-size-dropdown);
-     line-height: 1;
+     line-height: 0.9;
      color: var(--menu-button-color);
      -webkit-text-fill-color: var(--menu-button-glow-color);
      text-shadow: var(--glow-text);
@@ -313,9 +309,6 @@ h1 {
      line-height: 0.95;
      white-space: nowrap;
 }
-
-/* NOTE: MARQUEE RAINBOW */
-/* Core JS replaces the text with spans and colors them directly. */
 
 #marquee span {
      display: inline-block;
