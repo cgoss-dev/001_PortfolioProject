@@ -47,7 +47,7 @@
      --font-body: "Noto Sans Mono", monospace;
      --font-fancy: "Bungee Shade", monospace;
 
-     --text-menu-size: clamp(2rem, 4vw, 3rem);
+     --text-menu-size: clamp(3rem, 5vw, 4rem);
      --text-title-size: var(--text-menu-size);
      --text-tagline-size: clamp(0.75rem, 2vw, 1rem);
      --text-role-size: clamp(0.75rem, 2vw, 1rem);
