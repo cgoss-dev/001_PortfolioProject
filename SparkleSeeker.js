@@ -2,15 +2,13 @@
 
 // TROUBLESHOOTING
 
-alert("top of game js");
-console.log("top of game js");
+// alert("top of game js");
+// console.log("top of game js");
 
-// Meant to be displayed in the homepage canvas window, or on it's own page.
+// NOTE: BASE CONST
 
 const gameCanvas = document.getElementById("miniGameCanvas");
 const gameCtx = gameCanvas ? gameCanvas.getContext("2d") : null;
-
-// NOTE: PLAYER CONST
 
 const playerFaces = {
      neutral: "😐",
@@ -22,15 +20,22 @@ const player = {
      x: 0,
      y: 0,
      char: playerFaces.neutral,
-     size: 48, // Size of player emoji. Recommended 48px for finger size.
+     size: 48, // Size of player emoji. Recommended 40-60px for finger size.
      speed: 3, // Base player speed.
-     radius: 20 // Size of collision box/circle.
+     radius: 40, // Size of collision box/circle.
+     sparkleFaceTimer: 0 // Counts down how long the sparkle face should stay active after collecting a sparkle.
 };
 
-const keys = {};
+function isCollidingWithSparkle(playerObject, sparkleObject) {
+     const dx = playerObject.x - sparkleObject.x;
+     const dy = playerObject.y - sparkleObject.y;
+     const distance = Math.sqrt(dx * dx + dy * dy);
 
-// NOTE: SPARKLE CONST
-// Add obstacles and collisions later.
+     return distance < playerObject.radius + (sparkleObject.size * 0.35);
+     // Collision circle, so we don't have to rely on glyphs being the exact same size.
+}
+
+const keys = {};
 
 const sparkles = [];
 
@@ -42,11 +47,9 @@ let sparkleSpawnTimer = 0;
 const sparkleSpawnDelay = 50; // Lower number = more sparkles, more often.
 const sparkleSpawnCap = 25; // Max number of sparkles allowed on screen at once.
 
-// NOTE: SHARED COLOR ENGINE (HOOK)
+// NOTE: SHARED COLOR ENGINE
 
 let gameSparkleColorEngine = null;
-// Renamed this so it does not collide with the background sparkle engine in script.js.
-// Both files share the same page scope, so duplicate let names will crash the second file.
 
 function bindKeyboardInput() {
      window.addEventListener("keydown", (event) => {
@@ -68,7 +71,7 @@ function bindKeyboardInput() {
      });
 }
 
-// NOTE: PLAYER CORE
+// NOTE: PLAYER
 
 function resetPlayerPosition() {
      player.x = gameCanvas.width / 2;
@@ -88,8 +91,6 @@ function clampPlayerToCanvas() {
           Math.min(gameCanvas.height - player.radius - edgePadding, player.y)
      );
 }
-
-// NOTE: PLAYER MOVEMENT
 
 function updatePlayer() {
      if (keys["w"] || keys["arrowup"]) {
@@ -111,7 +112,15 @@ function updatePlayer() {
      clampPlayerToCanvas();
 }
 
-// NOTE: PLAYER DRAW
+function updatePlayerFaceState() {
+     if (player.sparkleFaceTimer > 0) {
+          player.sparkleFaceTimer -= 1;
+     }
+
+     if (player.sparkleFaceTimer <= 0) {
+          player.char = playerFaces.neutral;
+     }
+}
 
 function drawPlayer() {
      if (!gameCtx) return;
@@ -131,7 +140,7 @@ function drawPlayer() {
      gameCtx.fillText(player.char, player.x, player.y + playerYOffset);
 }
 
-// NOTE: SPARKLE SPAWN
+// NOTE: SPARKLES
 
 function createSparkle() {
      if (!gameSparkleColorEngine) {
@@ -170,8 +179,6 @@ function updateSparkleSpawns() {
      }
 }
 
-// NOTE: SPARKLE MOVEMENT
-
 function updateSparkles() {
      for (let i = sparkles.length - 1; i >= 0; i -= 1) {
           const sparkle = sparkles[i];
@@ -187,7 +194,22 @@ function updateSparkles() {
      }
 }
 
-// NOTE: SPARKLE DRAW
+function collectSparkles() {
+     for (let i = sparkles.length - 1; i >= 0; i -= 1) {
+          const sparkle = sparkles[i];
+
+          if (isCollidingWithSparkle(player, sparkle)) {
+               sparkles.splice(i, 1);
+               // Remove the collected sparkle from the game.
+
+               player.char = playerFaces.sparkle;
+               // Switch player face to the happy sparkle face on collection.
+
+               player.sparkleFaceTimer = 60;
+               // Keep the sparkle face for a short time.
+          }
+     }
+}
 
 function drawSparkles() {
      if (!gameCtx) return;
@@ -211,7 +233,7 @@ function drawSparkles() {
      }
 }
 
-// NOTE: SIMPLE BACKGROUND
+// NOTE: BACKGROUND
 
 function drawGameBackground() {
      if (!gameCtx) return;
@@ -227,8 +249,10 @@ function drawGameBackground() {
 
 function updateGame() {
      updatePlayer();
+     updatePlayerFaceState();
      updateSparkleSpawns();
      updateSparkles();
+     collectSparkles();
 }
 
 function drawGame() {
@@ -263,18 +287,8 @@ function startSparkleSeeker() {
      gameLoop();
 }
 
-// // NOTE: FAILSAFE
-
-// if (!gameCanvas || !gameCtx) {
-//      console.warn("Sparkle Seeker could not find #miniGameCanvas.");
-// } else {
-//      startSparkleSeeker();
-// }
-
 if (!gameCanvas || !gameCtx) {
-     alert("game canvas not found");
      console.warn("Sparkle Seeker could not find #miniGameCanvas.");
 } else {
-     alert("starting game");
      startSparkleSeeker();
 }
