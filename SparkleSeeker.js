@@ -31,7 +31,7 @@ function isCollidingWithSparkle(playerObject, sparkleObject) {
      const dy = playerObject.y - sparkleObject.y;
      const distance = Math.sqrt(dx * dx + dy * dy);
 
-     return distance < playerObject.radius + (sparkleObject.size * 0.35);
+     return distance < playerObject.radius + (sparkleObject.size * 0.25);
      // Collision circle, so we don't have to rely on glyphs being the exact same size.
 }
 

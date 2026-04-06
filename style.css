@@ -47,10 +47,10 @@
      --font-body: "Noto Sans Mono", monospace;
      --font-fancy: "Bungee Shade", monospace;
 
-     --text-menu-size: clamp(1rem, 4vw, 2rem);
+     --text-menu-size: clamp(1rem, 3vw, 2rem);
      --text-title-size: var(--text-menu-size);
-     --text-tagline-size: clamp(0.75rem, 3vw, 1rem);
-     --text-role-size: clamp(0.75rem, 3vw, 1rem);
+     --text-tagline-size: clamp(0.75rem, 2vw, 1rem);
+     --text-role-size: clamp(0.75rem, 2vw, 1rem);
 
      --text-title-color: var(--text-color);
      --text-tagline-color: var(--text-muted);
@@ -93,10 +93,10 @@
      --bungee-shadow-offset-1: 0.125rem 0.125rem 0 rgba(0, 0, 0, 0.8);
      --bungee-shadow-offset-2: 0.25rem 0.25rem 0 rgba(0, 0, 0, 0.6);
 
-     /* NOTE: STRUCTURE */
+     /* NOTE: PANEL */
 
      --panel-radius: 1rem;
-     --panel-border-width: 0.25rem;
+     --panel-border-width: 0.5rem;
      --panel-border-color: var(--accent-color);
      --panel-border: var(--panel-border-width) solid var(--panel-border-color);
      --panel-glow-color: var(--accent-color);
@@ -176,7 +176,7 @@
 *::before,
 *::after { box-sizing: border-box; }
 
-html { font-size: 12px; }
+html { font-size: 10px; }
 /* BASE FONT SIZE */
 
 body {
