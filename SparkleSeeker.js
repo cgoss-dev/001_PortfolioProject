@@ -22,7 +22,7 @@ const player = {
      char: playerFaces.neutral,
      size: 48, // Size of player emoji. Recommended 40-60px for finger size.
      speed: 3, // Base player speed.
-     radius: 40, // Size of collision box/circle.
+     radius: 20, // Size of collision box/circle.
      sparkleFaceTimer: 0 // Counts down how long the sparkle face should stay active after collecting a sparkle.
 };
 
