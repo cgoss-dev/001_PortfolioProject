@@ -35,11 +35,8 @@
      /* RESIZING */
 
      --page-padding: 1rem;
-     --page-width-mobile: 32rem;
      --page-width-wide: 48rem;
-     --hero-gap-mobile: 0.25rem;
      --hero-gap-wide: 0.75rem;
-     --main-top-space-mobile: 5rem;
      --main-top-space-wide: 2rem;
 
      /* TEXT */
@@ -126,17 +123,6 @@
      /* These variables the color engine reads from. */
 
      --sparkle-color-1: var(--text-color);
-     /* --sparkle-color-2: var(--text-color);
-     --sparkle-color-3: var(--text-color);
-     --sparkle-color-4: var(--text-color);
-     --sparkle-color-5: var(--text-color);
-     --sparkle-color-6: var(--text-color);
-     --sparkle-color-7: var(--text-color);
-     --sparkle-color-8: var(--text-color);
-     --sparkle-color-9: var(--text-color);
-     --sparkle-color-10: var(--text-color);
-     --sparkle-color-11: var(--text-color);
-     --sparkle-color-12: var(--text-color); */
 
      /* RAINBOW */
 
@@ -189,7 +175,6 @@ body {
 
 .body-ody {
      width: 100%;
-     max-width: var(--page-width-mobile);
      margin: 0 auto;
      padding: var(--page-padding);
      position: relative;
@@ -200,7 +185,6 @@ body {
      display: flex;
      flex-direction: column;
      position: relative;
-     gap: var(--hero-gap-mobile);
 }
 
 
@@ -218,8 +202,6 @@ body {
 
 .hero-blob h1 { margin: 0; line-height: 1; }
 
-.main-squeeze { margin-top: var(--main-top-space-mobile); }
-
 .menu-button {
      position: relative;
      display: inline-block;
@@ -231,8 +213,6 @@ body {
      color: var(--menu-button-color);
      -webkit-text-fill-color: var(--menu-button-glow-color);
      cursor: pointer;
-     /* padding: 0;
-     margin: 0; */
      transition:
           color var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style),
           text-shadow var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style),
@@ -267,8 +247,6 @@ body {
 }
 
 .nav-menu {
-     /* margin: 0;
-     padding: 0; */
      list-style: none;
      min-width: var(--menu-panel-width-min);
      border: var(--panel-border);
