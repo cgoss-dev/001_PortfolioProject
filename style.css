@@ -44,10 +44,6 @@
      --font-body: "Noto Sans Mono", monospace;
      --font-fancy: "Bungee Shade", monospace;
 
-     /* --text-title-size: clamp(2rem, 3vw, 2.5rem);
-     --text-menu-size: clamp(2rem, 3vw, 2.5rem);
-     --text-tagline-size: clamp(0.75rem, 1vw, 1rem);
-     --text-role-size: clamp(0.75rem, 1vw, 1rem); */
      /* clamp(MINIMUM, FLEXIBLE, MAXIMUM) */
      --text-title-size: clamp(2rem, 4vw, 3.5rem);
      --text-menu-size: clamp(2rem, 4vw, 3.5rem);
@@ -69,10 +65,11 @@
      /* GLOW */
 
      --glow-depth: 0 0.75rem 1.75rem rgba(0, 0, 0, 0.5);
-     --glow-core: 0 0 0.06rem;
+     /* offset-x   offset-y   blur-radius   color */
+     --glow-core: 0 0 0.05rem;
      --glow-soft: 0 0 0.25rem;
-     --glow-wide: 0 0 0.9rem;
-     --glow-max: 0 0 1.75rem;
+     --glow-wide: 0 0 0.75rem;
+     --glow-max: 0 0 1rem;
 
      --glow-text:
           var(--glow-core) currentColor,
@@ -87,7 +84,7 @@
      --glow-particle-blur: 8;
      /* JS reads this for sparkle glow blur strength on the canvas. */
 
-     --bungee-glow-blur: 0 0 0.375rem;
+     --bungee-glow-blur: 0 0 0.05rem;
      --bungee-shadow-offset-1: 0.125rem 0.125rem 0 rgba(0, 0, 0, 0.8);
      --bungee-shadow-offset-2: 0.25rem 0.25rem 0 rgba(0, 0, 0, 0.6);
 
@@ -363,6 +360,11 @@ body {
 /* NOTE: RESIZING */
 
 @media (min-width: 48rem) {
+     .tagline,
+     .role {
+          line-height: 2;
+     }
+
      .body-ody {
           max-width: var(--page-width-wide);
           padding: 2rem;
