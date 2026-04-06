@@ -4,66 +4,70 @@
 @import url("https://fonts.googleapis.com/css2?family=Bungee+Shade&display=swap");
 
 :root {
-     /* COLOR */
+     /* NOTE: COLOR */
 
      --bg-color: #000000;
+     --bg-accent: #ffffff;
      --text-color: #ffffff;
      --text-muted: rgba(255, 255, 255, 0.5);
-     --accent-color: var(--pink);
+     --accent-color: var(--rainbow-pink);
 
-     --pink: #ea76cb;
-     --red: #d20f39;
-     --maroon: #e64553;
-     --peach: #fe640b;
-     --flamingo: #dd7878;
-     --yellow: #df8e1d;
-     --green: #40a02b;
-     --teal: #179299;
-     --sky: #04a5e5;
-     --blue: #1e66f5;
-     --lavender: #7287fd;
-     --violet: #8839ef;
+     /* NOTE: SHARED RAINBOW COLOR ENGINE PALETTE */
+     /* Core JS + game JS both pull from these. */
 
-     /* MENU */
+     --rainbow-pink: #ea76cb;
+     --rainbow-red: #d20f39;
+     --rainbow-maroon: #e64553;
+     --rainbow-peach: #fe640b;
+     --rainbow-flamingo: #dd7878;
+     --rainbow-yellow: #df8e1d;
+     --rainbow-green: #40a02b;
+     --rainbow-teal: #179299;
+     --rainbow-sky: #04a5e5;
+     --rainbow-blue: #1e66f5;
+     --rainbow-lavender: #7287fd;
+     --rainbow-violet: #8839ef;
+
+     /* NOTE: PAGE */
+
+     --page-padding: clamp(1rem, 2vw, 1.5rem);
+     --page-width-wide: 72rem;
+     --page-gap: 1.5rem;
+
+     /* NOTE: MENU */
 
      --menu-button-color: var(--text-color);
-     --menu-button-glow-color: var(--menu-button-color);
+     --menu-button-glow-color: var(--text-color);
      --menu-dropdown-offset-y: 0.5rem;
-     --menu-panel-width-min: 12rem;
+     --menu-canvasboard-width-min: 12rem;
      --menu-item-padding: 1rem;
+     --menu-opacity-open: 0.92;
 
-     /* RESIZING */
-
-     --page-padding: 1rem;
-     --page-width-wide: 48rem;
-
-     /* TEXT */
+     /* NOTE: TEXT */
 
      --font-body: "Noto Sans Mono", monospace;
      --font-fancy: "Bungee Shade", monospace;
 
-     /* clamp(MINIMUM, FLEXIBLE, MAXIMUM) */
-     --text-title-size: clamp(2rem, 4vw, 3.5rem);
-     --text-menu-size: clamp(2rem, 4vw, 3.5rem);
-     --text-tagline-size: clamp(0.75rem, 1.2vw, 1.25rem);
-     --text-role-size: clamp(0.75rem, 1.2vw, 1.25rem);
+     --text-size-marquee: clamp(2rem, 6vw, 4.25rem);
+     --text-size-dropdown: clamp(1.9rem, 4vw, 3rem);
+     --text-size-tagline: clamp(0.8rem, 1.3vw, 1.15rem);
 
-     --text-title-color: var(--text-color);
-     --text-tagline-color: var(--text-muted);
-     --text-role-color: var(--text-color);
+     --text-color-marquee: var(--text-color);
+     --text-color-dropdown: var(--text-color);
+     --text-color-tagline: var(--text-muted);
+
+     /* NOTE: JS TEXT COLOR CYCLE CONTROL */
+     /* Core JS reads this exact variable name. */
 
      --text-rainbow-cycle-speed: 900;
-     /* Milliseconds between each marquee color shuffle. Higher = slower color cycling. */
-
      --text-rainbow-transition-speed: 0.2s;
-     /* How quickly each letter visually fades from one color to the next. */
-
      --text-rainbow-transition-style: ease-in-out;
 
-     /* GLOW */
+     /* NOTE: GLOW */
 
      --glow-depth: 0 0.75rem 1.75rem rgba(0, 0, 0, 0.5);
      /* offset-x   offset-y   blur-radius   color */
+
      --glow-core: 0 0 0.05rem;
      --glow-soft: 0 0 0.25rem;
      --glow-wide: 0 0 0.75rem;
@@ -74,31 +78,42 @@
           var(--glow-soft) currentColor,
           var(--glow-wide) currentColor;
 
-     --glow-panel:
+     --glow-canvasboard:
           var(--glow-depth),
-          var(--glow-wide) var(--panel-glow-color),
-          var(--glow-max) var(--panel-glow-color);
+          var(--glow-wide) var(--canvasboard-glow-color),
+          var(--glow-max) var(--canvasboard-glow-color);
 
+     /* Core JS reads these exact names for the bungee-style +/- glow. */
      --glow-particle-blur: 8;
-     /* JS reads this for sparkle glow blur strength on the canvas. */
-
      --bungee-glow-blur: 0 0 0.05rem;
      --bungee-shadow-offset-1: 0.125rem 0.125rem 0 rgba(0, 0, 0, 0.8);
      --bungee-shadow-offset-2: 0.25rem 0.25rem 0 rgba(0, 0, 0, 0.6);
 
-     /* PANEL */
+     /* NOTE: CANVASBOARD */
 
-     --panel-radius: 1rem;
-     --panel-border-width: 0.25rem;
-     --panel-border-color: var(--accent-color);
-     --panel-border: var(--panel-border-width) solid var(--panel-border-color);
-     --panel-glow-color: var(--accent-color);
+     --canvasboard-radius: 1rem;
+     --canvasboard-border-width: 0.25rem;
+     --canvasboard-border-color: var(--accent-color);
+     --canvasboard-border: var(--canvasboard-border-width) solid var(--canvasboard-border-color);
+     --canvasboard-glow-color: var(--accent-color);
 
-     /* SPARKLE */
+     --canvas-bg: transparent;
+     --canvas-display: block;
+     --canvas-width: 100%;
+     --canvas-height: auto;
+
+     /* NOTE: LAYERS */
 
      --sparkle-layer-z: -1;
+     --ui-layer-z: 2;
+     --menu-layer-z: 20;
+
+     /* NOTE: SPARKLE CONTROL CENTER */
+     /* Core JS + game JS both read these exact variables. */
+
      --sparkle-opacity: 1;
      --sparkle-count-max: 180;
+     --sparkle-density: 0.00015;
 
      --sparkle-size-min: 12;
      --sparkle-size-max: 24;
@@ -106,10 +121,9 @@
      --sparkle-speed-min: 0.2;
      --sparkle-speed-max: 0.7;
 
-     --sparkle-density: 0.00015;
-
      --sparkle-wobble-speed-min: 0.005;
      --sparkle-wobble-speed-max: 0.02;
+
      --sparkle-wobble-amount-min: 5;
      --sparkle-wobble-amount-max: 15;
 
@@ -118,45 +132,19 @@
 
      --sparkle-respawn-offset-top: -20;
      --sparkle-respawn-offset-bottom: 24;
-
-     /* SHARED COLOR ENGINE PALETTES */
-     /* These variables the color engine reads from. */
-
-     --sparkle-color-1: var(--text-color);
-
-     /* RAINBOW */
-
-     --rainbow-color-1: var(--pink);
-     --rainbow-color-2: var(--red);
-     --rainbow-color-3: var(--maroon);
-     --rainbow-color-4: var(--peach);
-     --rainbow-color-5: var(--flamingo);
-     --rainbow-color-6: var(--yellow);
-     --rainbow-color-7: var(--green);
-     --rainbow-color-8: var(--teal);
-     --rainbow-color-9: var(--sky);
-     --rainbow-color-10: var(--blue);
-     --rainbow-color-11: var(--lavender);
-     --rainbow-color-12: var(--violet);
-
-     /* CANVAS */
-
-     --canvas-bg: transparent;
-     --canvas-display: block;
-     --canvas-width: 100%;
-     --canvas-height: auto;
-
-     --ui-layer-z: 2;
-     --menu-layer-z: 20;
 }
 
 /* NOTE: NON-ROOT CORE */
 
 *,
 *::before,
-*::after { box-sizing: border-box; }
+*::after {
+     box-sizing: border-box;
+}
 
-html { font-size: 16px; }
+html {
+     font-size: 16px;
+}
 /* BASE FONT SIZE, KEEP THIS AT 16px! */
 
 body {
@@ -171,105 +159,139 @@ body {
 
 .body-ody {
      width: 100%;
+     max-width: var(--page-width-wide);
      margin: 0 auto;
      padding: var(--page-padding);
      position: relative;
      z-index: var(--ui-layer-z);
 }
 
-/* NOTE: MENU */
+/* NOTE: HEADER */
 
-.menu-pocket {
-     position: absolute;
-     top: 15;
-     right: 0;
-     z-index: var(--menu-layer-z);
-}
-
-.hero-blob h1 {
-     margin: 0;
-     line-height: 1;
-}
-
-.menu-button {
+header {
      position: relative;
-     display: inline-block;
-     font-family: var(--font-fancy);
-     font-size: var(--text-menu-size);
-     line-height: 1;
-     background: none;
-     border: none;
-     color: var(--menu-button-color);
-     -webkit-text-fill-color: var(--menu-button-glow-color);
-     cursor: pointer;
-     padding: 0;
+     display: flex;
+     flex-direction: column;
+     gap: 0.5rem;
+     padding-top: 0.25rem;
+}
+
+h1 {
      margin: 0;
-     /* Buttons have default browser spacing too, so this forces the glyph to sit where YOU place it. */
-
-     transition:
-          color var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style),
-          text-shadow var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style),
-          -webkit-text-fill-color var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style);
+     line-height: 1;
 }
 
-.menu-button:hover,
-.menu-button:focus,
-.menu-button:active {
-     color: var(--menu-button-color);
-     -webkit-text-fill-color: var(--menu-button-color);
+.hero-blurb {
+     margin: 0;
+     padding-bottom: 1.5rem;
 }
-/* menu button stays white in all states */
+
+.tagline {
+     margin: 0;
+     color: var(--text-color-tagline);
+     font-size: var(--text-size-tagline);
+     line-height: 1.6;
+}
+
+/* NOTE: MENU */
+/* Wrapper stays visible/positioned. JS toggles .menu-open on this wrapper. */
 
 .dropdown-low {
      position: absolute;
-     top: calc(100% + var(--menu-dropdown-offset-y));
+     top: 0;
      right: 0;
      z-index: var(--menu-layer-z);
+     display: flex;
+     flex-direction: column;
+     align-items: flex-end;
+}
+
+/* NOTE: MENU BUTTON */
+
+.nav-button {
+     position: relative;
+     display: inline-flex;
+     align-items: center;
+     justify-content: center;
+     min-width: 2.25rem;
+     min-height: 2.25rem;
+     padding: 0;
+     margin: 0;
+     background: none;
+     border: none;
+     outline: none;
+     cursor: pointer;
+
+     font-family: var(--font-fancy);
+     font-size: var(--text-size-dropdown);
+     line-height: 1;
+     color: var(--menu-button-color);
+     -webkit-text-fill-color: var(--menu-button-glow-color);
+     text-shadow: var(--glow-text);
+}
+
+.nav-button:hover,
+.nav-button:focus-visible {
+     color: var(--menu-button-color);
+     -webkit-text-fill-color: var(--menu-button-glow-color);
+}
+
+.nav-button:focus-visible {
+     filter: brightness(1.1);
+}
+
+/* NOTE: NAV MENU PANEL */
+/* Hidden by default. Opens when parent wrapper gets .menu-open from JS. */
+
+.nav-menu {
+     list-style: none;
+     margin: var(--menu-dropdown-offset-y) 0 0;
+     padding: 0;
+
+     min-width: var(--menu-canvasboard-width-min);
+     border: var(--canvasboard-border);
+     border-radius: var(--canvasboard-radius);
+     overflow: hidden;
+     background: rgba(0, 0, 0, 0.92);
+     box-shadow: var(--glow-canvasboard);
+
      opacity: 0;
      transform: translateY(-0.5rem);
      pointer-events: none;
+
      transition:
           opacity 0.25s ease-in-out,
           transform 0.25s ease-in-out;
 }
 
-.dropdown-low.menu-open {
-     opacity: 0.85;
+.dropdown-low.menu-open .nav-menu {
+     opacity: var(--menu-opacity-open);
      transform: translateY(0);
      pointer-events: auto;
 }
 
-.nav-menu {
+.nav-menu ul {
      list-style: none;
      margin: 0;
      padding: 0;
-     /* Browsers add default margin/padding to <ul>, which causes that weird left gap before menu text. */
-
-     min-width: var(--menu-panel-width-min);
-     border: var(--panel-border);
-     border-radius: var(--panel-radius);
-     overflow: hidden;
-     background: var(--bg-color);
-     box-shadow: var(--glow-panel);
 }
 
 .nav-menu li {
      margin: 0;
      padding: 0;
-     /* This keeps list items from adding their own spacing on top of the link padding. */
 }
 
 .nav-menu a {
      display: block;
      padding: var(--menu-item-padding);
      text-decoration: none;
-     color: var(--text-color);
+     color: var(--text-color-dropdown);
      font-weight: 600;
-     background: var(--bg-color);
+     background: transparent;
      transition:
-          color var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style),
-          background var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style),
-          text-shadow var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style);
+          background-color 0.2s ease-in-out,
+          color 0.2s ease-in-out,
+          text-shadow 0.2s ease-in-out;
 }
 
 .nav-menu a:hover,
@@ -280,51 +302,23 @@ body {
      text-shadow: var(--glow-text);
 }
 
-/* NOTE: TEXT AREA */
+/* NOTE: MARQUEE */
 
-.marquee {
+#marquee {
      display: inline-block;
-     color: var(--text-title-color);
+     color: var(--text-color-marquee);
      text-decoration: none;
      font-family: var(--font-fancy);
-     font-size: var(--text-title-size);
-     line-height: 1;
+     font-size: var(--text-size-marquee);
+     line-height: 0.95;
+     white-space: nowrap;
 }
 
-.marquee:hover { color: var(--accent-color); }
+/* NOTE: MARQUEE RAINBOW */
+/* Core JS replaces the text with spans and colors them directly. */
 
-.tagline,
-.role {
-     margin: 0;
-     line-height: 1.5;
-}
-
-.tagline {
-     color: var(--text-tagline-color);
-     font-size: var(--text-tagline-size);
-}
-
-.role {
-     color: var(--text-role-color);
-     font-size: var(--text-role-size);
-}
-
-/* NOTE: SPARKLE */
-
-.site-bg-canvas {
-     position: fixed;
-     inset: 0;
-     width: 100vw;
-     height: 100vh;
-     pointer-events: none;
-     z-index: var(--sparkle-layer-z);
-     display: block;
-     opacity: var(--sparkle-opacity);
-}
-
-/* NOTE: RAINBOW */
-
-.marquee span {
+#marquee span {
+     display: inline-block;
      transition:
           color var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style),
           text-shadow var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style);
@@ -332,36 +326,52 @@ body {
      text-shadow: var(--glow-text);
 }
 
-/* NOTE: CANVAS */
+/* NOTE: MAIN LAYOUT */
 
-.canvas-crib {
+.main-squeeze {
      width: 100%;
-     border: var(--panel-border);
-     border-radius: var(--panel-radius);
-     overflow: hidden;
-     box-shadow: var(--glow-panel);
 }
+
+.game-shell {
+     width: 100%;
+}
+
+/* NOTE: BACKGROUND SPARKLE CANVAS */
+
+.site-bg-canvas {
+     position: fixed;
+     inset: 0;
+     width: 100vw;
+     height: 100vh;
+     display: block;
+     pointer-events: none;
+     opacity: var(--sparkle-opacity);
+     z-index: var(--sparkle-layer-z);
+}
+
+/* NOTE: MAIN GAME CANVAS */
 
 #miniGameCanvas {
      display: var(--canvas-display);
      width: var(--canvas-width);
      height: var(--canvas-height);
+     max-width: 100%;
      background: var(--canvas-bg);
+
+     border: var(--canvasboard-border);
+     border-radius: var(--canvasboard-radius);
+     box-shadow: var(--glow-canvasboard);
+     overflow: hidden;
 }
 
-/* NOTE: RESIZING */
+/* NOTE: RESPONSIVE */
 
 @media (min-width: 48rem) {
-     .tagline,
-     .role {
-          line-height: 2rem;
-     }
-
      .hero-blurb {
           padding-bottom: 2rem;
      }
 
-     .body-ody {
-          max-width: var(--page-width-wide);
+     .tagline {
+          line-height: 2rem;
      }
 }

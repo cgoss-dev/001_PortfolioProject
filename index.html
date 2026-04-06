@@ -8,15 +8,28 @@
      <link rel="stylesheet" href="style.css">
 </head>
 <body>
+     <!-- NOTE: BACKGROUND SPARKLE CANVAS -->
+     <canvas id="siteBgCanvas" class="site-bg-canvas" aria-hidden="true"></canvas>
+
      <div class="body-ody">
 
           <header>
                <div class="dropdown-low">
-                    <button class="nav-button" aria-label="Menu button.">
-                    <!-- ARIA is "Accessible Rich Internet Applications". -->
+                    <button
+                         class="nav-button"
+                         type="button"
+                         aria-label="Open navigation menu."
+                         aria-expanded="false"
+                         aria-controls="navMenu"
+                    >
                          +
                     </button>
-                    <nav class="nav-menu">
+
+                    <nav
+                         id="navMenu"
+                         class="nav-menu"
+                         aria-label="Main navigation"
+                    >
                          <ul>
                               <li><a href="#">Free Trash</a></li>
                               <li><a href="https://github.com/cgoss-dev" target="_blank" rel="noopener noreferrer">Tiny Crimes</a></li>
@@ -24,9 +37,11 @@
                          </ul>
                     </nav>
                </div>
+
                <h1>
                     <a href="index.html" id="marquee">CHRIS GOSS</a>
                </h1>
+
                <div class="hero-blurb">
                     <p class="tagline">Seattle developer... too many ideas, not enough chill.</p>
                     <!-- Building apps with HTML I found in a ditch. Making CSS do weird stuff on purpose. Driving unsupervised through Javascript. -->
@@ -34,13 +49,15 @@
           </header>
 
           <main class="main-squeeze">
-               <div>
+               <div class="game-shell">
+                    <!-- NOTE: ACTUAL GAME CANVAS -->
                     <canvas id="miniGameCanvas" width="480" height="480"></canvas>
                     <!-- Gotta have actual px dimensions for canvas to operate. Iphone SE is 640x1136. Keep this at multiples of 16px. -->
                </div>
           </main>
 
      </div>
+
      <script src="script.js"></script>
      <script src="SparkleSeeker.js"></script>
      <!-- This is where to swap out different games to appear in the main page canvas. -->

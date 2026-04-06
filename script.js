@@ -25,24 +25,6 @@ function getCssColor(variableName, fallback = "#ffffff") {
      return value || fallback;
 }
 
-function getThemeColors() {
-     return {
-          pink: getCssColor("--pink"),
-          red: getCssColor("--red"),
-          maroon: getCssColor("--maroon"),
-          peach: getCssColor("--peach"),
-          flamingo: getCssColor("--flamingo"),
-          yellow: getCssColor("--yellow"),
-          green: getCssColor("--green"),
-          teal: getCssColor("--teal"),
-          sky: getCssColor("--sky"),
-          blue: getCssColor("--blue"),
-          lavender: getCssColor("--lavender"),
-          violet: getCssColor("--violet"),
-          white: getCssColor("--text-color", "#ffffff")
-     };
-}
-
 function getTextSettings() {
      return {
           rainbowCycleSpeed: getCssNumber("--text-rainbow-cycle-speed", 900),
@@ -78,33 +60,6 @@ function getSparkleSettings() {
           respawnOffsetTop: getCssNumber("--sparkle-respawn-offset-top", -20),
           respawnOffsetBottom: getCssNumber("--sparkle-respawn-offset-bottom", 24)
      };
-}
-
-function getRainbowPalette() {
-     const theme = getThemeColors();
-
-     return [
-          getCssColor("--rainbow-color-1", theme.pink),
-          getCssColor("--rainbow-color-2", theme.red),
-          getCssColor("--rainbow-color-3", theme.maroon),
-          getCssColor("--rainbow-color-4", theme.peach),
-          getCssColor("--rainbow-color-5", theme.flamingo),
-          getCssColor("--rainbow-color-6", theme.yellow),
-          getCssColor("--rainbow-color-7", theme.green),
-          getCssColor("--rainbow-color-8", theme.teal),
-          getCssColor("--rainbow-color-9", theme.sky),
-          getCssColor("--rainbow-color-10", theme.blue),
-          getCssColor("--rainbow-color-11", theme.lavender),
-          getCssColor("--rainbow-color-12", theme.violet)
-     ];
-}
-
-function getSparklePalette() {
-     const theme = getThemeColors();
-
-     return [theme.white];
-     // Background sparkles only need one real color choice.
-     // A single-item palette is cleaner than storing a bunch of duplicate whites.
 }
 
 /* NOTE: UTILITIES */
