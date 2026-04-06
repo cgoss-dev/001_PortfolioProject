@@ -36,8 +36,6 @@
 
      --page-padding: 1rem;
      --page-width-wide: 48rem;
-     --hero-gap-wide: 1rem;
-     --main-top-space-wide: 2rem;
 
      /* TEXT */
 
@@ -179,17 +177,11 @@ body {
      z-index: var(--ui-layer-z);
 }
 
-.hero-blob {
-     display: flex;
-     flex-direction: column;
-     position: relative;
-}
-
 /* NOTE: MENU */
 
 .menu-pocket {
      position: absolute;
-     top: 0;
+     top: 15;
      right: 0;
      z-index: var(--menu-layer-z);
 }
@@ -362,19 +354,14 @@ body {
 @media (min-width: 48rem) {
      .tagline,
      .role {
-          line-height: 2;
+          line-height: 2rem;
+     }
+
+     .hero-blurb {
+          padding-bottom: 2rem;
      }
 
      .body-ody {
           max-width: var(--page-width-wide);
-          padding: 2rem;
-     }
-
-     .hero-blob {
-          gap: var(--hero-gap-wide);
-     }
-
-     .main-squeeze {
-          margin-top: var(--main-top-space-wide);
      }
 }
