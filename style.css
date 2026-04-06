@@ -151,10 +151,6 @@
      --menu-layer-z: 20;
 }
 
-
-
-
-
 /* NOTE: NON-ROOT CORE */
 
 *,
@@ -188,10 +184,6 @@ body {
      position: relative;
 }
 
-
-
-
-
 /* NOTE: MENU */
 
 .menu-pocket {
@@ -201,7 +193,10 @@ body {
      z-index: var(--menu-layer-z);
 }
 
-.hero-blob h1 { margin: 0; line-height: 1; }
+.hero-blob h1 {
+     margin: 0;
+     line-height: 1;
+}
 
 .menu-button {
      position: relative;
@@ -214,6 +209,10 @@ body {
      color: var(--menu-button-color);
      -webkit-text-fill-color: var(--menu-button-glow-color);
      cursor: pointer;
+     padding: 0;
+     margin: 0;
+     /* Buttons have default browser spacing too, so this forces the glyph to sit where YOU place it. */
+
      transition:
           color var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style),
           text-shadow var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style),
@@ -249,12 +248,22 @@ body {
 
 .nav-menu {
      list-style: none;
+     margin: 0;
+     padding: 0;
+     /* Browsers add default margin/padding to <ul>, which causes that weird left gap before menu text. */
+
      min-width: var(--menu-panel-width-min);
      border: var(--panel-border);
      border-radius: var(--panel-radius);
      overflow: hidden;
      background: var(--bg-color);
      box-shadow: var(--glow-panel);
+}
+
+.nav-menu li {
+     margin: 0;
+     padding: 0;
+     /* This keeps list items from adding their own spacing on top of the link padding. */
 }
 
 .nav-menu a {
@@ -292,12 +301,14 @@ body {
 .marquee:hover { color: var(--accent-color); }
 
 .tagline,
-.role { margin: 0; line-height: 1; }
+.role {
+     margin: 0;
+     line-height: 1.5;
+}
 
 .tagline {
      color: var(--text-tagline-color);
      font-size: var(--text-tagline-size);
-     font-weight: 600;
 }
 
 .role {
@@ -353,7 +364,9 @@ body {
           padding: 2rem;
      }
 
-     .hero-blob { gap: var(--hero-gap-wide); }
+     .hero-blob {
+          gap: var(--hero-gap-wide);
+     }
 
      .main-squeeze {
           margin-top: var(--main-top-space-wide);

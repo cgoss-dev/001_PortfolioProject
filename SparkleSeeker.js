@@ -65,8 +65,7 @@ function resizeGameCanvasFromCss() {
      // This reads the canvas size as it is ACTUALLY being displayed by CSS on the page.
 
      const dpr = window.devicePixelRatio || 1;
-     // DPR = device pixel ratio.
-     // This helps the canvas stay sharp on retina/high-density screens.
+     // DPR = device pixel ratio. Helps the canvas stay sharp on retina/high-density screens.
 
      gameCanvas.width = Math.round(rect.width * dpr);
      gameCanvas.height = Math.round(rect.height * dpr);
