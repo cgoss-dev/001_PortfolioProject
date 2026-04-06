@@ -1,10 +1,10 @@
-/* NOTE: BASE CSS */
+/* NOTE: ROOT CSS */
 
 @import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Mono:wght@400;600&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Bungee+Shade&display=swap");
 
 :root {
-     /* NOTE: COLOR */
+     /* COLOR */
 
      --bg-color: #000000;
      --text-color: #ffffff;
@@ -24,7 +24,7 @@
      --lavender: #7287fd;
      --violet: #8839ef;
 
-     /* NOTE: MENU */
+     /* MENU */
 
      --menu-button-color: var(--text-color);
      --menu-button-glow-color: var(--menu-button-color);
@@ -32,7 +32,7 @@
      --menu-panel-width-min: 12rem;
      --menu-item-padding: 1rem;
 
-     /* NOTE: RESIZING */
+     /* RESIZING */
 
      --page-padding: 1rem;
      --page-width-mobile: 32rem;
@@ -42,15 +42,20 @@
      --main-top-space-mobile: 1rem;
      --main-top-space-wide: 2rem;
 
-     /* NOTE: TEXT */
+     /* TEXT */
 
      --font-body: "Noto Sans Mono", monospace;
      --font-fancy: "Bungee Shade", monospace;
 
-     --text-menu-size: clamp(3rem, 5vw, 4rem);
+     /* --text-menu-size: clamp(4rem, 6vw, 5rem);
      --text-title-size: var(--text-menu-size);
-     --text-tagline-size: clamp(0.75rem, 2vw, 1rem);
-     --text-role-size: clamp(0.75rem, 2vw, 1rem);
+     --text-tagline-size: clamp(1rem, 2vw, 1.25rem);
+     --text-role-size: clamp(1rem, 2vw, 1.25rem); */
+
+     --text-menu-size: clamp(4rem, 5rem);
+     --text-title-size: var(--text-menu-size);
+     --text-tagline-size: clamp(1rem, 1.25rem);
+     --text-role-size: clamp(1rem, 1.25rem);
 
      --text-title-color: var(--text-color);
      --text-tagline-color: var(--text-muted);
@@ -64,15 +69,13 @@
 
      --text-rainbow-transition-style: ease-in-out;
 
-     /* NOTE: UNIVERSAL GLOW */
+     /* GLOW */
 
      --glow-depth: 0 0.75rem 1.75rem rgba(0, 0, 0, 0.5);
      --glow-core: 0 0 0.06rem;
      --glow-soft: 0 0 0.25rem;
      --glow-wide: 0 0 0.9rem;
      --glow-max: 0 0 1.75rem;
-
-     /* NOTE: UNIVERSAL GLOW PRESETS */
 
      --glow-text:
           var(--glow-core) currentColor,
@@ -87,21 +90,19 @@
      --glow-particle-blur: 8;
      /* JS reads this for sparkle glow blur strength on the canvas. */
 
-     /* NOTE: BUNGEE GLYPH GLOW */
-
      --bungee-glow-blur: 0 0 0.375rem;
      --bungee-shadow-offset-1: 0.125rem 0.125rem 0 rgba(0, 0, 0, 0.8);
      --bungee-shadow-offset-2: 0.25rem 0.25rem 0 rgba(0, 0, 0, 0.6);
 
-     /* NOTE: PANEL */
+     /* PANEL */
 
-     --panel-radius: 2rem;
-     --panel-border-width: 0.5rem;
+     --panel-radius: 1rem;
+     --panel-border-width: 0.25rem;
      --panel-border-color: var(--accent-color);
      --panel-border: var(--panel-border-width) solid var(--panel-border-color);
      --panel-glow-color: var(--accent-color);
 
-     /* NOTE: SPARKLE */
+     /* SPARKLE */
 
      --sparkle-layer-z: -1;
      --sparkle-opacity: 1;
@@ -126,7 +127,7 @@
      --sparkle-respawn-offset-top: -20;
      --sparkle-respawn-offset-bottom: 24;
 
-     /* NOTE: SHARED COLOR ENGINE PALETTES */
+     /* SHARED COLOR ENGINE PALETTES */
      /* These variables the color engine reads from. */
 
      --sparkle-color-1: var(--text-color);
@@ -142,7 +143,7 @@
      --sparkle-color-11: var(--text-color);
      --sparkle-color-12: var(--text-color); */
 
-     /* NOTE: RAINBOW */
+     /* RAINBOW */
 
      --rainbow-color-1: var(--pink);
      --rainbow-color-2: var(--red);
@@ -157,20 +158,22 @@
      --rainbow-color-11: var(--lavender);
      --rainbow-color-12: var(--violet);
 
-     /* NOTE: CANVAS */
+     /* CANVAS */
 
      --canvas-bg: transparent;
      --canvas-display: block;
      --canvas-width: 100%;
      --canvas-height: auto;
 
-     /* NOTE: LAYER */
-
      --ui-layer-z: 2;
      --menu-layer-z: 20;
 }
 
-/* NOTE: CORE */
+
+
+
+
+/* NOTE: NON-ROOT CORE */
 
 *,
 *::before,
@@ -205,7 +208,11 @@ body {
      gap: var(--hero-gap-mobile);
 }
 
-/* NOTE: MENU POCKET */
+
+
+
+
+/* NOTE: MENU */
 
 .menu-pocket {
      position: absolute;
@@ -217,8 +224,6 @@ body {
 .hero-blob h1 { margin: 0; line-height: 1; }
 
 .main-squeeze { margin-top: var(--main-top-space-mobile); }
-
-/* NOTE: MENU */
 
 .menu-button {
      position: relative;
@@ -239,14 +244,13 @@ body {
           -webkit-text-fill-color var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style);
 }
 
-/* menu button stays white in all states */
-
 .menu-button:hover,
 .menu-button:focus,
 .menu-button:active {
      color: var(--menu-button-color);
      -webkit-text-fill-color: var(--menu-button-color);
 }
+/* menu button stays white in all states */
 
 .dropdown-low {
      position: absolute;
@@ -300,7 +304,7 @@ body {
      text-shadow: var(--glow-text);
 }
 
-/* NOTE: TEXT */
+/* NOTE: TEXT AREA */
 
 .marquee {
      display: inline-block;

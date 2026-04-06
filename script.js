@@ -1,4 +1,4 @@
-// NOTE: BASE JS
+// NOTE: ROOT JS
 
 // TROUBLESHOOTING
 // alert("top of script");
