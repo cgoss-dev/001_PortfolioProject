@@ -108,8 +108,8 @@
      --canvas-width: 100%;
      --canvas-height: auto;
 
-     --canvas-height-responsive: 18rem;
-     /* Use this to adjust canvas height. */
+     --canvas-height-responsive: 10rem;
+     /* Use this to adjust canvas height, subtract less height = bigger canvas. */
 
      /* LAYERS */
 
@@ -411,5 +411,30 @@ h1 {
 @media (min-width: 48rem) {
      .tagline {
           line-height: 2rem;
+     }
+}
+
+@media (max-width: 40rem) {
+     .tagline-break {
+          display: block;
+     }
+
+     .tagline {
+          line-height: 1.3;
+     }
+
+     #marquee {
+          white-space: normal;
+     }
+
+     #marquee span {
+          display: inline-block;
+     }
+
+     #marquee span:nth-child(6) { /* Line break at the space between first/last name. */
+          display: block;
+          width: 100%;
+          height: 0;
+          overflow: hidden;
      }
 }
