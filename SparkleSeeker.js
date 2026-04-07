@@ -37,6 +37,11 @@ const player = {
 
 const keys = {};
 const sparkles = [];
+const sparkleChars = ["✦", "✧"];
+
+let sparkleScore = 0;
+let playerHealth = 3;
+const maxPlayerHealth = 3;
 
 const pointerInput = {
      active: false,
@@ -46,8 +51,6 @@ const pointerInput = {
 };
 
 let pointerInputBound = false;
-
-const sparkleChars = ["✦", "✧"];
 
 let sparkleSpawnTimer = 0;
 const sparkleSpawnDelay = 50;
@@ -280,6 +283,64 @@ function drawPlayer() {
      miniGameCtx.fillText(player.char, player.x, player.y + playerYOffset);
 }
 
+// NOTE: SCOREKEEPING
+
+function drawScore() {
+     if (!miniGameCtx) {
+          return;
+     }
+
+     miniGameCtx.save();
+
+     const formattedScore = sparkleScore.toString().padStart(3, "0");
+     // Always show at least three digits.
+
+     miniGameCtx.font = '28px "Bungee", "Bungee Shade", cursive';
+     miniGameCtx.textAlign = "left";
+     miniGameCtx.textBaseline = "top";
+     miniGameCtx.fillStyle = "#ffffff";
+     miniGameCtx.shadowColor = "rgba(255, 255, 255, 0.35)";
+     miniGameCtx.shadowBlur = 8;
+
+     miniGameCtx.fillText(formattedScore, 16, 14);
+
+     miniGameCtx.restore();
+}
+
+function drawHealth() {
+     if (!miniGameCtx) {
+          return;
+     }
+
+     miniGameCtx.save();
+
+     const filledHeart = "♥";
+     const emptyHeart = "♡";
+
+     let healthDisplay = "";
+
+     for (let i = 0; i < maxPlayerHealth; i += 1) {
+          if (i < playerHealth) {
+               healthDisplay += filledHeart;
+          } else {
+               healthDisplay += emptyHeart;
+          }
+     }
+     // Build a simple heart string like ♥♥♥, ♥♥♡, or ♥♡♡.
+
+     miniGameCtx.font = '36px "Noto Sans Mono", monospace'; // Use a font that properly supports heart symbols.
+
+     miniGameCtx.textAlign = "right";
+     miniGameCtx.textBaseline = "top";
+     miniGameCtx.fillStyle = "#ff6b9a";
+     miniGameCtx.shadowColor = "rgba(255, 107, 154, 0.35)";
+     miniGameCtx.shadowBlur = 8;
+
+     miniGameCtx.fillText(healthDisplay, miniGameWidth - 16, 14);
+
+     miniGameCtx.restore();
+}
+
 // NOTE: SPARKLES
 
 function createSparkle() {
@@ -349,7 +410,10 @@ function collectSparkles() {
 
           if (isCollidingWithSparkle(player, sparkle)) {
                sparkles.splice(i, 1);
-               // Remove the collected sparkle from the game.
+               // Remove collected sparkle.
+
+               sparkleScore += 1;
+               // Add 1 point for each sparkle collected.
 
                player.char = playerFaces.sparkle;
                // Switch player face to the happy sparkle face on collection.
@@ -435,6 +499,8 @@ function drawGame() {
      drawMiniGameBackground();
      drawSparkles();
      drawPlayer();
+     drawScore();
+     drawHealth();
 }
 
 function gameLoop() {
@@ -466,13 +532,16 @@ function startSparkleSeeker() {
      // Create the game's own color engine here so CSS + DOM are ready BEFORE colors are read.
      // Pass the palette function itself so it can always pull the latest theme colors.
 
+     sparkleScore = 0;
+     playerHealth = maxPlayerHealth;
+     // Reset score and health whenever the game starts.
+
      updateMiniGameCanvasSize();
      // Match the game canvas drawing size to the CSS display size before the game starts drawing.
 
      resetPlayerPosition();
      bindKeyboardInput();
      bindPointerInput();
-     // Added mouseclick/touchscreen recognition.
      bindResizeHandler();
      gameLoop();
 }

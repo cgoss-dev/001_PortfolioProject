@@ -2,11 +2,11 @@
      "customFileOrder.rules": {
           "/Users/buggs/Desktop/GA/001_PortfolioProject": {
                "order": [
+                    "README.md",
                     "index.html",
                     "style.css",
                     "script.js",
                     "SparkleSeeker.js",
-                    "README.md",
                     "wireframe.png",
                     ".vscode"
                ],

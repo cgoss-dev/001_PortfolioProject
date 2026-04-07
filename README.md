@@ -5,15 +5,12 @@ Digital footprint, games, resources.
 <br><br>
 
 ### TO DO
--    Click canvas movement recognition
 -    Randomize tagline
 -    Obstacle draw/function/collision
 -    Glow burst upon collection
--    Scorekeeping function
--    Score display (+/-)
 -    Swap marquee/border color functionality
--    Start/Pause/Paused
--    Menu: Restart/Music/SFX
+-    Lower Left "MENU" (Restart/Music/SFX)
+-    Lower Right "Start" (Pause/Paused)
 -    Mobile: landscape mode bug
 -    Obstacle effects
 -    Levels
