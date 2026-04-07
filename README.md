@@ -5,12 +5,13 @@ Digital footprint, games, resources.
 <br><br>
 
 ### TO DO
--    Randomize tagline
 -    Obstacle draw/function/collision
--    Glow burst upon collection
--    Swap marquee/border color functionality
 -    Lower Left "MENU" (Restart/Music/SFX)
 -    Lower Right "Start" (Pause/Paused)
+-    Glow burst upon collection
+-    Obstacle effects
+-    Randomize tagline
+-    Swap marquee/border color functionality
 -    Mobile: landscape mode bug
 -    Obstacle effects
 -    Levels

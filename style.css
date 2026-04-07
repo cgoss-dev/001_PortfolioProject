@@ -47,7 +47,7 @@
 
      --text-size-marquee: clamp(3rem, 5vw, 4rem);
      --text-size-dropdown: var(--text-size-marquee);
-     --text-size-tagline: clamp(0.75rem, 1.25vw, 1rem);
+     --text-size-tagline: clamp(1rem, 1.15vw, 1.25rem);
 
      --text-color-marquee: var(--text-color);
      --text-color-dropdown: var(--text-color);

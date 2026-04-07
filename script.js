@@ -624,6 +624,39 @@ function drawSparkleRain() {
      window.requestAnimationFrame(drawSparkleRain);
 }
 
+// ==============================
+// NOTE: TAGLINE RANDOMIZER
+// ==============================
+
+const taglineBreaks = [
+     "shipping chaos to production.",
+     "building with HTML I found in a ditch.",
+     "making CSS do weird stuff on purpose.",
+     "running unsupervised through JavaScript.",
+     "console.log and pray.",
+     "fixing bugs by creating new ones.",
+     "getting bullied by the terminal",
+     "using vibes as framework.",
+     "speedrunning tutorial hell.",
+     "merge conflicts build character.",
+     "git commit issues.",
+     "commenting like I'll forget everything.",
+     "writing comments like apologies.",
+     "AI is my rubber duck.",
+     "asked AI to dumb it down. Twice."
+];
+
+function setRandomTaglineBreak() {
+     const el = document.querySelector(".tagline-break");
+     if (!el) return;
+
+    const randomIndex = Math.floor(Math.random() * taglineBreaks.length);
+     el.textContent = taglineBreaks[randomIndex];
+}
+
+// Run on page load
+setRandomTaglineBreak();
+
 /* NOTE: RESIZE */
 
 function handleResize() {
