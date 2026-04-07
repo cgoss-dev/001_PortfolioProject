@@ -32,15 +32,17 @@
 
      --page-width-wide: 72rem;
      --page-padding-y: clamp(0.75rem, 4vw, 2rem);
-     --page-padding-x: calc(var(--page-padding-y) * 3);
-     --page-section-gap: clamp(0.75rem, 3vw, 1.5rem);
+     --page-padding-x: calc(var(--page-padding-y) * 2);
+
+     --page-section-gap: var(--page-padding-y);
+     --canvas-outer-gap: var(--page-padding-y);
 
      --menu-button-color: var(--text-color);
      --menu-button-glow-color: var(--text-color);
-     --menu-dropdown-offset-y: 0.5rem;
+     --menu-dropdown-offset-y: 1.5rem;
      --menu-canvasboard-width-min: 12rem;
-     --menu-item-padding: 1rem;
-     --menu-opacity-open: 0.92;
+     --menu-item-padding: 0.75rem;
+     --menu-opacity-open: 0.9;
      --menu-edge-gap-y: 1rem;
      --menu-stack-gap: calc(var(--menu-edge-gap-y) / 2);
 
@@ -104,6 +106,9 @@
      --canvas-width: 100%;
      --canvas-height: auto;
 
+     --canvas-height-responsive: 18rem;
+     /* Use this to adjust canvas height. */
+
      /* LAYERS */
 
      --sparkle-layer-z: -1;
@@ -156,7 +161,8 @@ body {
      color: var(--text-color);
      font-family: var(--font-body);
      position: relative;
-     overflow: hidden; /* Stop scroll function */
+     overflow: hidden;
+     /* Stop scroll function */
 }
 
 .body-ody {
@@ -179,7 +185,7 @@ header {
      display: flex;
      flex-direction: column;
      gap: var(--page-section-gap);
-     padding-top: 0.25rem;
+     padding-top: 0;
 }
 
 h1 {
@@ -189,7 +195,7 @@ h1 {
 
 .hero-blurb {
      margin: 0;
-     padding-bottom: 1.5rem;
+     padding-bottom: 0;
 }
 
 .tagline {
@@ -337,16 +343,19 @@ h1 {
      min-height: 0;
 
      display: flex;
-     align-items: flex-end;
+     align-items: center;
+     justify-content: center;
 }
 
 .game-shell {
      width: 100%;
+     height: 100%;
      min-height: 0;
 
      display: flex;
-     align-items: flex-end;
+     align-items: center;
      justify-content: center;
+     padding-block: var(--canvas-outer-gap);
 }
 
 /* NOTE: BACKGROUND SPARKLE CANVAS */
@@ -366,11 +375,11 @@ h1 {
 
 #miniGameCanvas {
      display: block;
-     width: auto;
-     height: 100%;
+     width: min(100%, calc(100svh - var(--canvas-height-responsive)));
+     height: auto;
+     aspect-ratio: 1 / 1;
      max-width: 100%;
      max-height: 100%;
-     aspect-ratio: 1 / 1;
      background: var(--canvas-bg);
 
      border: var(--canvasboard-border);
@@ -382,10 +391,6 @@ h1 {
 /* NOTE: RESPONSIVE */
 
 @media (min-width: 48rem) {
-     .hero-blurb {
-          padding-bottom: 2rem;
-     }
-
      .tagline {
           line-height: 2rem;
      }
