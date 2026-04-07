@@ -238,18 +238,40 @@ h1 {
      font-size: var(--text-size-dropdown);
      line-height: 0.9;
      color: var(--menu-button-color);
-     -webkit-text-fill-color: var(--menu-button-glow-color);
-     text-shadow: var(--glow-text);
+     -webkit-text-fill-color: currentColor;
+     text-shadow:
+          0 0 0.02rem currentColor,
+          0 0 0.08rem currentColor,
+          0 0 0.25rem currentColor,
+          0 0 0.6rem currentColor;
+     opacity: 1;
+     transform: scale(1);
+
+     transition:
+          text-shadow 0.2s ease-in-out,
+          opacity 0.2s ease-in-out,
+          transform 0.2s ease-in-out,
+          filter 0.2s ease-in-out;
 }
 
 .nav-button:hover,
 .nav-button:focus-visible {
      color: var(--menu-button-color);
-     -webkit-text-fill-color: var(--menu-button-glow-color);
+     -webkit-text-fill-color: currentColor;
+     text-shadow:
+          0 0 0.02rem currentColor,
+          0 0 0.08rem currentColor,
+          0 0 0.25rem currentColor,
+          0 0 0.6rem currentColor;
 }
 
 .nav-button:focus-visible {
      filter: brightness(1.1);
+}
+
+/* Optional soft state change when the wrapper is open */
+.dropdown-low.menu-open .nav-button {
+     transform: scale(0.98);
 }
 
 /* NOTE: NAV MENU PANEL */
