@@ -38,6 +38,15 @@ const player = {
 const keys = {};
 const sparkles = [];
 
+const pointerInput = {
+     active: false,
+     x: 0,
+     y: 0,
+     pointerId: null
+};
+
+let pointerInputBound = false;
+
 const sparkleChars = ["✦", "✧"];
 
 let sparkleSpawnTimer = 0;
@@ -113,6 +122,72 @@ function bindKeyboardInput() {
      keyboardInputBound = true;
 }
 
+function getCanvasPointerPosition(event) {
+     if (!miniGameCanvas) {
+          return { x: 0, y: 0 };
+     }
+
+     const rect = miniGameCanvas.getBoundingClientRect();
+
+     const x = ((event.clientX - rect.left) / rect.width) * miniGameWidth;
+     const y = ((event.clientY - rect.top) / rect.height) * miniGameHeight;
+
+     return { x, y };
+}
+
+function bindPointerInput() {
+     if (!miniGameCanvas || pointerInputBound) {
+          return;
+     }
+
+     miniGameCanvas.style.touchAction = "none";
+     // Prevent browser scrolling/zoom gestures from hijacking the game.
+
+     miniGameCanvas.addEventListener("pointerdown", function (event) {
+          event.preventDefault();
+
+          const position = getCanvasPointerPosition(event);
+
+          pointerInput.active = true;
+          pointerInput.x = position.x;
+          pointerInput.y = position.y;
+          pointerInput.pointerId = event.pointerId;
+
+          miniGameCanvas.setPointerCapture(event.pointerId);
+     });
+
+     miniGameCanvas.addEventListener("pointermove", function (event) {
+          if (!pointerInput.active) {
+               return;
+          }
+
+          if (pointerInput.pointerId !== event.pointerId) {
+               return;
+          }
+
+          const position = getCanvasPointerPosition(event);
+
+          pointerInput.x = position.x;
+          pointerInput.y = position.y;
+     });
+
+     miniGameCanvas.addEventListener("pointerup", function (event) {
+          if (pointerInput.pointerId === event.pointerId) {
+               pointerInput.active = false;
+               pointerInput.pointerId = null;
+          }
+     });
+
+     miniGameCanvas.addEventListener("pointercancel", function (event) {
+          if (pointerInput.pointerId === event.pointerId) {
+               pointerInput.active = false;
+               pointerInput.pointerId = null;
+          }
+     });
+
+     pointerInputBound = true;
+}
+
 // NOTE: PLAYER
 
 function resetPlayerPosition() {
@@ -138,24 +213,42 @@ function clampPlayerToCanvas() {
 }
 
 function updatePlayer() {
+     let movedByKeyboard = false;
+
      if (keys["w"] || keys["arrowup"]) {
           player.y -= player.speed;
+          movedByKeyboard = true;
      }
 
      if (keys["s"] || keys["arrowdown"]) {
           player.y += player.speed;
+          movedByKeyboard = true;
      }
 
      if (keys["a"] || keys["arrowleft"]) {
           player.x -= player.speed;
+          movedByKeyboard = true;
      }
 
      if (keys["d"] || keys["arrowright"]) {
           player.x += player.speed;
+          movedByKeyboard = true;
+     }
+
+     if (!movedByKeyboard && pointerInput.active) {
+          const dx = pointerInput.x - player.x;
+          const dy = pointerInput.y - player.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+
+          if (distance > 4) {
+               player.x += (dx / distance) * player.speed;
+               player.y += (dy / distance) * player.speed;
+          }
      }
 
      clampPlayerToCanvas();
 }
+// Added mouseclick/touchscreen recognition.
 
 function updatePlayerFaceState() {
      if (player.sparkleFaceTimer > 0) {
@@ -285,25 +378,24 @@ function drawSparkles() {
 
           miniGameCtx.font = `${sparkle.size}px Arial, Helvetica, sans-serif`;
 
-          // NOTE: COLOR BOOST
-          // Brighten colored sparkles slightly so they compete with white sparkles visually.
           miniGameCtx.fillStyle = sparkle.color;
+          // Brighten colored sparkles slightly so they compete with white sparkles visually.
 
-          // NOTE: GLOW BOOST
-          // Multiply blur slightly so colored sparkles read brighter.
           miniGameCtx.shadowBlur = glowSettings.gameParticleBlur * 1.2;
+          // Multiply blur slightly so colored sparkles read brighter.
 
           miniGameCtx.shadowColor = sparkle.color;
 
-          // NOTE: DOUBLE DRAW FOR INTENSITY
-          // First pass (glow)
+          // DOUBLE DRAW FOR INTENSITY
+
           miniGameCtx.globalAlpha = 0.9;
           miniGameCtx.fillText(sparkle.char, sparkle.x, sparkle.y);
+          // First pass (glow)
 
-          // Second pass (core brightness)
           miniGameCtx.globalAlpha = 1;
           miniGameCtx.shadowBlur = 0;
           miniGameCtx.fillText(sparkle.char, sparkle.x, sparkle.y);
+          // Second pass (core brightness)
 
           miniGameCtx.restore();
      }
@@ -379,6 +471,8 @@ function startSparkleSeeker() {
 
      resetPlayerPosition();
      bindKeyboardInput();
+     bindPointerInput();
+     // Added mouseclick/touchscreen recognition.
      bindResizeHandler();
      gameLoop();
 }
