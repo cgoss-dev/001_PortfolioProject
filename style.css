@@ -208,7 +208,9 @@ h1 {
 
 .dropdown-low {
      position: absolute;
+     top: calc(50% + (var(--page-section-gap) / 2));
      right: calc((100% - var(--canvas-frame-width)) / 2);
+     transform: translateY(-20%);
      z-index: var(--menu-layer-z);
      display: flex;
      flex-direction: column;
@@ -274,7 +276,7 @@ h1 {
 
 .dropdown-low.menu-open .nav-menu {
      opacity: var(--menu-opacity-open);
-     transform: translate(-1rem, 0);
+     transform: translate(-2rem, -1rem);
      pointer-events: auto;
 }
 
@@ -294,7 +296,6 @@ h1 {
      padding: var(--menu-item-padding);
      text-decoration: none;
      color: var(--text-color-dropdown);
-     font-weight: 600;
      background: transparent;
      transition:
           background-color 0.2s ease-in-out,
@@ -389,7 +390,7 @@ h1 {
 
 /* NOTE: RESPONSIVE */
 
-@media (max-width: 30rem) {
+@media (max-width: 33rem) {
      .tagline-break {
           display: block;
      }
