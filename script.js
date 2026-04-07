@@ -239,7 +239,7 @@ function createColorEngine(colorsOrFactory) {
 }
 
 /* NOTE: GLOW */
-/* Marquee uses universal text-shadow style glow. Menu glyph uses old shadow trick because bungee font needs extra help. */
+/* Marquee and menu glyph now both use the universal text-shadow glow style. */
 
 function buildUniversalTextGlow(color) {
      const textSettings = getTextSettings();
@@ -266,17 +266,39 @@ function buildBungeeGlyphGlow(color) {
 const navButton = document.querySelector(".nav-button");
 const dropdownLow = document.querySelector(".dropdown-low");
 const navMenu = document.getElementById("navMenu");
+let navGlyphSwapTimer = null;
 
 function syncNavButtonGlow() {
      if (!navButton) {
           return;
      }
 
-     const currentColor = getCssColor("--menu-button-glow-color", getCssColor("--menu-button-color", getCssColor("--text-color", "#ffffff")));
+     const currentColor = getCssColor("--menu-button-color", getCssColor("--text-color", "#ffffff"));
 
-     navButton.style.color = getCssColor("--menu-button-color", "#ffffff");
-     navButton.style.webkitTextFillColor = currentColor;
-     navButton.style.textShadow = buildBungeeGlyphGlow(currentColor);
+     navButton.style.color = currentColor;
+     navButton.style.webkitTextFillColor = "currentColor";
+     navButton.style.textShadow = buildUniversalTextGlow(currentColor);
+}
+
+function swapNavGlyph(nextGlyph) {
+     if (!navButton) {
+          return;
+     }
+
+     if (navButton.textContent === nextGlyph) {
+          syncNavButtonGlow();
+          return;
+     }
+
+     window.clearTimeout(navGlyphSwapTimer);
+
+     navButton.style.opacity = "0";
+
+     navGlyphSwapTimer = window.setTimeout(function () {
+          navButton.textContent = nextGlyph;
+          syncNavButtonGlow();
+          navButton.style.opacity = "1";
+     }, 100);
 }
 
 function openMenu() {
@@ -285,7 +307,7 @@ function openMenu() {
      }
 
      dropdownLow.classList.add("menu-open");
-     navButton.textContent = "×";
+     swapNavGlyph("×");
      navButton.setAttribute("aria-expanded", "true");
      syncNavButtonGlow();
 }
@@ -296,7 +318,7 @@ function closeMenu() {
      }
 
      dropdownLow.classList.remove("menu-open");
-     navButton.textContent = "+";
+     swapNavGlyph("+");
      navButton.setAttribute("aria-expanded", "false");
      syncNavButtonGlow();
 }

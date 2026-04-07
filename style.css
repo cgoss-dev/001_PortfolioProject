@@ -30,9 +30,9 @@
 
      /* NOTE: PAGE LAYOUT */
 
-     --page-width-wide: 72rem;
+     /* --page-width-wide: 72rem;
      --page-padding-y: clamp(0.75rem, 4vw, 2rem);
-     --page-padding-x: calc(var(--page-padding-y) * 2);
+     --page-padding-x: calc(var(--page-padding-y) * 2); */
 
      --page-section-gap: var(--page-padding-y);
      --canvas-outer-gap: var(--page-padding-y);
@@ -87,11 +87,13 @@
           var(--glow-max) var(--canvasboard-glow-color);
 
      /* Core JS reads these exact names for the bungee-style +/- glow. */
+     /* Black duplicate behind the white +/- was coming from the old offset shadows.
+        Leaving these variables in place so JS does not break, but neutralizing them. */
      --glow-bg-particle-blur: 12;
      --glow-game-particle-blur: 16;
      --bungee-glow-blur: 0 0 0.05rem;
-     --bungee-shadow-offset-1: 0.125rem 0.125rem 0 rgba(0, 0, 0, 0.8);
-     --bungee-shadow-offset-2: 0.25rem 0.25rem 0 rgba(0, 0, 0, 0.6);
+     --bungee-shadow-offset-1: 0 0 0 transparent;
+     --bungee-shadow-offset-2: 0 0 0 transparent;
 
      /* CANVASBOARD */
 
@@ -239,15 +241,13 @@ h1 {
      line-height: 0.9;
      color: var(--menu-button-color);
      -webkit-text-fill-color: currentColor;
-     text-shadow:
-          0 0 0.02rem currentColor,
-          0 0 0.08rem currentColor,
-          0 0 0.25rem currentColor,
-          0 0 0.6rem currentColor;
+     text-shadow: var(--glow-text);
      opacity: 1;
      transform: scale(1);
+     filter: none;
 
      transition:
+          color 0.2s ease-in-out,
           text-shadow 0.2s ease-in-out,
           opacity 0.2s ease-in-out,
           transform 0.2s ease-in-out,
@@ -258,18 +258,14 @@ h1 {
 .nav-button:focus-visible {
      color: var(--menu-button-color);
      -webkit-text-fill-color: currentColor;
-     text-shadow:
-          0 0 0.02rem currentColor,
-          0 0 0.08rem currentColor,
-          0 0 0.25rem currentColor,
-          0 0 0.6rem currentColor;
+     text-shadow: var(--glow-text);
 }
 
 .nav-button:focus-visible {
      filter: brightness(1.1);
 }
 
-/* Optional soft state change when the wrapper is open */
+/* Optional soft visual state while menu is open */
 .dropdown-low.menu-open .nav-button {
      transform: scale(0.98);
 }
