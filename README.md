@@ -5,9 +5,18 @@ Digital footprint, games, resources.
 <br><br>
 
 ### TO DO
--    Game win/lose conditions.
 -    Drag button for player movement.
+-    Flanking buttons for future dev.
 -    Obstacle effects affect player size, swap particles, etc.
--    Swap marquee/border color functionality
--    Mobile: landscape mode bug
--    Levels
+-    Swap marquee/border color functionality.
+-    Mobile landscape mode bug.
+-    Game win/lose conditions.
+     -    Canvas starts at "LET'S PLAY".
+     -    Zero hearts = "TRY AGAIN".
+     -    Max hearts = 2x points (gained & lost).
+     -    Levels begin at 0. Each level is 25 points.
+
+### FUTURE GAMES
+-    Farming sim.
+-    Quiz game.
+-    Choose your own adventure.
