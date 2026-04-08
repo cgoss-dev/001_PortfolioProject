@@ -18,22 +18,29 @@ let miniGameHeight = 0;
 const playerFaces = {
      neutral: "😐",
      sparkle: "😁",
-     obstacle: "😫"
+     obstacle: "😫",
+     maxHealth: "🤩",
+     lowHealth: "😰",
+     dead: "☠️"
 };
 
 const player = {
      x: 0,
      y: 0,
      char: playerFaces.neutral,
-     size: 64,
+     size: 54,
      // Size of player emoji. Recommended 40-60px for finger size.
      speed: 3,
      // Base player speed.
      radius: 30,
      // Size of collision box/circle.
      sparkleFaceTimer: 0
-     // Counts down how long the sparkle face should stay active after collecting a sparkle or hitting an obstacle.
+     // Counts down how long the temporary sparkle / obstacle face should stay active.
 };
+
+const playerBaseHealth = 3;
+const playerBaseSpeed = 3;
+const playerSpeedPerHeart = 0.5;
 
 const keys = {};
 const sparkles = [];
@@ -60,14 +67,32 @@ const obstacleTypes = [
           name: "affectType",
           char: "⚠\uFE0E",
           effect: ["swapSparkleObjects"],
-          penalty: 2
+          penalty: 1
      }
 ];
 // Keep these as Unicode text presentation so they stay consistent and do not switch to emoji style unexpectedly.
 
 let sparkleScore = 0;
+let sparkleHealProgress = 0;
+// Every 10 collected sparkles restores 1 heart.
+
 let playerHealth = 3;
-const maxPlayerHealth = 3;
+const maxPlayerHealth = 10;
+
+let gameStarted = false;
+let gamePaused = true;
+
+const gameButton = {
+     x: 0,
+     y: 0,
+     width: 0,
+     height: 0,
+     paddingX: 16,
+     paddingY: 10,
+     isPressed: false,
+     pressTimer: 0
+};
+// Drawn inside the canvas. Click/tap to toggle START and PAUSE.
 
 const pointerInput = {
      active: false,
@@ -107,6 +132,15 @@ function isCollidingWithSparkle(playerObject, sparkleObject) {
      // Collision circle, so we do not have to rely on glyphs being the exact same size.
 }
 
+function isPointInsideRect(x, y, rect) {
+     return (
+          x >= rect.x &&
+          x <= rect.x + rect.width &&
+          y >= rect.y &&
+          y <= rect.y + rect.height
+     );
+}
+
 function resizeMiniGameCanvasFromCss() {
      if (!miniGameCanvas || !miniGameCtx) {
           return;
@@ -129,6 +163,104 @@ function resizeMiniGameCanvasFromCss() {
      miniGameWidth = rect.width;
      miniGameHeight = rect.height;
      // Store the visible canvas size separately so gameplay math uses screen-sized values.
+}
+
+function getDefaultPlayerFace() {
+     if (playerHealth <= 0) {
+          return playerFaces.dead;
+     }
+
+     if (playerHealth === maxPlayerHealth) {
+          return playerFaces.maxHealth;
+     }
+
+     if (playerHealth <= 2) {
+          return playerFaces.lowHealth;
+     }
+
+     return playerFaces.neutral;
+}
+
+function updatePlayerSpeedFromHealth() {
+     const heartDifference = playerHealth - playerBaseHealth;
+     player.speed = Math.max(0, playerBaseSpeed + (heartDifference * playerSpeedPerHeart));
+     // Speed rises or falls by 0.5 for every heart above or below the starting 3 hearts, controlled in BASE CONST.
+}
+
+function refreshPlayerStateFace() {
+     player.char = getDefaultPlayerFace();
+}
+
+function applyTemporaryPlayerFace(face, duration) {
+     if (playerHealth <= 0 || playerHealth === maxPlayerHealth || playerHealth <= 2) {
+          player.sparkleFaceTimer = 0;
+          refreshPlayerStateFace();
+          return;
+     }
+
+     player.char = face;
+     player.sparkleFaceTimer = duration;
+}
+
+function syncPlayerHealthState() {
+     updatePlayerSpeedFromHealth();
+
+     if (player.sparkleFaceTimer <= 0 || playerHealth <= 0 || playerHealth === maxPlayerHealth || playerHealth <= 2) {
+          refreshPlayerStateFace();
+     }
+}
+
+function getPauseButtonLabel() {
+     if (!gameStarted || gamePaused) {
+          return "START";
+     }
+
+     return "PAUSE";
+}
+
+function updatePauseButtonBounds() {
+     if (!miniGameCtx) {
+          return;
+     }
+
+     const label = getPauseButtonLabel();
+
+     miniGameCtx.save();
+     miniGameCtx.font = '24px "Bungee", "Bungee Shade", cursive';
+
+     const measuredText = miniGameCtx.measureText(label);
+     const textWidth = measuredText.width;
+
+     gameButton.width = textWidth + (gameButton.paddingX * 2);
+     gameButton.height = 24 + (gameButton.paddingY * 2);
+
+     gameButton.x = (miniGameWidth - gameButton.width) / 2;
+     gameButton.y = miniGameHeight - gameButton.height - 18;
+
+     miniGameCtx.restore();
+}
+
+function updatePauseButtonState() {
+     if (gameButton.pressTimer > 0) {
+          gameButton.pressTimer -= 1;
+     } else {
+          gameButton.isPressed = false;
+     }
+}
+
+function toggleGamePause() {
+     if (!gameStarted) {
+          gameStarted = true;
+          gamePaused = false;
+          return;
+     }
+
+     gamePaused = !gamePaused;
+
+     if (gamePaused) {
+          pointerInput.active = false;
+          pointerInput.pointerId = null;
+     }
 }
 
 function bindKeyboardInput() {
@@ -182,6 +314,18 @@ function bindPointerInput() {
           event.preventDefault();
 
           const position = getCanvasPointerPosition(event);
+          updatePauseButtonBounds();
+
+          if (isPointInsideRect(position.x, position.y, gameButton)) {
+               gameButton.isPressed = true;
+               gameButton.pressTimer = 15; // Change length of button press animation.
+               toggleGamePause();
+               return;
+          }
+
+          if (gamePaused) {
+               return;
+          }
 
           pointerInput.active = true;
           pointerInput.x = position.x;
@@ -291,7 +435,7 @@ function updatePlayerFaceState() {
      }
 
      if (player.sparkleFaceTimer <= 0) {
-          player.char = playerFaces.neutral;
+          refreshPlayerStateFace();
      }
 }
 
@@ -349,26 +493,106 @@ function drawHealth() {
      const filledHeart = "♥";
      const emptyHeart = "♡";
 
-     let healthDisplay = "";
+     const heartsPerRow = 5;
 
-     for (let i = 0; i < maxPlayerHealth; i += 1) {
+     let topRow = "";
+     let bottomRow = "";
+
+     // TOP ROW: hearts 10 → 6
+     for (let i = maxPlayerHealth - 1; i >= heartsPerRow; i -= 1) {
           if (i < playerHealth) {
-               healthDisplay += filledHeart;
+               topRow += filledHeart;
           } else {
-               healthDisplay += emptyHeart;
+               topRow += emptyHeart;
           }
      }
-     // Build a simple heart string like ♥♥♥, ♥♥♡, or ♥♡♡.
 
-     miniGameCtx.font = '32px "Noto Sans Mono", monospace'; // Use a font that properly supports heart symbols.
+     // BOTTOM ROW: hearts 5 → 1
+     for (let i = heartsPerRow - 1; i >= 0; i -= 1) {
+          if (i < playerHealth) {
+               bottomRow += filledHeart;
+          } else {
+               bottomRow += emptyHeart;
+          }
+     }
 
+     miniGameCtx.font = '26px "Noto Sans Mono", monospace';
      miniGameCtx.textAlign = "right";
      miniGameCtx.textBaseline = "top";
-     miniGameCtx.fillStyle = "#ff6b9a";
-     miniGameCtx.shadowColor = "rgba(255, 107, 154, 0.35)";
+     miniGameCtx.fillStyle = "#ea76cb";
+     miniGameCtx.shadowColor = "#ea76cb";
      miniGameCtx.shadowBlur = 8;
 
-     miniGameCtx.fillText(healthDisplay, miniGameWidth - 16, 14);
+     const healthX = miniGameWidth - 16;
+     const healthY = 14;
+     const rowGap = 24;
+
+     miniGameCtx.fillText(topRow, healthX, healthY);
+     miniGameCtx.fillText(bottomRow, healthX, healthY + rowGap);
+
+     miniGameCtx.restore();
+}
+
+function drawPauseButton() {
+     if (!miniGameCtx) {
+          return;
+     }
+
+     updatePauseButtonBounds();
+
+     const label = getPauseButtonLabel();
+     const pressOffsetY = gameButton.isPressed ? 3 : 0;
+     const pressScale = gameButton.isPressed ? 0.96 : 1;
+     const buttonCenterX = gameButton.x + (gameButton.width / 2);
+     const buttonCenterY = gameButton.y + (gameButton.height / 2) + pressOffsetY;
+
+     miniGameCtx.save();
+
+     miniGameCtx.translate(buttonCenterX, buttonCenterY);
+     miniGameCtx.scale(pressScale, pressScale);
+     miniGameCtx.translate(-buttonCenterX, -buttonCenterY);
+
+     miniGameCtx.fillStyle = gameButton.isPressed
+          ? "rgba(255, 255, 255, 0.16)"
+          : "rgba(255, 255, 255, 0.08)";
+
+     miniGameCtx.strokeStyle = gameButton.isPressed
+          ? "rgba(255, 255, 255, 0.55)"
+          : "rgba(255, 255, 255, 0.35)";
+
+     miniGameCtx.lineWidth = 2;
+
+     miniGameCtx.shadowColor = gameButton.isPressed
+          ? "rgba(255, 255, 255, 0.28)"
+          : "rgba(255, 255, 255, 0.18)";
+
+     miniGameCtx.shadowBlur = gameButton.isPressed ? 14 : 10;
+
+     miniGameCtx.beginPath();
+     miniGameCtx.roundRect(
+          gameButton.x,
+          gameButton.y + pressOffsetY,
+          gameButton.width,
+          gameButton.height,
+          12
+     );
+     miniGameCtx.fill();
+     miniGameCtx.stroke();
+
+     miniGameCtx.font = '24px "Bungee", "Bungee Shade", cursive';
+     miniGameCtx.textAlign = "center";
+     miniGameCtx.textBaseline = "middle";
+     miniGameCtx.fillStyle = "#ffffff";
+     miniGameCtx.shadowColor = gameButton.isPressed
+          ? "rgba(255, 255, 255, 0.5)"
+          : "rgba(255, 255, 255, 0.35)";
+     miniGameCtx.shadowBlur = gameButton.isPressed ? 10 : 8;
+
+     miniGameCtx.fillText(
+          label,
+          gameButton.x + (gameButton.width / 2),
+          gameButton.y + (gameButton.height / 2) + 1 + pressOffsetY
+     );
 
      miniGameCtx.restore();
 }
@@ -387,6 +611,7 @@ function createCollisionBurst(x, y, color, burstType) {
      for (let i = 0; i < burstCount; i += 1) {
           const angle = (Math.PI * 2 * i) / burstCount + (Math.random() * 0.5);
           const speed = randomNumber(burstSpeedMin, burstSpeedMax);
+          const life = Math.floor(randomNumber(burstLifeMin, burstLifeMax));
 
           collisionBursts.push({
                x: x,
@@ -396,8 +621,8 @@ function createCollisionBurst(x, y, color, burstType) {
                size: randomNumber(burstSizeMin, burstSizeMax),
                char: randomItem(burstChars),
                color: color,
-               life: Math.floor(randomNumber(burstLifeMin, burstLifeMax)),
-               maxLife: Math.floor(randomNumber(burstLifeMin, burstLifeMax)),
+               life: life,
+               maxLife: life,
                glowBoost: burstType === "obstacle" ? 2 : 1.4
           });
      }
@@ -542,11 +767,18 @@ function collectSparkles() {
                sparkleScore += 1;
                // Add 1 point for each sparkle collected.
 
-               player.char = playerFaces.sparkle;
-               // Switch player face to the happy sparkle face on collection.
+               sparkleHealProgress += 1;
+               // Count sparkles toward the next heart refill.
 
-               player.sparkleFaceTimer = 60;
-               // Keep the sparkle face for a short time.
+               while (sparkleHealProgress >= 10 && playerHealth < maxPlayerHealth) {
+                    sparkleHealProgress -= 10;
+                    playerHealth += 1;
+               }
+               // Every 10 sparkles restores 1 heart, up to the max.
+
+               syncPlayerHealthState();
+               applyTemporaryPlayerFace(playerFaces.sparkle, 60);
+               // Switch player face to the happy sparkle face on collection unless a health-state face should override it.
           }
      }
 }
@@ -658,20 +890,16 @@ function hitObstacles() {
                // Remove obstacle on hit.
 
                sparkleScore -= obstacle.type.penalty;
-               // Negative points for hitting an obstacle.
+               sparkleScore = Math.max(0, sparkleScore);
+               // Negative points for hitting an obstacle, but never below zero.
 
                playerHealth -= 1;
                playerHealth = Math.max(0, playerHealth);
                // Remove health, but do not allow it to go below zero.
 
-               player.char = playerFaces.obstacle;
-               // Switch player face to the hurt face on collision.
-
-               player.sparkleFaceTimer = 30;
-               // Keep the obstacle face for a short time.
-
-               // Step 4 effect logic is intentionally not added yet.
-               // This only handles negative score + health damage for now.
+               syncPlayerHealthState();
+               applyTemporaryPlayerFace(playerFaces.obstacle, 30);
+               // Switch player face to the hurt face on collision unless a health-state face should override it.
           }
      }
 }
@@ -719,8 +947,34 @@ function drawMiniGameBackground() {
      miniGameCtx.clearRect(0, 0, miniGameWidth, miniGameHeight);
      // Clear using the visible canvas size so drawing lines up with what the user sees.
 
-     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.75)"; // Canvas opacity.
+     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.75)";
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
+}
+
+function drawUiUnderlay() {
+     if (!miniGameCtx) {
+          return;
+     }
+
+     const centerX = miniGameWidth / 2;
+     const centerY = miniGameHeight / 2;
+     const distanceToCorner = Math.sqrt((centerX * centerX) + (centerY * centerY));
+
+     const underlayGradient = miniGameCtx.createRadialGradient(
+          centerX, centerY, distanceToCorner * 0.1,
+          centerX, centerY, distanceToCorner
+     );
+
+     underlayGradient.addColorStop(0, "rgba(255, 255, 255, 0)");
+     underlayGradient.addColorStop(0.6, "rgba(255, 255, 255, 0)");
+     underlayGradient.addColorStop(0.8, "rgba(255, 255, 255, 0.1)");
+     underlayGradient.addColorStop(1, "rgba(255, 255, 255, 0.2)");
+
+     miniGameCtx.save();
+     miniGameCtx.fillStyle = underlayGradient;
+     miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
+     miniGameCtx.restore();
+     // Constant, non-pulsing, soft white vignette to gently support readability around the UI edges.
 }
 
 function updateMiniGameCanvasSize() {
@@ -731,6 +985,12 @@ function updateMiniGameCanvasSize() {
 // NOTE: GAME UPDATE DRAW LOOP
 
 function updateGame() {
+     updatePauseButtonState();
+
+     if (gamePaused) {
+          return;
+     }
+
      updatePlayer();
      updatePlayerFaceState();
      updateSparkleSpawns();
@@ -744,12 +1004,14 @@ function updateGame() {
 
 function drawGame() {
      drawMiniGameBackground();
+     drawUiUnderlay();
      drawSparkles();
      drawObstacles();
      drawCollisionBursts();
      drawPlayer();
      drawScore();
      drawHealth();
+     drawPauseButton();
 }
 
 function gameLoop() {
@@ -768,6 +1030,7 @@ function bindResizeHandler() {
      window.addEventListener("resize", function () {
           updateMiniGameCanvasSize();
           resetPlayerPosition();
+          updatePauseButtonBounds();
      });
      // On resize, first update the canvas drawing space, then re-center the player inside the new visible area.
 
@@ -782,7 +1045,11 @@ function startSparkleSeeker() {
      // Pass the palette function itself so it can always pull the latest theme colors.
 
      sparkleScore = 0;
-     playerHealth = maxPlayerHealth;
+     sparkleHealProgress = 0;
+     playerHealth = playerBaseHealth;
+     gameStarted = false;
+     gamePaused = true;
+     // Start in a paused state until the player clicks START.
 
      sparkles.length = 0;
      obstacles.length = 0;
@@ -793,10 +1060,13 @@ function startSparkleSeeker() {
      obstacleSpawnTimer = 0;
      // Reset timers whenever the game starts.
 
+     syncPlayerHealthState();
+
      updateMiniGameCanvasSize();
      // Match the game canvas drawing size to the CSS display size before the game starts drawing.
 
      resetPlayerPosition();
+     updatePauseButtonBounds();
      bindKeyboardInput();
      bindPointerInput();
      bindResizeHandler();

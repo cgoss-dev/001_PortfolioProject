@@ -47,8 +47,8 @@ function getGlowSettings() {
 function getSparkleSettings() {
      return {
           countMax: getCssNumber("--sparkle-count-max", 180),
-          sizeMin: getCssNumber("--sparkle-size-min", 12),
-          sizeMax: getCssNumber("--sparkle-size-max", 24),
+          sizeMin: getCssNumber("--sparkle-size-min", 16),
+          sizeMax: getCssNumber("--sparkle-size-max", 26),
           speedMin: getCssNumber("--sparkle-speed-min", 0.2),
           speedMax: getCssNumber("--sparkle-speed-max", 0.7),
           density: getCssNumber("--sparkle-density", 0.00015),

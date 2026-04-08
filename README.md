@@ -5,12 +5,8 @@ Digital footprint, games, resources.
 <br><br>
 
 ### TO DO
--    Obstacle draw/function/collision
 -    Lower Left "MENU" (Restart/Music/SFX)
--    Lower Right "Start" (Pause/Paused)
--    Glow burst upon collection
 -    Obstacle effects
 -    Swap marquee/border color functionality
 -    Mobile: landscape mode bug
--    Obstacle effects
 -    Levels
