@@ -72,8 +72,6 @@ export const playerFaces = {
      dead: "☠️"
 };
 
-// NOTE: PLAYER DATA
-
 export const player = {
      x: 0,
      y: 0,
@@ -84,7 +82,7 @@ export const player = {
      // Base player speed.
      radius: 30,
      // Size of collision box/circle.
-     sparkleFaceTimer: 0
+     sparkleFaceTimer: 0,
      // FIXME: Counts down how long the temporary sparkle / obstacle face should stay active.
 };
 

@@ -49,18 +49,16 @@ import {
 import {
      createColorEngine,
      getRainbowPalette,
-     getSparkleSettings
+     getGameParticleSettings
 } from "./game-theme.js";
-// These helpers read theme values from CSS and build the shared color engine.
-// They live in game-theme.js so the game modules do not have to rely on script.js globals.
+// 🔥 IMPORTANT CHANGE
+// We now use ONE shared particle system instead of sparkle-specific settings.
 
 // NOTE: PLAYER
 
 export function resetPlayerPosition() {
      player.x = miniGameWidth / 2;
      player.y = miniGameHeight / 2;
-     // Use visible canvas size here, not the raw internal canvas size.
-     // Keeps player centered where the user actually sees the canvas.
 }
 
 export function clampPlayerToCanvas() {
@@ -75,7 +73,6 @@ export function clampPlayerToCanvas() {
           player.radius + edgePadding,
           Math.min(miniGameHeight - player.radius - edgePadding, player.y)
      );
-     // Clamp against the visible game area so the player stays inside the on-screen canvas.
 }
 
 export function updatePlayer() {
@@ -114,7 +111,6 @@ export function updatePlayer() {
 
      clampPlayerToCanvas();
 }
-// Added mouseclick/touchscreen recognition.
 
 export function updatePlayerFaceState() {
      if (player.sparkleFaceTimer > 0) {
@@ -126,50 +122,73 @@ export function updatePlayerFaceState() {
      }
 }
 
-// NOTE: COLLISION BURSTS
+// NOTE: COLLISION BURSTS (NOW FULLY CENTRALIZED)
 
 export function createCollisionBurst(x, y, color, burstType) {
-     const burstCount = burstType === "obstacle" ? 12 : 8;
-     const burstSizeMin = burstType === "obstacle" ? 16 : 12;
-     const burstSizeMax = burstType === "obstacle" ? 28 : 20;
-     const burstSpeedMin = burstType === "obstacle" ? 1.2 : 0.8;
-     const burstSpeedMax = burstType === "obstacle" ? 3.2 : 2.1;
-     const burstLifeMin = burstType === "obstacle" ? 24 : 18;
-     const burstLifeMax = burstType === "obstacle" ? 40 : 28;
+     const settings = getGameParticleSettings();
 
-     for (let i = 0; i < burstCount; i += 1) {
-          const angle = (Math.PI * 2 * i) / burstCount + (Math.random() * 0.5);
-          const speed = randomNumber(burstSpeedMin, burstSpeedMax);
-          const life = Math.floor(randomNumber(burstLifeMin, burstLifeMax));
+     const isObstacle = burstType === "obstacle";
+
+     const count = Math.floor(
+          settings.burstParticleCount *
+          (isObstacle ? settings.obstacleBurstCountMultiplier : settings.sparkleBurstCountMultiplier)
+     );
+
+     const sizeMin = settings.burstParticleSizeMin *
+          (isObstacle ? settings.obstacleBurstSizeMultiplier : settings.sparkleBurstSizeMultiplier);
+
+     const sizeMax = settings.burstParticleSizeMax *
+          (isObstacle ? settings.obstacleBurstSizeMultiplier : settings.sparkleBurstSizeMultiplier);
+
+     const speedMin = settings.burstParticleSpeedMin *
+          (isObstacle ? settings.obstacleBurstSpeedMultiplier : settings.sparkleBurstSpeedMultiplier);
+
+     const speedMax = settings.burstParticleSpeedMax *
+          (isObstacle ? settings.obstacleBurstSpeedMultiplier : settings.sparkleBurstSpeedMultiplier);
+
+     const lifeMin = settings.burstParticleLifeMin *
+          (isObstacle ? settings.obstacleBurstLifeMultiplier : settings.sparkleBurstLifeMultiplier);
+
+     const lifeMax = settings.burstParticleLifeMax *
+          (isObstacle ? settings.obstacleBurstLifeMultiplier : settings.sparkleBurstLifeMultiplier);
+
+     for (let i = 0; i < count; i += 1) {
+          const angle = (Math.PI * 2 * i) / count + (Math.random() * 0.5);
+          const speed = randomNumber(speedMin, speedMax);
+          const life = Math.floor(randomNumber(lifeMin, lifeMax));
 
           collisionBursts.push({
-               x: x,
-               y: y,
+               x,
+               y,
                dx: Math.cos(angle) * speed,
                dy: Math.sin(angle) * speed,
-               size: randomNumber(burstSizeMin, burstSizeMax),
+               size: randomNumber(sizeMin, sizeMax),
                char: randomItem(burstChars),
-               color: color,
-               life: life,
+               color,
+               life,
                maxLife: life,
-               glowBoost: burstType === "obstacle" ? 2 : 1.4
+               glowBoost: isObstacle ? 2 : 1.4
           });
      }
 
      collisionBursts.push({
-          x: x,
-          y: y,
+          x,
+          y,
           dx: 0,
           dy: 0,
-          size: burstType === "obstacle" ? 72 : 56,
+          size: settings.burstParticleCenterSize *
+               (isObstacle
+                    ? settings.obstacleBurstCenterSizeMultiplier
+                    : settings.sparkleBurstCenterSizeMultiplier),
           char: "✦",
-          color: color,
-          life: burstType === "obstacle" ? 12 : 10,
-          maxLife: burstType === "obstacle" ? 12 : 10,
-          glowBoost: burstType === "obstacle" ? 3 : 2
+          color,
+          life: isObstacle ? 12 : 10,
+          maxLife: isObstacle ? 12 : 10,
+          glowBoost: isObstacle ? 3 : 2
      });
-     // Add one larger centered glow pop so the collision feels more punchy.
 }
+
+// NOTE: COLLISION BURST UPDATE
 
 export function updateCollisionBursts() {
      for (let i = collisionBursts.length - 1; i >= 0; i -= 1) {
@@ -186,35 +205,56 @@ export function updateCollisionBursts() {
      }
 }
 
-// NOTE: SPARKLES
+// NOTE: SPARKLES (NOW USING SHARED PARTICLE SIZE)
 
 export function createSparkle() {
      if (!gameSparkleColorEngine) {
           setGameSparkleColorEngine(createColorEngine(getRainbowPalette));
      }
-     // Safety fallback: if engine somehow was not created yet, build it here instead of crashing.
-     // Pass the palette FUNCTION, same pattern the updated core script uses.
 
-     const sparkleSettings = getSparkleSettings();
-     // Pulls the same sparkle size settings the background particle system uses.
-     // Keeps both systems reading from the same control center.
+     const settings = getGameParticleSettings();
 
      const x = Math.random() * (miniGameWidth - 20) + 10;
-     // Spawn across the visible canvas width instead of the raw internal width.
 
      const nextSparkleColor = gameSparkleColorEngine.next() || "#ffffff";
-     // Ask the shared color engine for the next color.
-     // Fallback keeps sparkles visible if the palette ever fails.
 
      sparkles.push({
-          x: x,
+          x,
           baseX: x,
           y: -20,
           speed: 0.25 + Math.random() * 0.5,
-          size: randomNumber(sparkleSettings.sizeMin, sparkleSettings.sizeMax),
-          // This now matches the same size range logic used by the background sparkles.
+          size: randomNumber(settings.particleSizeMin, settings.particleSizeMax),
           char: randomItem(sparkleChars),
           color: nextSparkleColor,
+          wobbleOffset: Math.random() * Math.PI * 2,
+          wobbleSpeed: 0.02 + Math.random() * 0.03,
+          wobbleAmount: 5 + Math.random() * 10
+     });
+}
+
+// NOTE: OBSTACLES (SAME PARTICLE SIZE SYSTEM)
+
+export function createObstacle() {
+     const type = randomItem(obstacleTypes);
+     const settings = getGameParticleSettings();
+
+     if (!gameSparkleColorEngine) {
+          setGameSparkleColorEngine(createColorEngine(getRainbowPalette));
+     }
+
+     const x = Math.random() * (miniGameWidth - 20) + 10;
+
+     const nextObstacleColor = gameSparkleColorEngine.next() || "#ffffff";
+
+     obstacles.push({
+          x,
+          baseX: x,
+          y: -20,
+          speed: 0.5 + Math.random() * 0.7,
+          size: randomNumber(settings.particleSizeMin, settings.particleSizeMax),
+          char: type.char,
+          type,
+          color: nextObstacleColor,
           wobbleOffset: Math.random() * Math.PI * 2,
           wobbleSpeed: 0.02 + Math.random() * 0.03,
           wobbleAmount: 5 + Math.random() * 10
@@ -239,14 +279,12 @@ export function updateSparkles() {
           const sparkle = sparkles[i];
 
           sparkle.y += sparkle.speed;
-
           sparkle.wobbleOffset += sparkle.wobbleSpeed;
           sparkle.x = sparkle.baseX + Math.sin(sparkle.wobbleOffset) * sparkle.wobbleAmount;
 
           if (sparkle.y > miniGameHeight + 30) {
                sparkles.splice(i, 1);
           }
-          // Remove sparkles when they move below the visible canvas height.
      }
 }
 
@@ -258,58 +296,19 @@ export function collectSparkles() {
                createCollisionBurst(sparkle.x, sparkle.y, sparkle.color, "sparkle");
 
                sparkles.splice(i, 1);
-               // Remove collected sparkle.
 
                addSparkleScore(1);
-               // Add 1 point for each sparkle collected.
-
                addSparkleHealProgress(1);
-               // Count sparkles toward the next heart refill.
 
                while (sparkleHealProgress >= 10 && playerHealth < maxPlayerHealth) {
                     setSparkleHealProgress(sparkleHealProgress - 10);
                     addPlayerHealth(1);
                }
-               // Every 10 sparkles restores 1 heart, up to the max.
 
                syncPlayerHealthState();
                applyTemporaryPlayerFace(playerFaces.sparkle, 60);
-               // Switch player face to the happy sparkle face on collection unless a health-state face should override it.
           }
      }
-}
-
-// NOTE: OBSTACLES
-
-export function createObstacle() {
-     const type = randomItem(obstacleTypes);
-     const sparkleSettings = getSparkleSettings();
-
-     if (!gameSparkleColorEngine) {
-          setGameSparkleColorEngine(createColorEngine(getRainbowPalette));
-     }
-     // Same safety fallback as sparkles.
-     // This protects obstacle spawning if the shared engine was somehow not ready yet.
-
-     const x = Math.random() * (miniGameWidth - 20) + 10;
-     // Spawn across the visible canvas width instead of the raw internal width.
-
-     const nextObstacleColor = gameSparkleColorEngine.next() || "#ffffff";
-     // Use the SAME shared color engine as the collectible sparkles.
-
-     obstacles.push({
-          x: x,
-          baseX: x,
-          y: -20,
-          speed: 0.5 + Math.random() * 0.7,
-          size: randomNumber(sparkleSettings.sizeMin, sparkleSettings.sizeMax),
-          char: type.char,
-          type: type,
-          color: nextObstacleColor,
-          wobbleOffset: Math.random() * Math.PI * 2,
-          wobbleSpeed: 0.02 + Math.random() * 0.03,
-          wobbleAmount: 5 + Math.random() * 10
-     });
 }
 
 export function updateObstacleSpawns() {
@@ -330,14 +329,12 @@ export function updateObstacles() {
           const obstacle = obstacles[i];
 
           obstacle.y += obstacle.speed;
-
           obstacle.wobbleOffset += obstacle.wobbleSpeed;
           obstacle.x = obstacle.baseX + Math.sin(obstacle.wobbleOffset) * obstacle.wobbleAmount;
 
           if (obstacle.y > miniGameHeight + 30) {
                obstacles.splice(i, 1);
           }
-          // Remove obstacles when they move below the visible canvas height.
      }
 }
 
@@ -349,19 +346,15 @@ export function hitObstacles() {
                createCollisionBurst(obstacle.x, obstacle.y, obstacle.color, "obstacle");
 
                obstacles.splice(i, 1);
-               // Remove obstacle on hit.
 
                addSparkleScore(-obstacle.type.penalty);
                setSparkleScore(Math.max(0, sparkleScore));
-               // Negative points for hitting an obstacle, but never below zero.
-               // We subtract first, then clamp the total score back up to zero if needed.
 
                setPlayerHealth(Math.max(0, playerHealth - 1));
-               // Remove health, but do not allow it to go below zero.
 
                syncPlayerHealthState();
                applyTemporaryPlayerFace(playerFaces.obstacle, 30);
-               // Switch player face to the hurt face on collision unless a health-state face should override it.
           }
      }
 }
+// Added back missing block.

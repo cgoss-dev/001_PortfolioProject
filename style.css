@@ -105,8 +105,8 @@
      --ui-layer-z: 2;
      --menu-layer-z: 20;
 
-     /* SPARKLE CONTROL CENTER */
-     /* Core JS + game JS both read these exact variables. */
+     /* NOTE: BACKGROUND SPARKLE CONTROL CENTER */
+     /* These control the root-page sparkle rain behind the site. */
 
      --sparkle-opacity: 1;
      --sparkle-count-max: 180;
@@ -129,6 +129,44 @@
 
      --sparkle-respawn-offset-top: -20;
      --sparkle-respawn-offset-bottom: 24;
+
+     /* NOTE: MINI-GAME PARTICLE CONTROL CENTER */
+     /* Sparkles and Obstacles are both particles in the mini-game. */
+     /* These variables are read by game-theme.js and then used by game-entities.js / game-render.js. */
+
+     --game-particle-size-min: 20;
+     --game-particle-size-max: 32;
+
+     --burst-particle-count: 10;
+
+     --burst-particle-size-min: 14;
+     --burst-particle-size-max: 32;
+
+     --burst-particle-speed-min: 0.8;
+     --burst-particle-speed-max: 3.2;
+
+     --burst-particle-life-min: 18;
+     --burst-particle-life-max: 40;
+
+     --burst-particle-center-size: 72;
+
+     /* NOTE: COLLISION TYPE MULTIPLIERS */
+     /* These keep obstacle hits punchier than sparkle pickups while still sharing one base system. */
+
+     --sparkle-burst-count-multiplier: 0.8;
+     --obstacle-burst-count-multiplier: 1.2;
+
+     --sparkle-burst-size-multiplier: 0.85;
+     --obstacle-burst-size-multiplier: 1.15;
+
+     --sparkle-burst-speed-multiplier: 0.85;
+     --obstacle-burst-speed-multiplier: 1.15;
+
+     --sparkle-burst-life-multiplier: 0.85;
+     --obstacle-burst-life-multiplier: 1.15;
+
+     --sparkle-burst-center-size-multiplier: 0.9;
+     --obstacle-burst-center-size-multiplier: 1.15;
 }
 
 /* NOTE: NON-ROOT CORE */
@@ -179,7 +217,6 @@ header {
      flex: 0 0 auto;
      min-height: 0;
      gap: var(--page-section-gap);
-     padding-top: 0var;
 }
 
 h1,

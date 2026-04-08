@@ -1,5 +1,6 @@
 // NOTE: GAME THEME / SHARED VISUAL HELPERS
-// This file reads CSS custom properties and shares theme helpers with the game files. Style.css stores the values.
+// This file reads CSS custom properties and shares theme helpers with the game files.
+// style.css stores the values.
 // THIS file reads them in JavaScript, then the other game js files read from this.
 
 export function getCssValue(variableName) {
@@ -17,6 +18,9 @@ export function getCssColor(variableName, fallback = "#ffffff") {
      return value || fallback;
 }
 
+// NOTE: SHARED GLOW SETTINGS
+// These are used by multiple systems, including the background and the mini-game.
+
 export function getGlowSettings() {
      return {
           bgParticleBlur: getCssNumber("--glow-bg-particle-blur", 12),
@@ -26,6 +30,9 @@ export function getGlowSettings() {
           bungeeShadowOffset2: getCssValue("--bungee-shadow-offset-2") || "0.25rem 0.25rem 0 rgba(0, 0, 0, 0.6)"
      };
 }
+
+// NOTE: BACKGROUND SPARKLE SETTINGS
+// These are for the root page background sparkle rain, NOT the mini-game entities.
 
 export function getSparkleSettings() {
      return {
@@ -43,6 +50,53 @@ export function getSparkleSettings() {
           opacityMax: getCssNumber("--sparkle-opacity-max", 1),
           respawnOffsetTop: getCssNumber("--sparkle-respawn-offset-top", -20),
           respawnOffsetBottom: getCssNumber("--sparkle-respawn-offset-bottom", 24)
+     };
+}
+
+// NOTE: MINI-GAME PARTICLE CONTROL CENTER
+// Sparkles and Obstacles are both particles in the mini-game.
+// Their shared visual tuning lives here in one place.
+//
+// particleSize = normal falling mini-game particle size
+// burstParticle = the emitted collision bits
+// burstParticleCenter = the big center pop added during a collision
+//
+// The base values are shared.
+// Type-specific multipliers let sparkle hits and obstacle hits still feel different
+// without splitting the whole settings object into two separate systems.
+
+export function getGameParticleSettings() {
+     return {
+          particleSizeMin: getCssNumber("--game-particle-size-min", 16),
+          particleSizeMax: getCssNumber("--game-particle-size-max", 26),
+
+          burstParticleCount: getCssNumber("--burst-particle-count", 10),
+
+          burstParticleSizeMin: getCssNumber("--burst-particle-size-min", 12),
+          burstParticleSizeMax: getCssNumber("--burst-particle-size-max", 28),
+
+          burstParticleSpeedMin: getCssNumber("--burst-particle-speed-min", 0.8),
+          burstParticleSpeedMax: getCssNumber("--burst-particle-speed-max", 3.2),
+
+          burstParticleLifeMin: getCssNumber("--burst-particle-life-min", 18),
+          burstParticleLifeMax: getCssNumber("--burst-particle-life-max", 40),
+
+          burstParticleCenterSize: getCssNumber("--burst-particle-center-size", 64),
+
+          sparkleBurstCountMultiplier: getCssNumber("--sparkle-burst-count-multiplier", 0.8),
+          obstacleBurstCountMultiplier: getCssNumber("--obstacle-burst-count-multiplier", 1.2),
+
+          sparkleBurstSizeMultiplier: getCssNumber("--sparkle-burst-size-multiplier", 0.85),
+          obstacleBurstSizeMultiplier: getCssNumber("--obstacle-burst-size-multiplier", 1.15),
+
+          sparkleBurstSpeedMultiplier: getCssNumber("--sparkle-burst-speed-multiplier", 0.85),
+          obstacleBurstSpeedMultiplier: getCssNumber("--obstacle-burst-speed-multiplier", 1.15),
+
+          sparkleBurstLifeMultiplier: getCssNumber("--sparkle-burst-life-multiplier", 0.85),
+          obstacleBurstLifeMultiplier: getCssNumber("--obstacle-burst-life-multiplier", 1.15),
+
+          sparkleBurstCenterSizeMultiplier: getCssNumber("--sparkle-burst-center-size-multiplier", 0.9),
+          obstacleBurstCenterSizeMultiplier: getCssNumber("--obstacle-burst-center-size-multiplier", 1.15)
      };
 }
 

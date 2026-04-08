@@ -5,9 +5,9 @@ Digital footprint, games, resources.
 <br><br>
 
 ### TO DO
--    Game win/lose reqs.
+-    Game win/lose conditions.
 -    Drag button for player movement.
--    Obstacle effects (player size, swap particles, etc.)
+-    Obstacle effects affect player size, swap particles, etc.
 -    Swap marquee/border color functionality
 -    Mobile: landscape mode bug
 -    Levels
