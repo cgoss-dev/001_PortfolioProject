@@ -32,12 +32,38 @@ const player = {
      radius: 30,
      // Size of collision box/circle.
      sparkleFaceTimer: 0
-     // Counts down how long the sparkle face should stay active after collecting a sparkle.
+     // Counts down how long the sparkle face should stay active after collecting a sparkle or hitting an obstacle.
 };
 
 const keys = {};
 const sparkles = [];
+const obstacles = [];
+const collisionBursts = [];
+
 const sparkleChars = ["✦", "✧"];
+const burstChars = ["✦", "✧", "·", "•"];
+
+const obstacleTypes = [
+     {
+          name: "affectSize",
+          char: "☢\uFE0E",
+          effect: ["playerGrow", "playerShrink"],
+          penalty: 1
+     },
+     {
+          name: "affectSpeed",
+          char: "⚡\uFE0E",
+          effect: ["playerSlow", "objectSlow"],
+          penalty: 1
+     },
+     {
+          name: "affectType",
+          char: "⚠\uFE0E",
+          effect: ["swapSparkleObjects"],
+          penalty: 2
+     }
+];
+// Keep these as Unicode text presentation so they stay consistent and do not switch to emoji style unexpectedly.
 
 let sparkleScore = 0;
 let playerHealth = 3;
@@ -57,6 +83,12 @@ const sparkleSpawnDelay = 50;
 const sparkleSpawnCap = 25;
 // Lower number = more sparkles, more often.
 // Max number of sparkles allowed on screen at once.
+
+let obstacleSpawnTimer = 0;
+const obstacleSpawnDelay = 120;
+const obstacleSpawnCap = 10;
+// Lower number = obstacles appear more often.
+// Max number of obstacles allowed on screen at once.
 
 let gameSparkleColorEngine = null;
 
@@ -328,7 +360,7 @@ function drawHealth() {
      }
      // Build a simple heart string like ♥♥♥, ♥♥♡, or ♥♡♡.
 
-     miniGameCtx.font = '36px "Noto Sans Mono", monospace'; // Use a font that properly supports heart symbols.
+     miniGameCtx.font = '32px "Noto Sans Mono", monospace'; // Use a font that properly supports heart symbols.
 
      miniGameCtx.textAlign = "right";
      miniGameCtx.textBaseline = "top";
@@ -339,6 +371,99 @@ function drawHealth() {
      miniGameCtx.fillText(healthDisplay, miniGameWidth - 16, 14);
 
      miniGameCtx.restore();
+}
+
+// NOTE: COLLISION BURSTS
+
+function createCollisionBurst(x, y, color, burstType) {
+     const burstCount = burstType === "obstacle" ? 12 : 8;
+     const burstSizeMin = burstType === "obstacle" ? 16 : 12;
+     const burstSizeMax = burstType === "obstacle" ? 28 : 20;
+     const burstSpeedMin = burstType === "obstacle" ? 1.2 : 0.8;
+     const burstSpeedMax = burstType === "obstacle" ? 3.2 : 2.1;
+     const burstLifeMin = burstType === "obstacle" ? 24 : 18;
+     const burstLifeMax = burstType === "obstacle" ? 40 : 28;
+
+     for (let i = 0; i < burstCount; i += 1) {
+          const angle = (Math.PI * 2 * i) / burstCount + (Math.random() * 0.5);
+          const speed = randomNumber(burstSpeedMin, burstSpeedMax);
+
+          collisionBursts.push({
+               x: x,
+               y: y,
+               dx: Math.cos(angle) * speed,
+               dy: Math.sin(angle) * speed,
+               size: randomNumber(burstSizeMin, burstSizeMax),
+               char: randomItem(burstChars),
+               color: color,
+               life: Math.floor(randomNumber(burstLifeMin, burstLifeMax)),
+               maxLife: Math.floor(randomNumber(burstLifeMin, burstLifeMax)),
+               glowBoost: burstType === "obstacle" ? 2 : 1.4
+          });
+     }
+
+     collisionBursts.push({
+          x: x,
+          y: y,
+          dx: 0,
+          dy: 0,
+          size: burstType === "obstacle" ? 72 : 56,
+          char: "✦",
+          color: color,
+          life: burstType === "obstacle" ? 12 : 10,
+          maxLife: burstType === "obstacle" ? 12 : 10,
+          glowBoost: burstType === "obstacle" ? 3 : 2
+     });
+     // Add one larger centered glow pop so the collision feels more punchy.
+}
+
+function updateCollisionBursts() {
+     for (let i = collisionBursts.length - 1; i >= 0; i -= 1) {
+          const burst = collisionBursts[i];
+
+          burst.x += burst.dx;
+          burst.y += burst.dy;
+          burst.dy += 0.015;
+          burst.life -= 1;
+
+          if (burst.life <= 0) {
+               collisionBursts.splice(i, 1);
+          }
+     }
+}
+
+function drawCollisionBursts() {
+     if (!miniGameCtx) {
+          return;
+     }
+
+     const glowSettings = getGlowSettings();
+
+     miniGameCtx.textAlign = "center";
+     miniGameCtx.textBaseline = "middle";
+
+     for (let i = 0; i < collisionBursts.length; i += 1) {
+          const burst = collisionBursts[i];
+          const lifeRatio = burst.life / burst.maxLife;
+          const sizeMultiplier = 0.7 + ((1 - lifeRatio) * 0.6);
+          const burstSize = burst.size * sizeMultiplier;
+
+          miniGameCtx.save();
+
+          miniGameCtx.font = `${burstSize}px Arial, Helvetica, sans-serif`;
+          miniGameCtx.fillStyle = burst.color;
+          miniGameCtx.shadowColor = burst.color;
+          miniGameCtx.shadowBlur = glowSettings.gameParticleBlur * burst.glowBoost * lifeRatio;
+
+          miniGameCtx.globalAlpha = Math.max(0, lifeRatio * 0.95);
+          miniGameCtx.fillText(burst.char, burst.x, burst.y);
+
+          miniGameCtx.globalAlpha = Math.max(0, lifeRatio * 0.8);
+          miniGameCtx.shadowBlur = 0;
+          miniGameCtx.fillText(burst.char, burst.x, burst.y);
+
+          miniGameCtx.restore();
+     }
 }
 
 // NOTE: SPARKLES
@@ -409,6 +534,8 @@ function collectSparkles() {
           const sparkle = sparkles[i];
 
           if (isCollidingWithSparkle(player, sparkle)) {
+               createCollisionBurst(sparkle.x, sparkle.y, sparkle.color, "sparkle");
+
                sparkles.splice(i, 1);
                // Remove collected sparkle.
 
@@ -465,6 +592,122 @@ function drawSparkles() {
      }
 }
 
+// NOTE: OBSTACLES
+
+function createObstacle() {
+     const type = randomItem(obstacleTypes);
+     const sparkleSettings = getSparkleSettings();
+
+     const x = Math.random() * (miniGameWidth - 20) + 10;
+     // Spawn across the visible canvas width instead of the raw internal width.
+
+     const nextObstacleColor = gameSparkleColorEngine.next() || "#ffffff";
+     // Use the SAME shared color engine as the collectible sparkles.
+
+     obstacles.push({
+          x: x,
+          baseX: x,
+          y: -20,
+          speed: 0.5 + Math.random() * 0.7,
+          size: randomNumber(sparkleSettings.sizeMin, sparkleSettings.sizeMax),
+          char: type.char,
+          type: type,
+          color: nextObstacleColor,
+          wobbleOffset: Math.random() * Math.PI * 2,
+          wobbleSpeed: 0.02 + Math.random() * 0.03,
+          wobbleAmount: 5 + Math.random() * 10
+     });
+}
+
+function updateObstacleSpawns() {
+     obstacleSpawnTimer += 1;
+
+     if (obstacleSpawnTimer >= obstacleSpawnDelay) {
+          if (obstacles.length < obstacleSpawnCap) {
+               createObstacle();
+          }
+
+          obstacleSpawnTimer = 0;
+     }
+}
+
+function updateObstacles() {
+     for (let i = obstacles.length - 1; i >= 0; i -= 1) {
+          const obstacle = obstacles[i];
+
+          obstacle.y += obstacle.speed;
+
+          obstacle.wobbleOffset += obstacle.wobbleSpeed;
+          obstacle.x = obstacle.baseX + Math.sin(obstacle.wobbleOffset) * obstacle.wobbleAmount;
+
+          if (obstacle.y > miniGameHeight + 30) {
+               obstacles.splice(i, 1);
+          }
+          // Remove obstacles when they move below the visible canvas height.
+     }
+}
+
+function hitObstacles() {
+     for (let i = obstacles.length - 1; i >= 0; i -= 1) {
+          const obstacle = obstacles[i];
+
+          if (isCollidingWithSparkle(player, obstacle)) {
+               createCollisionBurst(obstacle.x, obstacle.y, obstacle.color, "obstacle");
+
+               obstacles.splice(i, 1);
+               // Remove obstacle on hit.
+
+               sparkleScore -= obstacle.type.penalty;
+               // Negative points for hitting an obstacle.
+
+               playerHealth -= 1;
+               playerHealth = Math.max(0, playerHealth);
+               // Remove health, but do not allow it to go below zero.
+
+               player.char = playerFaces.obstacle;
+               // Switch player face to the hurt face on collision.
+
+               player.sparkleFaceTimer = 30;
+               // Keep the obstacle face for a short time.
+
+               // Step 4 effect logic is intentionally not added yet.
+               // This only handles negative score + health damage for now.
+          }
+     }
+}
+
+function drawObstacles() {
+     if (!miniGameCtx) {
+          return;
+     }
+     // Defensive guard: prevents drawing errors if context is missing.
+
+     const glowSettings = getGlowSettings();
+
+     miniGameCtx.textAlign = "center";
+     miniGameCtx.textBaseline = "middle";
+
+     for (let i = 0; i < obstacles.length; i += 1) {
+          const obstacle = obstacles[i];
+
+          miniGameCtx.save();
+
+          miniGameCtx.font = `${obstacle.size}px Arial, Helvetica, sans-serif`;
+          miniGameCtx.fillStyle = obstacle.color;
+          miniGameCtx.shadowColor = obstacle.color;
+          miniGameCtx.shadowBlur = glowSettings.gameParticleBlur * 1.2;
+
+          miniGameCtx.globalAlpha = 0.9;
+          miniGameCtx.fillText(obstacle.char, obstacle.x, obstacle.y);
+
+          miniGameCtx.globalAlpha = 1;
+          miniGameCtx.shadowBlur = 0;
+          miniGameCtx.fillText(obstacle.char, obstacle.x, obstacle.y);
+
+          miniGameCtx.restore();
+     }
+}
+
 // NOTE: BACKGROUND
 
 function drawMiniGameBackground() {
@@ -491,13 +734,19 @@ function updateGame() {
      updatePlayer();
      updatePlayerFaceState();
      updateSparkleSpawns();
+     updateObstacleSpawns();
      updateSparkles();
+     updateObstacles();
+     updateCollisionBursts();
      collectSparkles();
+     hitObstacles();
 }
 
 function drawGame() {
      drawMiniGameBackground();
      drawSparkles();
+     drawObstacles();
+     drawCollisionBursts();
      drawPlayer();
      drawScore();
      drawHealth();
@@ -534,7 +783,15 @@ function startSparkleSeeker() {
 
      sparkleScore = 0;
      playerHealth = maxPlayerHealth;
-     // Reset score and health whenever the game starts.
+
+     sparkles.length = 0;
+     obstacles.length = 0;
+     collisionBursts.length = 0;
+     // Reset spawned objects whenever the game starts.
+
+     sparkleSpawnTimer = 0;
+     obstacleSpawnTimer = 0;
+     // Reset timers whenever the game starts.
 
      updateMiniGameCanvasSize();
      // Match the game canvas drawing size to the CSS display size before the game starts drawing.

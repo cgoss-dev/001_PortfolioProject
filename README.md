@@ -10,7 +10,6 @@ Digital footprint, games, resources.
 -    Lower Right "Start" (Pause/Paused)
 -    Glow burst upon collection
 -    Obstacle effects
--    Randomize tagline
 -    Swap marquee/border color functionality
 -    Mobile: landscape mode bug
 -    Obstacle effects
