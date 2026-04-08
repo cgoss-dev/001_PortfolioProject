@@ -29,8 +29,8 @@
      /* NOTE: PAGE LAYOUT */
 
      --page-width-wide: 72rem;
-     --page-padding-y: clamp(0.75rem, 3vw, 1rem);
-     --page-padding-x: calc(var(--page-padding-y) * 2);
+     --page-padding-y: clamp(1rem, 2vw, 1.5rem);
+     --page-padding-x: calc(var(--page-padding-y) * 1.5);
      --page-section-gap: var(--page-padding-y);
 
      --menu-button-color: var(--text-color);
@@ -47,7 +47,7 @@
 
      --text-size-marquee: clamp(3rem, 5vw, 4rem);
      --text-size-dropdown: var(--text-size-marquee);
-     --text-size-tagline: clamp(1rem, 1.15vw, 1.25rem);
+     --text-size-tagline: clamp(0.8rem, 1.2vw, 1rem);
 
      --text-color-marquee: var(--text-color);
      --text-color-dropdown: var(--text-color);
@@ -250,7 +250,7 @@ h1 {
           filter 0.2s ease-in-out;
 }
 
-/* NOTE: NAV MENU PANEL */
+/* NOTE: PANEL */
 /* Hidden by default. Opens when parent wrapper gets .menu-open from JS. */
 
 .nav-menu {
@@ -266,7 +266,7 @@ h1 {
      box-shadow: var(--glow-canvasboard);
 
      opacity: 0;
-     transform: translate(-1rem, -0.5rem);
+     transform: translateX(-1rem) translateY(-0.75rem);
      pointer-events: none;
 
      transition:
@@ -276,7 +276,7 @@ h1 {
 
 .dropdown-low.menu-open .nav-menu {
      opacity: var(--menu-opacity-open);
-     transform: translate(-2rem, -1rem);
+     transform: translateX(-1rem) translateY(0);
      pointer-events: auto;
 }
 

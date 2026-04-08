@@ -624,25 +624,22 @@ function drawSparkleRain() {
      window.requestAnimationFrame(drawSparkleRain);
 }
 
-// ==============================
-// NOTE: TAGLINE RANDOMIZER
-// ==============================
+// NOTE: TAGLINE
 
 const taglineBreaks = [
-     "shipping chaos to production.",
-     "building with HTML I found in a ditch.",
      "making CSS do weird stuff on purpose.",
-     "unsupervised in JavaScript.",
+     "weaponizing side projects.",
+     "debugging until it ships.",
 
-     "fixing bugs by creating new ones.",
-     "fistfighting the CLI.",
-     "using vibes as framework.",
-     "speedrunning tutorial hell.",
+     "turning chaos into commits.",
+     "nosy questions early, fixes things late.",
+     "feedback in, better code out.",
 
-     "writing comments like apologies.",
-     "asked AI to dumb it down. Twice.",
-     "centered with violence.",
-     "git pull and hope.",
+     "gremlin in dev, professional in prod.",
+     "unhinged energy, finished tickets.",
+     "chaotic process, consistent results.",
+
+
 ];
 
 function setRandomTaglineBreak() {

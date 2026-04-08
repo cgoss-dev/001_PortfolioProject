@@ -5,8 +5,9 @@ Digital footprint, games, resources.
 <br><br>
 
 ### TO DO
--    Lower Left "MENU" (Restart/Music/SFX)
--    Obstacle effects
+-    Game win/lose reqs.
+-    Drag button for player movement.
+-    Obstacle effects (player size, swap particles, etc.)
 -    Swap marquee/border color functionality
 -    Mobile: landscape mode bug
 -    Levels

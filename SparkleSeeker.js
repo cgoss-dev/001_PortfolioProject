@@ -35,7 +35,7 @@ const player = {
      radius: 30,
      // Size of collision box/circle.
      sparkleFaceTimer: 0
-     // Counts down how long the temporary sparkle / obstacle face should stay active.
+     // FIXME: Counts down how long the temporary sparkle / obstacle face should stay active.
 };
 
 const playerBaseHealth = 3;
@@ -55,19 +55,19 @@ const obstacleTypes = [
           name: "affectSize",
           char: "☢\uFE0E",
           effect: ["playerGrow", "playerShrink"],
-          penalty: 1
+          penalty: 10
      },
      {
           name: "affectSpeed",
           char: "⚡\uFE0E",
           effect: ["playerSlow", "objectSlow"],
-          penalty: 1
+          penalty: 10
      },
      {
           name: "affectType",
           char: "⚠\uFE0E",
           effect: ["swapSparkleObjects"],
-          penalty: 1
+          penalty: 10
      }
 ];
 // Keep these as Unicode text presentation so they stay consistent and do not switch to emoji style unexpectedly.
@@ -104,16 +104,12 @@ const pointerInput = {
 let pointerInputBound = false;
 
 let sparkleSpawnTimer = 0;
-const sparkleSpawnDelay = 50;
-const sparkleSpawnCap = 25;
-// Lower number = more sparkles, more often.
-// Max number of sparkles allowed on screen at once.
+const sparkleSpawnDelay = 50; // Lower number = more sparkles, more often.
+const sparkleSpawnCap = 25; // Max number of sparkles allowed on screen at once.
 
 let obstacleSpawnTimer = 0;
-const obstacleSpawnDelay = 120;
-const obstacleSpawnCap = 10;
-// Lower number = obstacles appear more often.
-// Max number of obstacles allowed on screen at once.
+const obstacleSpawnDelay = 120; // Lower number = obstacles appear more often.
+const obstacleSpawnCap = 10; // Max number of obstacles allowed on screen at once.
 
 let gameSparkleColorEngine = null;
 
@@ -209,6 +205,8 @@ function syncPlayerHealthState() {
           refreshPlayerStateFace();
      }
 }
+
+// NOTE: BUTTONS & CLICKS
 
 function getPauseButtonLabel() {
      if (!gameStarted || gamePaused) {
@@ -957,7 +955,7 @@ function drawUiUnderlay() {
      }
 
      const centerX = miniGameWidth / 2;
-     const centerY = miniGameHeight / 2;
+     const centerY = miniGameHeight / 2 + miniGameHeight * 0.1; // Top gradient not prominent enough alone.
      const distanceToCorner = Math.sqrt((centerX * centerX) + (centerY * centerY));
 
      const underlayGradient = miniGameCtx.createRadialGradient(
