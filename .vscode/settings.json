@@ -6,9 +6,19 @@
                     "index.html",
                     "style.css",
                     "script.js",
-                    "SparkleSeeker.js",
+                    "SparkleSeeker",
                     "wireframe.png",
                     ".vscode"
+               ],
+               "type": "manual"
+          },
+          "/Users/buggs/Desktop/GA/001_PortfolioProject/SparkleSeeker": {
+               "order": [
+                    "game-core.js",
+                    "game-theme.js",
+                    "game-input.js",
+                    "game-entities.js",
+                    "game-render.js"
                ],
                "type": "manual"
           }
