@@ -131,7 +131,7 @@ export const touchControls = {
           height: 68,
           isPressed: false,
           pointerId: null,
-          label: "✦"
+          label: "✧" // Left button glyph.
      },
      rightButton: {
           x: 0,
@@ -140,7 +140,7 @@ export const touchControls = {
           height: 68,
           isPressed: false,
           pointerId: null,
-          label: "★"
+          label: "✦" // Right button glyph.
      }
 };
 

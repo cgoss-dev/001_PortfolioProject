@@ -61,7 +61,7 @@ export function drawScore() {
 
      const formattedScore = sparkleScore.toString().padStart(3, "0");
 
-     miniGameCtx.font = '28px "Bungee", "Bungee Shade", cursive';
+     miniGameCtx.font = '32px "Bungee", "Bungee Shade", cursive';
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "top";
      miniGameCtx.fillStyle = "#ffffff";
@@ -95,7 +95,7 @@ export function drawHealth() {
           bottomRow += (i < playerHealth) ? filledHeart : emptyHeart;
      }
 
-     miniGameCtx.font = '26px "Noto Sans Mono", monospace';
+     miniGameCtx.font = '20px "Noto Sans Mono", monospace';
      miniGameCtx.textAlign = "right";
      miniGameCtx.textBaseline = "top";
      miniGameCtx.fillStyle = "#ea76cb";
@@ -104,7 +104,7 @@ export function drawHealth() {
 
      const healthX = miniGameWidth - 16;
      const healthY = 14;
-     const rowGap = 24;
+     const rowGap = 14;
 
      miniGameCtx.fillText(topRow, healthX, healthY);
      miniGameCtx.fillText(bottomRow, healthX, healthY + rowGap);
@@ -313,14 +313,12 @@ function drawSingleTouchButton(button, glowSettings) {
           ? glowSettings.gameParticleBlur
           : glowSettings.gameParticleBlur * 0.85;
 
+     const radius = button.width / 2;
+     const centerX = button.x + radius;
+     const centerY = button.y + radius + pressOffsetY;
+
      miniGameCtx.beginPath();
-     miniGameCtx.roundRect(
-          button.x,
-          button.y + pressOffsetY,
-          button.width,
-          button.height,
-          16
-     );
+     miniGameCtx.arc(centerX, centerY, radius, 0, Math.PI * 2);
      miniGameCtx.fill();
      miniGameCtx.stroke();
 

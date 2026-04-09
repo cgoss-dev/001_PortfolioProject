@@ -81,14 +81,14 @@ export function updatePauseButtonBounds() {
      const label = getPauseButtonLabel();
 
      miniGameCtx.save();
-     miniGameCtx.font = '24px "Bungee", cursive';
+     miniGameCtx.font = '24px "Bungee", "Bungee Shade", cursive';
 
      const textWidth = miniGameCtx.measureText(label).width;
 
-     gameButton.width = textWidth + (gameButton.paddingX * 2);
-     gameButton.height = 24 + (gameButton.paddingY * 2);
+     gameButton.width = Math.max(132, textWidth + (gameButton.paddingX * 2));
+     gameButton.height = 48;
 
-     const topPadding = 14;
+     const topPadding = 24;
 
      gameButton.x = (miniGameWidth - gameButton.width) / 2;
      gameButton.y = topPadding;
