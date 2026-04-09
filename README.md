@@ -6,11 +6,10 @@ Digital footprint, games, resources.
 
 ### TO DO
 -    Add WASD function for joystick.
--    Half heart fill instead of ten hearts.
 -    Obstacle effects affect player size, swap particles, etc.
 -    Swap marquee/border color functionality.
 -    Mobile landscape mode bug.
--    Game win/lose conditions.
+-    Game win/lose conditions & difficulty scaling.
      -    Canvas starts at "LET'S PLAY".
      -    Zero hearts = "TRY AGAIN".
      -    Max hearts = 2x points (gained & lost).
