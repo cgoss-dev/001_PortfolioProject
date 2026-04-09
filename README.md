@@ -6,6 +6,10 @@ Digital footprint, games, resources.
 
 ### TO DO
 -    ‼️ Fix play button turning into emoji on mobile ‼️
+-    Stop game when zero hearts.
+     -    "TRY AGAIN"
+     -    Pressing play again starts new game.
+-    Modify joystick speed.
 -    Add WASD function for joystick.
 -    Obstacle effects affect player size, swap particles, etc.
 -    Swap marquee/border color functionality.
@@ -18,4 +22,4 @@ Digital footprint, games, resources.
 ### FUTURE GAMES
 -    Farming sim. (32x32 or 48x48)
 -    Quiz game. (Pokemon, City, Snack)
--    Choose your own adventure. (Mage, Knight, Rogue)
+-    Ad-lib choose your own adventure. (Mage, Knight, Rogue)
