@@ -30,7 +30,7 @@
 
      --page-width-wide: 72rem;
      --page-padding-y: clamp(1rem, 2vw, 1.5rem);
-     --page-padding-x: calc(var(--page-padding-y) * 1.5);
+     --page-padding-x: calc(var(--page-padding-y) * 1); /* Be mindful of small screen widths */
      --page-section-gap: var(--page-padding-y);
 
      --menu-button-color: var(--text-color);

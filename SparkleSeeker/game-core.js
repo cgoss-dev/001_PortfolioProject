@@ -134,7 +134,7 @@ export const touchControls = {
           height: 60, // Left button size.
           isPressed: false,
           pointerId: null,
-          label: "⏯"
+          label: "\u23EF" // Ensure force unicode! ⏯
      },
      rightButton: {
           x: 0,
@@ -143,7 +143,7 @@ export const touchControls = {
           height: 60, // Right button size.
           isPressed: false,
           pointerId: null,
-          label: "☰"
+          label: "\u2630" // Force unicode! ☰
      }
 };
 

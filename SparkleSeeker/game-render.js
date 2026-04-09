@@ -319,7 +319,7 @@ export function drawMenuOverlay() {
 
      miniGameCtx.fillText("How to Play:", textX, textY);
      textY += lineGap;
-     miniGameCtx.fillText("Drag joystick to move.", textX, textY);
+     miniGameCtx.fillText("Drag joystick to move. Collect sparkles, avoid obstacles.", textX, textY);
      textY += lineGap;
      miniGameCtx.fillText(`Music: ${musicEnabled ? "On" : "Off"}`, textX, textY);
      textY += lineGap;
