@@ -5,15 +5,15 @@ Digital footprint, games, resources.
 <br><br>
 
 ### TO DO
+-    ‼️ Fix play button turning into emoji on mobile ‼️
 -    Add WASD function for joystick.
 -    Obstacle effects affect player size, swap particles, etc.
 -    Swap marquee/border color functionality.
--    Mobile landscape mode bug.
--    Game win/lose conditions & difficulty scaling.
-     -    Canvas starts at "LET'S PLAY".
-     -    Zero hearts = "TRY AGAIN".
+-    🐞 Mobile landscape mode bug.
+-    Game conditions:
+     -    Text overlay: LET'S PLAY, TRY AGAIN", "YOU WIN".
      -    Max hearts = 2x points (gained & lost).
-     -    Levels begin at 0. Each level is 25 points.
+     -    Levels begin at 0. Each level 25 points? Add scaling.
 
 ### FUTURE GAMES
 -    Farming sim. (32x32 or 48x48)
