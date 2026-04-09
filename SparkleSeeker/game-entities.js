@@ -13,7 +13,7 @@ import {
      playerHealth,
      maxPlayerHealth,
      keys,
-     pointerInput,
+     touchControls,
      sparkles,
      obstacles,
      collisionBursts,
@@ -51,8 +51,6 @@ import {
      getRainbowPalette,
      getGameParticleSettings
 } from "./game-theme.js";
-// 🔥 IMPORTANT CHANGE
-// We now use ONE shared particle system instead of sparkle-specific settings.
 
 // NOTE: PLAYER
 
@@ -78,6 +76,7 @@ export function clampPlayerToCanvas() {
 export function updatePlayer() {
      let movedByKeyboard = false;
 
+     // KEYBOARD INPUT
      if (keys["w"] || keys["arrowup"]) {
           player.y -= player.speed;
           movedByKeyboard = true;
@@ -98,14 +97,14 @@ export function updatePlayer() {
           movedByKeyboard = true;
      }
 
-     if (!movedByKeyboard && pointerInput.active) {
-          const dx = pointerInput.x - player.x;
-          const dy = pointerInput.y - player.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
+     // JOYSTICK INPUT (PRIMARY TOUCH CONTROL)
+     if (!movedByKeyboard) {
+          const inputX = touchControls.joystick.inputX;
+          const inputY = touchControls.joystick.inputY;
 
-          if (distance > 4) {
-               player.x += (dx / distance) * player.speed;
-               player.y += (dy / distance) * player.speed;
+          if (inputX !== 0 || inputY !== 0) {
+               player.x += inputX * player.speed;
+               player.y += inputY * player.speed;
           }
      }
 
@@ -122,11 +121,10 @@ export function updatePlayerFaceState() {
      }
 }
 
-// NOTE: COLLISION BURSTS (NOW FULLY CENTRALIZED)
+// NOTE: COLLISION BURSTS
 
 export function createCollisionBurst(x, y, color, burstType) {
      const settings = getGameParticleSettings();
-
      const isObstacle = burstType === "obstacle";
 
      const count = Math.floor(
@@ -134,22 +132,28 @@ export function createCollisionBurst(x, y, color, burstType) {
           (isObstacle ? settings.obstacleBurstCountMultiplier : settings.sparkleBurstCountMultiplier)
      );
 
-     const sizeMin = settings.burstParticleSizeMin *
+     const sizeMin =
+          settings.burstParticleSizeMin *
           (isObstacle ? settings.obstacleBurstSizeMultiplier : settings.sparkleBurstSizeMultiplier);
 
-     const sizeMax = settings.burstParticleSizeMax *
+     const sizeMax =
+          settings.burstParticleSizeMax *
           (isObstacle ? settings.obstacleBurstSizeMultiplier : settings.sparkleBurstSizeMultiplier);
 
-     const speedMin = settings.burstParticleSpeedMin *
+     const speedMin =
+          settings.burstParticleSpeedMin *
           (isObstacle ? settings.obstacleBurstSpeedMultiplier : settings.sparkleBurstSpeedMultiplier);
 
-     const speedMax = settings.burstParticleSpeedMax *
+     const speedMax =
+          settings.burstParticleSpeedMax *
           (isObstacle ? settings.obstacleBurstSpeedMultiplier : settings.sparkleBurstSpeedMultiplier);
 
-     const lifeMin = settings.burstParticleLifeMin *
+     const lifeMin =
+          settings.burstParticleLifeMin *
           (isObstacle ? settings.obstacleBurstLifeMultiplier : settings.sparkleBurstLifeMultiplier);
 
-     const lifeMax = settings.burstParticleLifeMax *
+     const lifeMax =
+          settings.burstParticleLifeMax *
           (isObstacle ? settings.obstacleBurstLifeMultiplier : settings.sparkleBurstLifeMultiplier);
 
      for (let i = 0; i < count; i += 1) {
@@ -176,7 +180,8 @@ export function createCollisionBurst(x, y, color, burstType) {
           y,
           dx: 0,
           dy: 0,
-          size: settings.burstParticleCenterSize *
+          size:
+               settings.burstParticleCenterSize *
                (isObstacle
                     ? settings.obstacleBurstCenterSizeMultiplier
                     : settings.sparkleBurstCenterSizeMultiplier),
@@ -187,8 +192,6 @@ export function createCollisionBurst(x, y, color, burstType) {
           glowBoost: isObstacle ? 3 : 2
      });
 }
-
-// NOTE: COLLISION BURST UPDATE
 
 export function updateCollisionBursts() {
      for (let i = collisionBursts.length - 1; i >= 0; i -= 1) {
@@ -205,7 +208,7 @@ export function updateCollisionBursts() {
      }
 }
 
-// NOTE: SPARKLES (NOW USING SHARED PARTICLE SIZE)
+// NOTE: SPARKLES
 
 export function createSparkle() {
      if (!gameSparkleColorEngine) {
@@ -213,9 +216,7 @@ export function createSparkle() {
      }
 
      const settings = getGameParticleSettings();
-
      const x = Math.random() * (miniGameWidth - 20) + 10;
-
      const nextSparkleColor = gameSparkleColorEngine.next() || "#ffffff";
 
      sparkles.push({
@@ -226,35 +227,6 @@ export function createSparkle() {
           size: randomNumber(settings.particleSizeMin, settings.particleSizeMax),
           char: randomItem(sparkleChars),
           color: nextSparkleColor,
-          wobbleOffset: Math.random() * Math.PI * 2,
-          wobbleSpeed: 0.02 + Math.random() * 0.03,
-          wobbleAmount: 5 + Math.random() * 10
-     });
-}
-
-// NOTE: OBSTACLES (SAME PARTICLE SIZE SYSTEM)
-
-export function createObstacle() {
-     const type = randomItem(obstacleTypes);
-     const settings = getGameParticleSettings();
-
-     if (!gameSparkleColorEngine) {
-          setGameSparkleColorEngine(createColorEngine(getRainbowPalette));
-     }
-
-     const x = Math.random() * (miniGameWidth - 20) + 10;
-
-     const nextObstacleColor = gameSparkleColorEngine.next() || "#ffffff";
-
-     obstacles.push({
-          x,
-          baseX: x,
-          y: -20,
-          speed: 0.5 + Math.random() * 0.7,
-          size: randomNumber(settings.particleSizeMin, settings.particleSizeMax),
-          char: type.char,
-          type,
-          color: nextObstacleColor,
           wobbleOffset: Math.random() * Math.PI * 2,
           wobbleSpeed: 0.02 + Math.random() * 0.03,
           wobbleAmount: 5 + Math.random() * 10
@@ -311,6 +283,34 @@ export function collectSparkles() {
      }
 }
 
+// NOTE: OBSTACLES
+
+export function createObstacle() {
+     const type = randomItem(obstacleTypes);
+     const settings = getGameParticleSettings();
+
+     if (!gameSparkleColorEngine) {
+          setGameSparkleColorEngine(createColorEngine(getRainbowPalette));
+     }
+
+     const x = Math.random() * (miniGameWidth - 20) + 10;
+     const nextObstacleColor = gameSparkleColorEngine.next() || "#ffffff";
+
+     obstacles.push({
+          x,
+          baseX: x,
+          y: -20,
+          speed: 0.5 + Math.random() * 0.7,
+          size: randomNumber(settings.particleSizeMin, settings.particleSizeMax),
+          char: type.char,
+          type,
+          color: nextObstacleColor,
+          wobbleOffset: Math.random() * Math.PI * 2,
+          wobbleSpeed: 0.02 + Math.random() * 0.03,
+          wobbleAmount: 5 + Math.random() * 10
+     });
+}
+
 export function updateObstacleSpawns() {
      const nextObstacleSpawnTimer = obstacleSpawnTimer + 1;
      setObstacleSpawnTimer(nextObstacleSpawnTimer);
@@ -357,4 +357,3 @@ export function hitObstacles() {
           }
      }
 }
-// Added back missing block.

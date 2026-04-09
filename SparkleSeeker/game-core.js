@@ -2,21 +2,15 @@
 // This file is the shared "home base" for the whole mini-game.
 // It stores shared state, core settings, utility helpers, and the main startup/update/draw loop.
 
-// TROUBLESHOOTING
-
-// alert("top of game js");
-// console.log("top of game js");
-
 // NOTE: IMPORTS
-// These will come from the other files in your new split setup.
-// Think of imports like "bring these tools in from other files."
 
 import {
      bindKeyboardInput,
      bindPointerInput,
      bindResizeHandler,
      updatePauseButtonState,
-     updatePauseButtonBounds
+     updatePauseButtonBounds,
+     updateTouchControlBounds
 } from "./game-input.js";
 
 import {
@@ -41,27 +35,25 @@ import {
      drawPlayer,
      drawScore,
      drawHealth,
-     drawPauseButton
+     drawPauseButton,
+     drawTouchJoystick,
+     drawTouchButtons
 } from "./game-render.js";
 
 import {
      createColorEngine,
      getRainbowPalette
 } from "./game-theme.js";
-// These used to live in script.js.
-// They now need to be imported into the game module world properly.
 
-// NOTE: CANVAS REFERENCES
+// NOTE: CANVAS
 
 export const miniGameCanvas = document.getElementById("miniGameCanvas");
 export const miniGameCtx = miniGameCanvas ? miniGameCanvas.getContext("2d") : null;
 
 export let miniGameWidth = 0;
 export let miniGameHeight = 0;
-// These store the canvas size in CSS pixels.
-// We use these for gameplay math so movement/drawing matches the canvas as it appears on screen.
 
-// NOTE: PLAYER VISUALS
+// NOTE: PLAYER
 
 export const playerFaces = {
      neutral: "😐",
@@ -77,61 +69,38 @@ export const player = {
      y: 0,
      char: playerFaces.neutral,
      size: 54,
-     // Size of player emoji. Recommended 40-60px for finger size.
      speed: 3,
-     // Base player speed.
      radius: 30,
-     // Size of collision box/circle.
      sparkleFaceTimer: 0,
-     // FIXME: Counts down how long the temporary sparkle / obstacle face should stay active.
+     // Counts down how long the temporary sparkle / obstacle face should stay active.
 };
 
 export const playerBaseHealth = 3;
 export const playerBaseSpeed = 3;
 export const playerSpeedPerHeart = 0.5;
 
-// NOTE: SHARED GAME ARRAYS / OBJECT STORAGE
-// These arrays are shared across files.
-// Entities update them, render draws them, and core resets them.
+// NOTE: ARRAYS
 
 export const keys = {};
 export const sparkles = [];
 export const obstacles = [];
 export const collisionBursts = [];
 
-// NOTE: CHARACTER TABLES
+// NOTE: TABLES
 
 export const sparkleChars = ["✦", "✧"];
 export const burstChars = ["✦", "✧", "·", "•"];
 
 export const obstacleTypes = [
-     {
-          name: "affectSize",
-          char: "☢\uFE0E",
-          effect: ["playerGrow", "playerShrink"],
-          penalty: 10
-     },
-     {
-          name: "affectSpeed",
-          char: "⚡\uFE0E",
-          effect: ["playerSlow", "objectSlow"],
-          penalty: 10
-     },
-     {
-          name: "affectType",
-          char: "⚠\uFE0E",
-          effect: ["swapSparkleObjects"],
-          penalty: 10
-     }
+     { name: "affectSize", char: "☢\uFE0E", effect: ["playerGrow", "playerShrink"], penalty: 10 },
+     { name: "affectSpeed", char: "⚡\uFE0E", effect: ["playerSlow", "objectSlow"], penalty: 10 },
+     { name: "affectType", char: "⚠\uFE0E", effect: ["swapSparkleObjects"], penalty: 10 }
 ];
-// Keep these as Unicode text presentation so they stay consistent and do not switch to emoji style unexpectedly.
 
-// NOTE: SCORE / HEALTH / GAME STATE
-// Exported as "let" so this file can reassign them while other files still read the live updated values.
+// NOTE: GAME STATE
 
 export let sparkleScore = 0;
 export let sparkleHealProgress = 0;
-// Every 10 collected sparkles restores 1 heart.
 
 export let playerHealth = 3;
 export const maxPlayerHealth = 10;
@@ -139,8 +108,43 @@ export const maxPlayerHealth = 10;
 export let gameStarted = false;
 export let gamePaused = true;
 
-// NOTE: BUTTON STATE
-// Drawn inside the canvas. Click/tap to toggle START and PAUSE.
+// NOTE: TOUCH CONTROLS
+
+export const touchControls = {
+     joystick: {
+          centerX: 0,
+          centerY: 0,
+          baseRadius: 44,
+          thumbRadius: 22,
+          knobX: 0,
+          knobY: 0,
+          isActive: false,
+          pointerId: null,
+          inputX: 0,
+          inputY: 0,
+          deadZone: 0.18
+     },
+     leftButton: {
+          x: 0,
+          y: 0,
+          width: 68,
+          height: 68,
+          isPressed: false,
+          pointerId: null,
+          label: "✦"
+     },
+     rightButton: {
+          x: 0,
+          y: 0,
+          width: 68,
+          height: 68,
+          isPressed: false,
+          pointerId: null,
+          label: "★"
+     }
+};
+
+// NOTE: PAUSE BUTTON
 
 export const gameButton = {
      x: 0,
@@ -153,183 +157,141 @@ export const gameButton = {
      pressTimer: 0
 };
 
-// NOTE: POINTER / TOUCH INPUT STATE
-// game-input.js updates this.
-// game-entities.js reads it for touch / mouse-follow movement.
-
-export const pointerInput = {
-     active: false,
-     x: 0,
-     y: 0,
-     pointerId: null
-};
+// NOTE: BIND FLAGS
 
 export let pointerInputBound = false;
-
-export let sparkleSpawnTimer = 0;
-export const sparkleSpawnDelay = 50; // Lower number = more sparkles, more often.
-export const sparkleSpawnCap = 25; // Max number of sparkles allowed on screen at once.
-
-export let obstacleSpawnTimer = 0;
-export const obstacleSpawnDelay = 120; // Lower number = obstacles appear more often.
-export const obstacleSpawnCap = 10; // Max number of obstacles allowed on screen at once.
-
-export let gameSparkleColorEngine = null;
-// This stores the shared color engine used by the game sparkles/obstacles.
-// We keep it in core so other game files can read the same engine.
-
 export let keyboardInputBound = false;
 export let resizeHandlerBound = false;
-// These stop us from attaching the same listeners more than once if the game ever gets restarted.
 
-// NOTE: SHARED SETTERS
-// Because imported bindings are read-only in other modules, helper setter functions like these
-// give the other files a safe way to update core state without fighting module rules.
-// Beginner version: imports can READ live values, but other files should not directly reassign them.
+// NOTE: TIMERS
 
-export function setMiniGameSize(width, height) {
-     miniGameWidth = width;
-     miniGameHeight = height;
+export let sparkleSpawnTimer = 0;
+export const sparkleSpawnDelay = 50;
+export const sparkleSpawnCap = 25;
+
+export let obstacleSpawnTimer = 0;
+export const obstacleSpawnDelay = 120;
+export const obstacleSpawnCap = 10;
+
+export let gameSparkleColorEngine = null;
+
+// NOTE: SETTERS
+
+export function setPointerInputBound(v) { pointerInputBound = v; }
+export function setKeyboardInputBound(v) { keyboardInputBound = v; }
+export function setResizeHandlerBound(v) { resizeHandlerBound = v; }
+
+export function setSparkleSpawnTimer(v) { sparkleSpawnTimer = v; }
+export function setObstacleSpawnTimer(v) { obstacleSpawnTimer = v; }
+
+export function setSparkleScore(v) { sparkleScore = v; }
+export function addSparkleScore(v) { sparkleScore += v; }
+
+export function setSparkleHealProgress(v) { sparkleHealProgress = v; }
+export function addSparkleHealProgress(v) { sparkleHealProgress += v; }
+
+export function setPlayerHealth(v) { playerHealth = v; }
+export function addPlayerHealth(v) { playerHealth += v; }
+
+export function setGameStarted(v) { gameStarted = v; }
+export function setGamePaused(v) { gamePaused = v; }
+
+export function setGameSparkleColorEngine(v) { gameSparkleColorEngine = v; }
+
+// NOTE: TOUCH SETTERS
+
+export function setJoystickActive(v) { touchControls.joystick.isActive = v; }
+export function setJoystickPointerId(v) { touchControls.joystick.pointerId = v; }
+export function setJoystickKnobOffset(x, y) {
+     touchControls.joystick.knobX = x;
+     touchControls.joystick.knobY = y;
+}
+export function setJoystickInput(x, y) {
+     touchControls.joystick.inputX = x;
+     touchControls.joystick.inputY = y;
 }
 
-export function setPointerInputBound(value) {
-     pointerInputBound = value;
+export function setLeftButtonPressed(v) { touchControls.leftButton.isPressed = v; }
+export function setLeftButtonPointerId(v) { touchControls.leftButton.pointerId = v; }
+export function setRightButtonPressed(v) { touchControls.rightButton.isPressed = v; }
+export function setRightButtonPointerId(v) { touchControls.rightButton.pointerId = v; }
+
+// NOTE: TOUCH HELPERS
+
+export function resetJoystickState() {
+     const j = touchControls.joystick;
+     j.knobX = j.knobY = j.inputX = j.inputY = 0;
+     j.isActive = false;
+     j.pointerId = null;
 }
 
-export function setKeyboardInputBound(value) {
-     keyboardInputBound = value;
+export function resetTouchButtons() {
+     touchControls.leftButton.isPressed = false;
+     touchControls.leftButton.pointerId = null;
+     touchControls.rightButton.isPressed = false;
+     touchControls.rightButton.pointerId = null;
 }
 
-export function setResizeHandlerBound(value) {
-     resizeHandlerBound = value;
+export function resetTouchControls() {
+     resetJoystickState();
+     resetTouchButtons();
 }
 
-export function setSparkleSpawnTimer(value) {
-     sparkleSpawnTimer = value;
-}
-
-export function setObstacleSpawnTimer(value) {
-     obstacleSpawnTimer = value;
-}
-
-export function setGameSparkleColorEngine(value) {
-     gameSparkleColorEngine = value;
-}
-
-export function setSparkleScore(value) {
-     sparkleScore = value;
-}
-
-export function addSparkleScore(amount) {
-     sparkleScore += amount;
-}
-
-export function setSparkleHealProgress(value) {
-     sparkleHealProgress = value;
-}
-
-export function addSparkleHealProgress(amount) {
-     sparkleHealProgress += amount;
-}
-
-export function setPlayerHealth(value) {
-     playerHealth = value;
-}
-
-export function addPlayerHealth(amount) {
-     playerHealth += amount;
-}
-
-export function setGameStarted(value) {
-     gameStarted = value;
-}
-
-export function setGamePaused(value) {
-     gamePaused = value;
+export function isPointInsideCircle(x, y, cx, cy, r) {
+     const dx = x - cx;
+     const dy = y - cy;
+     return Math.sqrt(dx * dx + dy * dy) <= r;
 }
 
 // NOTE: UTILITIES
 
-export function randomItem(array) {
-     return array[Math.floor(Math.random() * array.length)];
+export function randomItem(a) { return a[Math.floor(Math.random() * a.length)]; }
+export function randomNumber(min, max) { return Math.random() * (max - min) + min; }
+
+export function isCollidingWithSparkle(p, s) {
+     const dx = p.x - s.x;
+     const dy = p.y - s.y;
+     return Math.sqrt(dx * dx + dy * dy) < p.radius + (s.size * 0.25);
 }
 
-export function randomNumber(min, max) {
-     return Math.random() * (max - min) + min;
+export function isPointInsideRect(x, y, r) {
+     return x >= r.x && x <= r.x + r.width && y >= r.y && y <= r.y + r.height;
 }
 
-export function isCollidingWithSparkle(playerObject, sparkleObject) {
-     const dx = playerObject.x - sparkleObject.x;
-     const dy = playerObject.y - sparkleObject.y;
-     const distance = Math.sqrt(dx * dx + dy * dy);
-
-     return distance < playerObject.radius + (sparkleObject.size * 0.25);
-     // Collision circle, so we do not have to rely on glyphs being the exact same size.
-}
-
-export function isPointInsideRect(x, y, rect) {
-     return (
-          x >= rect.x &&
-          x <= rect.x + rect.width &&
-          y >= rect.y &&
-          y <= rect.y + rect.height
-     );
-}
-
-// NOTE: CANVAS SIZE / DISPLAY SYNC
+// NOTE: CANVAS SIZE
 
 export function resizeMiniGameCanvasFromCss() {
-     if (!miniGameCanvas || !miniGameCtx) {
-          return;
-     }
+     if (!miniGameCanvas || !miniGameCtx) return;
 
      const rect = miniGameCanvas.getBoundingClientRect();
-     // This reads the canvas size as it is ACTUALLY being displayed by CSS on the page.
-
      const dpr = window.devicePixelRatio || 1;
-     // DPR = device pixel ratio. Helps the canvas stay sharp on retina/high-density screens.
 
      miniGameCanvas.width = Math.round(rect.width * dpr);
      miniGameCanvas.height = Math.round(rect.height * dpr);
-     // The canvas has an internal drawing size and a visual CSS size.
-     // We resize the internal drawing size to match the displayed size more accurately.
-
      miniGameCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-     // This makes our drawing coordinates behave like CSS pixels instead of raw device pixels.
 
      miniGameWidth = rect.width;
      miniGameHeight = rect.height;
-     // Store the visible canvas size separately so gameplay math uses screen-sized values.
 }
 
 export function updateMiniGameCanvasSize() {
      resizeMiniGameCanvasFromCss();
-     // Recalculate the internal canvas size so the drawing space matches the CSS display size.
+     updatePauseButtonBounds();
+     updateTouchControlBounds();
 }
 
-// NOTE: PLAYER STATE HELPERS
-// These are shared helpers used by entities when health changes or temporary faces are applied.
+// NOTE: PLAYER STATE
 
 export function getDefaultPlayerFace() {
-     if (playerHealth <= 0) {
-          return playerFaces.dead;
-     }
-
-     if (playerHealth === maxPlayerHealth) {
-          return playerFaces.maxHealth;
-     }
-
-     if (playerHealth <= 2) {
-          return playerFaces.lowHealth;
-     }
-
+     if (playerHealth <= 0) return playerFaces.dead;
+     if (playerHealth === maxPlayerHealth) return playerFaces.maxHealth;
+     if (playerHealth <= 2) return playerFaces.lowHealth;
      return playerFaces.neutral;
 }
 
 export function updatePlayerSpeedFromHealth() {
-     const heartDifference = playerHealth - playerBaseHealth;
-     player.speed = Math.max(0, playerBaseSpeed + (heartDifference * playerSpeedPerHeart));
-     // Speed rises or falls by 0.5 for every heart above or below the starting 3 hearts, controlled in BASE CONST.
+     const diff = playerHealth - playerBaseHealth;
+     player.speed = Math.max(0, playerBaseSpeed + (diff * playerSpeedPerHeart));
 }
 
 export function refreshPlayerStateFace() {
@@ -342,27 +304,27 @@ export function applyTemporaryPlayerFace(face, duration) {
           refreshPlayerStateFace();
           return;
      }
-
      player.char = face;
      player.sparkleFaceTimer = duration;
 }
 
 export function syncPlayerHealthState() {
      updatePlayerSpeedFromHealth();
-
-     if (player.sparkleFaceTimer <= 0 || playerHealth <= 0 || playerHealth === maxPlayerHealth || playerHealth <= 2) {
+     if (
+          player.sparkleFaceTimer <= 0 ||
+          playerHealth <= 0 ||
+          playerHealth === maxPlayerHealth ||
+          playerHealth <= 2
+     ) {
           refreshPlayerStateFace();
      }
 }
 
-// NOTE: GAME UPDATE DRAW LOOP
+// NOTE: LOOP
 
 export function updateGame() {
      updatePauseButtonState();
-
-     if (gamePaused) {
-          return;
-     }
+     if (gamePaused) return;
 
      updatePlayer();
      updatePlayerFaceState();
@@ -385,69 +347,59 @@ export function drawGame() {
      drawScore();
      drawHealth();
      drawPauseButton();
+
+     if (gameStarted && !gamePaused) {
+          drawTouchJoystick();
+          drawTouchButtons();
+     }
 }
 
 export function gameLoop() {
      updateGame();
      drawGame();
-     window.requestAnimationFrame(gameLoop);
-     // requestAnimationFrame tells the browser:
-     // "run this loop again on the next paint frame."
+     requestAnimationFrame(gameLoop);
 }
 
- // NOTE: STARTUP RESET
-// This resets the shared game state back to the beginning.
-// Good for initial load now, and useful later if you add restart / game-over / replay.
+// NOTE: RESET
 
 export function resetGameState() {
      gameSparkleColorEngine = createColorEngine(getRainbowPalette);
-     // Create the game's own color engine here so CSS + DOM are ready BEFORE colors are read.
-     // Pass the palette function itself so it can always pull the latest theme colors.
-     // Important: this now comes from game-theme.js, not script.js.
 
      sparkleScore = 0;
      sparkleHealProgress = 0;
      playerHealth = playerBaseHealth;
      gameStarted = false;
      gamePaused = true;
-     // Start in a paused state until the player clicks START.
 
      sparkles.length = 0;
      obstacles.length = 0;
      collisionBursts.length = 0;
-     // Reset spawned objects whenever the game starts.
 
      sparkleSpawnTimer = 0;
      obstacleSpawnTimer = 0;
-     // Reset timers whenever the game starts.
 
-     pointerInput.active = false;
-     pointerInput.x = 0;
-     pointerInput.y = 0;
-     pointerInput.pointerId = null;
-     // Reset pointer tracking too so an old touch/click state does not carry across a restart.
-
+     resetTouchControls();
      syncPlayerHealthState();
 }
 
+// NOTE: START
+
 export function startSparkleSeeker() {
      resetGameState();
-
      updateMiniGameCanvasSize();
-     // Match the game canvas drawing size to the CSS display size before the game starts drawing.
 
      resetPlayerPosition();
      updatePauseButtonBounds();
+     updateTouchControlBounds();
 
      bindKeyboardInput();
      bindPointerInput();
      bindResizeHandler();
-     // These should only bind once because the input file tracks "already bound" state.
 
      gameLoop();
 }
 
-// NOTE: AUTO STARTUP
+// NOTE: AUTO START
 
 if (!miniGameCanvas || !miniGameCtx) {
      console.warn("Sparkle Seeker could not find #miniGameCanvas.");

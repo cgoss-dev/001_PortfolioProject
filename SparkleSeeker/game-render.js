@@ -16,7 +16,8 @@ import {
      gameButton,
      sparkles,
      obstacles,
-     collisionBursts
+     collisionBursts,
+     touchControls
 } from "./game-core.js";
 
 import {
@@ -27,9 +28,6 @@ import {
 import {
      getGlowSettings
 } from "./game-theme.js";
-// 🔥 REQUIRED FIX
-// This was missing before.
-// Without this import, draw functions crash when trying to read glow settings.
 
 // NOTE: PLAYER
 
@@ -84,7 +82,6 @@ export function drawHealth() {
 
      const filledHeart = "♥";
      const emptyHeart = "♡";
-
      const heartsPerRow = 5;
 
      let topRow = "";
@@ -182,10 +179,177 @@ export function drawPauseButton() {
      miniGameCtx.restore();
 }
 
+// NOTE: TOUCH CONTROLS
+
+export function drawTouchJoystick() {
+     if (!miniGameCtx) {
+          return;
+     }
+
+     const joystick = touchControls.joystick;
+     const glowSettings = getGlowSettings();
+
+     const centerX = joystick.centerX;
+     const centerY = joystick.centerY;
+     const knobCenterX = centerX + joystick.knobX;
+     const knobCenterY = centerY + joystick.knobY;
+
+     miniGameCtx.save();
+
+     // BASE RING
+     miniGameCtx.globalAlpha = 0.9;
+     miniGameCtx.fillStyle = "rgba(255, 255, 255, 0.05)";
+     miniGameCtx.strokeStyle = joystick.isActive
+          ? "rgba(255, 255, 255, 0.4)"
+          : "rgba(255, 255, 255, 0.25)";
+     miniGameCtx.lineWidth = 2;
+
+     miniGameCtx.shadowColor = joystick.isActive
+          ? "rgba(255, 255, 255, 0.3)"
+          : "rgba(255, 255, 255, 0.18)";
+     miniGameCtx.shadowBlur = joystick.isActive
+          ? glowSettings.gameParticleBlur
+          : glowSettings.gameParticleBlur * 0.75;
+
+     miniGameCtx.beginPath();
+     miniGameCtx.arc(centerX, centerY, joystick.baseRadius, 0, Math.PI * 2);
+     miniGameCtx.fill();
+     miniGameCtx.stroke();
+
+     // DIRECTION MARKS
+     miniGameCtx.shadowBlur = 0;
+     miniGameCtx.strokeStyle = "rgba(255, 255, 255, 0.18)";
+     miniGameCtx.lineWidth = 2;
+     miniGameCtx.lineCap = "round";
+
+     const tickInset = joystick.baseRadius * 0.48;
+     const tickOutset = joystick.baseRadius * 0.78;
+
+     miniGameCtx.beginPath();
+     miniGameCtx.moveTo(centerX, centerY - tickInset);
+     miniGameCtx.lineTo(centerX, centerY - tickOutset);
+     miniGameCtx.moveTo(centerX + tickInset, centerY);
+     miniGameCtx.lineTo(centerX + tickOutset, centerY);
+     miniGameCtx.moveTo(centerX, centerY + tickInset);
+     miniGameCtx.lineTo(centerX, centerY + tickOutset);
+     miniGameCtx.moveTo(centerX - tickInset, centerY);
+     miniGameCtx.lineTo(centerX - tickOutset, centerY);
+     miniGameCtx.stroke();
+
+     miniGameCtx.restore();
+
+     miniGameCtx.save();
+
+     // THUMB / KNOB
+     const pressScale = joystick.isActive ? 0.94 : 1;
+     const thumbRadius = joystick.thumbRadius;
+
+     miniGameCtx.translate(knobCenterX, knobCenterY);
+     miniGameCtx.scale(pressScale, pressScale);
+     miniGameCtx.translate(-knobCenterX, -knobCenterY);
+
+     miniGameCtx.fillStyle = joystick.isActive
+          ? "rgba(255, 255, 255, 0.42)"
+          : "rgba(255, 255, 255, 0.24)";
+     miniGameCtx.strokeStyle = joystick.isActive
+          ? "rgba(255, 255, 255, 0.55)"
+          : "rgba(255, 255, 255, 0.28)";
+     miniGameCtx.lineWidth = 2;
+
+     miniGameCtx.shadowColor = joystick.isActive
+          ? "rgba(255, 255, 255, 0.34)"
+          : "rgba(255, 255, 255, 0.2)";
+     miniGameCtx.shadowBlur = joystick.isActive
+          ? glowSettings.gameParticleBlur * 1.1
+          : glowSettings.gameParticleBlur * 0.85;
+
+     miniGameCtx.beginPath();
+     miniGameCtx.arc(knobCenterX, knobCenterY, thumbRadius, 0, Math.PI * 2);
+     miniGameCtx.fill();
+     miniGameCtx.stroke();
+
+     miniGameCtx.restore();
+}
+
+export function drawTouchButtons() {
+     if (!miniGameCtx) {
+          return;
+     }
+
+     const glowSettings = getGlowSettings();
+
+     drawSingleTouchButton(touchControls.leftButton, glowSettings);
+     drawSingleTouchButton(touchControls.rightButton, glowSettings);
+}
+
+function drawSingleTouchButton(button, glowSettings) {
+     const pressOffsetY = button.isPressed ? 3 : 0;
+     const pressScale = button.isPressed ? 0.94 : 1;
+
+     const buttonCenterX = button.x + (button.width / 2);
+     const buttonCenterY = button.y + (button.height / 2) + pressOffsetY;
+
+     miniGameCtx.save();
+
+     miniGameCtx.translate(buttonCenterX, buttonCenterY);
+     miniGameCtx.scale(pressScale, pressScale);
+     miniGameCtx.translate(-buttonCenterX, -buttonCenterY);
+
+     miniGameCtx.fillStyle = button.isPressed
+          ? "rgba(255, 255, 255, 0.16)"
+          : "rgba(255, 255, 255, 0.08)";
+
+     miniGameCtx.strokeStyle = button.isPressed
+          ? "rgba(255, 255, 255, 0.55)"
+          : "rgba(255, 255, 255, 0.35)";
+
+     miniGameCtx.lineWidth = 2;
+
+     miniGameCtx.shadowColor = button.isPressed
+          ? "rgba(255, 255, 255, 0.28)"
+          : "rgba(255, 255, 255, 0.18)";
+
+     miniGameCtx.shadowBlur = button.isPressed
+          ? glowSettings.gameParticleBlur
+          : glowSettings.gameParticleBlur * 0.85;
+
+     miniGameCtx.beginPath();
+     miniGameCtx.roundRect(
+          button.x,
+          button.y + pressOffsetY,
+          button.width,
+          button.height,
+          16
+     );
+     miniGameCtx.fill();
+     miniGameCtx.stroke();
+
+     miniGameCtx.font = '28px "Bungee", "Bungee Shade", cursive';
+     miniGameCtx.textAlign = "center";
+     miniGameCtx.textBaseline = "middle";
+     miniGameCtx.fillStyle = "#ffffff";
+
+     miniGameCtx.shadowColor = button.isPressed
+          ? "rgba(255, 255, 255, 0.45)"
+          : "rgba(255, 255, 255, 0.3)";
+
+     miniGameCtx.shadowBlur = button.isPressed ? 10 : 8;
+
+     miniGameCtx.fillText(
+          button.label,
+          button.x + (button.width / 2),
+          button.y + (button.height / 2) + pressOffsetY + 1
+     );
+
+     miniGameCtx.restore();
+}
+
 // NOTE: COLLISION BURSTS
 
 export function drawCollisionBursts() {
-     if (!miniGameCtx) return;
+     if (!miniGameCtx) {
+          return;
+     }
 
      const glowSettings = getGlowSettings();
 
@@ -203,7 +367,6 @@ export function drawCollisionBursts() {
           miniGameCtx.font = `${burstSize}px Arial, Helvetica, sans-serif`;
           miniGameCtx.fillStyle = burst.color;
           miniGameCtx.shadowColor = burst.color;
-
           miniGameCtx.shadowBlur = glowSettings.gameParticleBlur * burst.glowBoost * lifeRatio;
 
           miniGameCtx.globalAlpha = Math.max(0, lifeRatio * 0.95);
@@ -220,7 +383,9 @@ export function drawCollisionBursts() {
 // NOTE: SPARKLES
 
 export function drawSparkles() {
-     if (!miniGameCtx) return;
+     if (!miniGameCtx) {
+          return;
+     }
 
      const glowSettings = getGlowSettings();
 
@@ -234,7 +399,6 @@ export function drawSparkles() {
 
           miniGameCtx.font = `${sparkle.size}px Arial, Helvetica, sans-serif`;
           miniGameCtx.fillStyle = sparkle.color;
-
           miniGameCtx.shadowBlur = glowSettings.gameParticleBlur * 1.2;
           miniGameCtx.shadowColor = sparkle.color;
 
@@ -252,7 +416,9 @@ export function drawSparkles() {
 // NOTE: OBSTACLES
 
 export function drawObstacles() {
-     if (!miniGameCtx) return;
+     if (!miniGameCtx) {
+          return;
+     }
 
      const glowSettings = getGlowSettings();
 
@@ -283,7 +449,9 @@ export function drawObstacles() {
 // NOTE: BACKGROUND
 
 export function drawMiniGameBackground() {
-     if (!miniGameCtx) return;
+     if (!miniGameCtx) {
+          return;
+     }
 
      miniGameCtx.clearRect(0, 0, miniGameWidth, miniGameHeight);
      miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.75)";
@@ -291,7 +459,9 @@ export function drawMiniGameBackground() {
 }
 
 export function drawUiUnderlay() {
-     if (!miniGameCtx) return;
+     if (!miniGameCtx) {
+          return;
+     }
 
      const centerX = miniGameWidth / 2;
      const centerY = miniGameHeight / 2 + miniGameHeight * 0.1;

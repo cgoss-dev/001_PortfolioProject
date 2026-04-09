@@ -1,7 +1,4 @@
 // NOTE: GAME INPUT
-// This file handles player input and canvas-interaction behavior.
-// It does NOT run the whole game by itself.
-// It just listens for input and updates shared state in game-core.js.
 
 import {
      miniGameCanvas,
@@ -10,7 +7,6 @@ import {
      miniGameHeight,
      keys,
      gameButton,
-     pointerInput,
      gamePaused,
      gameStarted,
      keyboardInputBound,
@@ -22,12 +18,47 @@ import {
      setResizeHandlerBound,
      setGameStarted,
      setGamePaused,
-     updateMiniGameCanvasSize
+     updateMiniGameCanvasSize,
+     touchControls,
+     setJoystickActive,
+     setJoystickPointerId,
+     setJoystickKnobOffset,
+     setJoystickInput,
+     setLeftButtonPressed,
+     setLeftButtonPointerId,
+     setRightButtonPressed,
+     setRightButtonPointerId,
+     resetJoystickState,
+     resetTouchButtons,
+     isPointInsideCircle
 } from "./game-core.js";
 
 import {
      resetPlayerPosition
 } from "./game-entities.js";
+
+// NOTE: TOUCH CONTROL BOUNDS
+
+export function updateTouchControlBounds() {
+     const bottomPadding = 22;
+     const sideGap = 28;
+
+     const joystick = touchControls.joystick;
+     const left = touchControls.leftButton;
+     const right = touchControls.rightButton;
+
+     const centerX = miniGameWidth / 2;
+     const bottomY = miniGameHeight - bottomPadding;
+
+     joystick.centerX = centerX;
+     joystick.centerY = bottomY - joystick.baseRadius;
+
+     left.x = centerX - joystick.baseRadius - sideGap - left.width;
+     left.y = bottomY - left.height;
+
+     right.x = centerX + joystick.baseRadius + sideGap;
+     right.y = bottomY - right.height;
+}
 
 // NOTE: BUTTON LABEL
 
@@ -39,9 +70,8 @@ export function getPauseButtonLabel() {
      return "PAUSE";
 }
 
-// NOTE: BUTTON SIZE / POSITION
-// The pause button is drawn inside the canvas, not in HTML.
-// That means we have to measure its text size and manually calculate its clickable box.
+// NOTE: PAUSE BUTTON BOUNDS
+// Moved to the top-right so it does not overlap the bottom-center joystick.
 
 export function updatePauseButtonBounds() {
      if (!miniGameCtx) {
@@ -51,30 +81,23 @@ export function updatePauseButtonBounds() {
      const label = getPauseButtonLabel();
 
      miniGameCtx.save();
-     miniGameCtx.font = '24px "Bungee", "Bungee Shade", cursive';
+     miniGameCtx.font = '24px "Bungee", cursive';
 
-     const measuredText = miniGameCtx.measureText(label);
-     const textWidth = measuredText.width;
+     const textWidth = miniGameCtx.measureText(label).width;
 
      gameButton.width = textWidth + (gameButton.paddingX * 2);
      gameButton.height = 24 + (gameButton.paddingY * 2);
 
-     gameButton.x = (miniGameWidth - gameButton.width) / 2;
-     gameButton.y = miniGameHeight - gameButton.height - 18;
+     const topPadding = 14;
+     const rightPadding = 16;
+
+     gameButton.x = miniGameWidth - gameButton.width - rightPadding;
+     gameButton.y = topPadding;
 
      miniGameCtx.restore();
 }
 
-export function updatePauseButtonState() {
-     if (gameButton.pressTimer > 0) {
-          gameButton.pressTimer -= 1;
-     } else {
-          gameButton.isPressed = false;
-     }
-}
-
 // NOTE: PAUSE TOGGLE
-// Shared state lives in game-core.js, so we update it through setter functions.
 
 export function toggleGamePause() {
      if (!gameStarted) {
@@ -87,9 +110,134 @@ export function toggleGamePause() {
      setGamePaused(nextPausedState);
 
      if (nextPausedState) {
-          pointerInput.active = false;
-          pointerInput.pointerId = null;
+          resetJoystickState();
+          resetTouchButtons();
      }
+}
+
+// NOTE: POINTER POSITION
+
+export function getCanvasPointerPosition(event) {
+     const rect = miniGameCanvas.getBoundingClientRect();
+
+     return {
+          x: ((event.clientX - rect.left) / rect.width) * miniGameWidth,
+          y: ((event.clientY - rect.top) / rect.height) * miniGameHeight
+     };
+}
+
+// NOTE: POINTER INPUT
+// We still use pointer EVENTS for the joystick and buttons.
+// We just no longer store old pointer-follow movement state in game-core.
+
+export function bindPointerInput() {
+     if (!miniGameCanvas || pointerInputBound) {
+          return;
+     }
+
+     miniGameCanvas.style.touchAction = "none";
+
+     miniGameCanvas.addEventListener("pointerdown", (event) => {
+          event.preventDefault();
+
+          const pos = getCanvasPointerPosition(event);
+
+          updatePauseButtonBounds();
+          updateTouchControlBounds();
+
+          // PAUSE BUTTON
+          if (isPointInsideRect(pos.x, pos.y, gameButton)) {
+               gameButton.isPressed = true;
+               gameButton.pressTimer = 15;
+               toggleGamePause();
+               return;
+          }
+
+          if (gamePaused) {
+               return;
+          }
+
+          const joystick = touchControls.joystick;
+
+          // JOYSTICK
+          if (isPointInsideCircle(pos.x, pos.y, joystick.centerX, joystick.centerY, joystick.baseRadius)) {
+               setJoystickActive(true);
+               setJoystickPointerId(event.pointerId);
+               miniGameCanvas.setPointerCapture(event.pointerId);
+               return;
+          }
+
+          // LEFT BUTTON
+          if (isPointInsideRect(pos.x, pos.y, touchControls.leftButton)) {
+               setLeftButtonPressed(true);
+               setLeftButtonPointerId(event.pointerId);
+               return;
+          }
+
+          // RIGHT BUTTON
+          if (isPointInsideRect(pos.x, pos.y, touchControls.rightButton)) {
+               setRightButtonPressed(true);
+               setRightButtonPointerId(event.pointerId);
+               return;
+          }
+     });
+
+     miniGameCanvas.addEventListener("pointermove", (event) => {
+          const joystick = touchControls.joystick;
+
+          if (joystick.isActive && joystick.pointerId === event.pointerId) {
+               const pos = getCanvasPointerPosition(event);
+
+               const dx = pos.x - joystick.centerX;
+               const dy = pos.y - joystick.centerY;
+
+               const distance = Math.sqrt(dx * dx + dy * dy);
+               const max = joystick.baseRadius;
+
+               const clamped = Math.min(distance, max);
+               const angle = Math.atan2(dy, dx);
+
+               const x = Math.cos(angle) * clamped;
+               const y = Math.sin(angle) * clamped;
+
+               setJoystickKnobOffset(x, y);
+
+               const nx = x / max;
+               const ny = y / max;
+               const magnitude = Math.sqrt(nx * nx + ny * ny);
+
+               if (magnitude < joystick.deadZone) {
+                    setJoystickInput(0, 0);
+               } else {
+                    setJoystickInput(nx, ny);
+               }
+          }
+     });
+
+     miniGameCanvas.addEventListener("pointerup", (event) => {
+          const joystick = touchControls.joystick;
+
+          if (joystick.pointerId === event.pointerId) {
+               resetJoystickState();
+          }
+
+          if (touchControls.leftButton.pointerId === event.pointerId) {
+               setLeftButtonPressed(false);
+               setLeftButtonPointerId(null);
+          }
+
+          if (touchControls.rightButton.pointerId === event.pointerId) {
+               setRightButtonPressed(false);
+               setRightButtonPointerId(null);
+          }
+     });
+
+     miniGameCanvas.addEventListener("pointercancel", () => {
+          resetJoystickState();
+          resetTouchButtons();
+     });
+
+     setPointerInputBound(true);
 }
 
 // NOTE: KEYBOARD INPUT
@@ -99,7 +247,7 @@ export function bindKeyboardInput() {
           return;
      }
 
-     window.addEventListener("keydown", function (event) {
+     window.addEventListener("keydown", (event) => {
           const key = event.key.toLowerCase();
 
           if ([
@@ -112,7 +260,7 @@ export function bindKeyboardInput() {
           keys[key] = true;
      });
 
-     window.addEventListener("keyup", function (event) {
+     window.addEventListener("keyup", (event) => {
           const key = event.key.toLowerCase();
           keys[key] = false;
      });
@@ -120,101 +268,19 @@ export function bindKeyboardInput() {
      setKeyboardInputBound(true);
 }
 
-// NOTE: POINTER POSITION HELPERS
-
-export function getCanvasPointerPosition(event) {
-     if (!miniGameCanvas) {
-          return { x: 0, y: 0 };
-     }
-
-     const rect = miniGameCanvas.getBoundingClientRect();
-
-     const x = ((event.clientX - rect.left) / rect.width) * miniGameWidth;
-     const y = ((event.clientY - rect.top) / rect.height) * miniGameHeight;
-
-     return { x, y };
-}
-
-// NOTE: POINTER / TOUCH INPUT
-
-export function bindPointerInput() {
-     if (!miniGameCanvas || pointerInputBound) {
-          return;
-     }
-
-     miniGameCanvas.style.touchAction = "none";
-     // Prevent browser scrolling/zoom gestures from hijacking the game.
-
-     miniGameCanvas.addEventListener("pointerdown", function (event) {
-          event.preventDefault();
-
-          const position = getCanvasPointerPosition(event);
-          updatePauseButtonBounds();
-
-          if (isPointInsideRect(position.x, position.y, gameButton)) {
-               gameButton.isPressed = true;
-               gameButton.pressTimer = 15; // Change length of button press animation.
-               toggleGamePause();
-               return;
-          }
-
-          if (gamePaused) {
-               return;
-          }
-
-          pointerInput.active = true;
-          pointerInput.x = position.x;
-          pointerInput.y = position.y;
-          pointerInput.pointerId = event.pointerId;
-
-          miniGameCanvas.setPointerCapture(event.pointerId);
-     });
-
-     miniGameCanvas.addEventListener("pointermove", function (event) {
-          if (!pointerInput.active) {
-               return;
-          }
-
-          if (pointerInput.pointerId !== event.pointerId) {
-               return;
-          }
-
-          const position = getCanvasPointerPosition(event);
-
-          pointerInput.x = position.x;
-          pointerInput.y = position.y;
-     });
-
-     miniGameCanvas.addEventListener("pointerup", function (event) {
-          if (pointerInput.pointerId === event.pointerId) {
-               pointerInput.active = false;
-               pointerInput.pointerId = null;
-          }
-     });
-
-     miniGameCanvas.addEventListener("pointercancel", function (event) {
-          if (pointerInput.pointerId === event.pointerId) {
-               pointerInput.active = false;
-               pointerInput.pointerId = null;
-          }
-     });
-
-     setPointerInputBound(true);
-}
-
-// NOTE: RESIZE HANDLING
+// NOTE: RESIZE
 
 export function bindResizeHandler() {
      if (resizeHandlerBound) {
           return;
      }
 
-     window.addEventListener("resize", function () {
+     window.addEventListener("resize", () => {
           updateMiniGameCanvasSize();
           resetPlayerPosition();
           updatePauseButtonBounds();
+          updateTouchControlBounds();
      });
-     // On resize, first update the canvas drawing space, then re-center the player inside the new visible area.
 
      setResizeHandlerBound(true);
 }

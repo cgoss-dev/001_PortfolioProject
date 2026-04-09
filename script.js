@@ -239,7 +239,7 @@ function createColorEngine(colorsOrFactory) {
 }
 
 /* NOTE: GLOW */
-/* Marquee and menu glyph now both use the universal text-shadow glow style. */
+/* Marquee and menu glyph share the universal text-shadow glow style. */
 
 function buildUniversalTextGlow(color) {
      const textSettings = getTextSettings();
@@ -650,14 +650,11 @@ function setRandomTaglineBreak() {
      el.textContent = taglineBreaks[randomIndex];
 }
 
-// Run on page load
-setRandomTaglineBreak();
-
-/* NOTE: RESIZE */
+/* NOTE: STARTUP */
 
 function handleResize() {
      window.clearTimeout(resizeTimer);
-
+     
      resizeTimer = window.setTimeout(function () {
           setupSparkleRain();
           syncNavButtonGlow();
@@ -665,9 +662,8 @@ function handleResize() {
      }, 150);
 }
 
-/* NOTE: STARTUP */
-
 startHeaderColorCycle();
+setRandomTaglineBreak();
 syncNavButtonGlow();
 closeMenu();
 
