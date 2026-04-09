@@ -54,10 +54,10 @@ export function updateTouchControlBounds() {
      joystick.centerY = bottomY - joystick.baseRadius;
 
      left.x = centerX - joystick.baseRadius - sideGap - left.width;
-     left.y = bottomY - left.height;
-
      right.x = centerX + joystick.baseRadius + sideGap;
-     right.y = bottomY - right.height;
+
+     left.y = joystick.centerY - (left.height / 2);
+     right.y = joystick.centerY - (right.height / 2);
 }
 
 // NOTE: BUTTON LABEL
@@ -89,12 +89,22 @@ export function updatePauseButtonBounds() {
      gameButton.height = 24 + (gameButton.paddingY * 2);
 
      const topPadding = 14;
-     const rightPadding = 16;
 
-     gameButton.x = miniGameWidth - gameButton.width - rightPadding;
+     gameButton.x = (miniGameWidth - gameButton.width) / 2;
      gameButton.y = topPadding;
 
      miniGameCtx.restore();
+}
+
+// NOTE: PAUSE BUTTON PRESS STATE
+// This keeps the pause/start button press animation alive for a short time.
+
+export function updatePauseButtonState() {
+     if (gameButton.pressTimer > 0) {
+          gameButton.pressTimer -= 1;
+     } else {
+          gameButton.isPressed = false;
+     }
 }
 
 // NOTE: PAUSE TOGGLE

@@ -347,11 +347,8 @@ export function drawGame() {
      drawScore();
      drawHealth();
      drawPauseButton();
-
-     if (gameStarted && !gamePaused) {
-          drawTouchJoystick();
-          drawTouchButtons();
-     }
+     drawTouchJoystick();
+     drawTouchButtons();
 }
 
 export function gameLoop() {
