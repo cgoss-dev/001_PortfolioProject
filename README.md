@@ -16,6 +16,6 @@ Digital footprint, games, resources.
      -    Levels begin at 0. Each level is 25 points.
 
 ### FUTURE GAMES
--    Farming sim.
--    Quiz game.
--    Choose your own adventure.
+-    Farming sim. (32x32 or 48x48)
+-    Quiz game. (Pokemon, City, Snack)
+-    Choose your own adventure. (Mage, Knight, Rogue)
