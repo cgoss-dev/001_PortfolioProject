@@ -13,17 +13,15 @@ import {
      sparkleScore,
      playerHealth,
      maxPlayerHealth,
-     gameButton,
      sparkles,
      obstacles,
      collisionBursts,
-     touchControls
+     touchControls,
+     gameStarted,
+     gameMenuOpen,
+     musicEnabled,
+     soundEffectsEnabled
 } from "./game-core.js";
-
-import {
-     getPauseButtonLabel,
-     updatePauseButtonBounds
-} from "./game-input.js";
 
 import {
      getGlowSettings
@@ -32,7 +30,7 @@ import {
 // NOTE: PLAYER
 
 export function drawPlayer() {
-     if (!miniGameCtx) {
+     if (!miniGameCtx || !gameStarted) {
           return;
      }
 
@@ -112,71 +110,11 @@ export function drawHealth() {
      miniGameCtx.restore();
 }
 
+// NOTE: LEGACY PAUSE LABEL
+// Kept as a no-op so core imports remain stable if reused later.
+
 export function drawPauseButton() {
-     if (!miniGameCtx) {
-          return;
-     }
-
-     updatePauseButtonBounds();
-
-     const label = getPauseButtonLabel();
-     const pressOffsetY = gameButton.isPressed ? 3 : 0;
-     const pressScale = gameButton.isPressed ? 0.96 : 1;
-
-     const buttonCenterX = gameButton.x + (gameButton.width / 2);
-     const buttonCenterY = gameButton.y + (gameButton.height / 2) + pressOffsetY;
-
-     miniGameCtx.save();
-
-     miniGameCtx.translate(buttonCenterX, buttonCenterY);
-     miniGameCtx.scale(pressScale, pressScale);
-     miniGameCtx.translate(-buttonCenterX, -buttonCenterY);
-
-     miniGameCtx.fillStyle = gameButton.isPressed
-          ? "rgba(255, 255, 255, 0.16)"
-          : "rgba(255, 255, 255, 0.08)";
-
-     miniGameCtx.strokeStyle = gameButton.isPressed
-          ? "rgba(255, 255, 255, 0.55)"
-          : "rgba(255, 255, 255, 0.35)";
-
-     miniGameCtx.lineWidth = 2;
-
-     miniGameCtx.shadowColor = gameButton.isPressed
-          ? "rgba(255, 255, 255, 0.28)"
-          : "rgba(255, 255, 255, 0.18)";
-
-     miniGameCtx.shadowBlur = gameButton.isPressed ? 14 : 10;
-
-     miniGameCtx.beginPath();
-     miniGameCtx.roundRect(
-          gameButton.x,
-          gameButton.y + pressOffsetY,
-          gameButton.width,
-          gameButton.height,
-          12
-     );
-     miniGameCtx.fill();
-     miniGameCtx.stroke();
-
-     miniGameCtx.font = '24px "Bungee", "Bungee Shade", cursive';
-     miniGameCtx.textAlign = "center";
-     miniGameCtx.textBaseline = "middle";
-     miniGameCtx.fillStyle = "#ffffff";
-
-     miniGameCtx.shadowColor = gameButton.isPressed
-          ? "rgba(255, 255, 255, 0.5)"
-          : "rgba(255, 255, 255, 0.35)";
-
-     miniGameCtx.shadowBlur = gameButton.isPressed ? 10 : 8;
-
-     miniGameCtx.fillText(
-          label,
-          gameButton.x + (gameButton.width / 2),
-          gameButton.y + (gameButton.height / 2) + 1 + pressOffsetY
-     );
-
-     miniGameCtx.restore();
+     return;
 }
 
 // NOTE: TOUCH CONTROLS
@@ -196,7 +134,6 @@ export function drawTouchJoystick() {
 
      miniGameCtx.save();
 
-     // BASE RING
      miniGameCtx.globalAlpha = 0.9;
      miniGameCtx.fillStyle = "rgba(255, 255, 255, 0.05)";
      miniGameCtx.strokeStyle = joystick.isActive
@@ -216,7 +153,6 @@ export function drawTouchJoystick() {
      miniGameCtx.fill();
      miniGameCtx.stroke();
 
-     // DIRECTION MARKS
      miniGameCtx.shadowBlur = 0;
      miniGameCtx.strokeStyle = "rgba(255, 255, 255, 0.18)";
      miniGameCtx.lineWidth = 2;
@@ -240,7 +176,6 @@ export function drawTouchJoystick() {
 
      miniGameCtx.save();
 
-     // THUMB / KNOB
      const pressScale = joystick.isActive ? 0.94 : 1;
      const thumbRadius = joystick.thumbRadius;
 
@@ -335,9 +270,60 @@ function drawSingleTouchButton(button, glowSettings) {
 
      miniGameCtx.fillText(
           button.label,
-          button.x + (button.width / 2),
-          button.y + (button.height / 2) + pressOffsetY + 1
+          centerX,
+          centerY + 1
      );
+
+     miniGameCtx.restore();
+}
+
+// NOTE: MENU OVERLAY
+
+export function drawMenuOverlay() {
+     if (!miniGameCtx || !gameMenuOpen) {
+          return;
+     }
+
+     const panelWidth = Math.min(320, miniGameWidth - 48);
+     const panelHeight = 180;
+     const panelX = (miniGameWidth - panelWidth) / 2;
+     const panelY = (miniGameHeight - panelHeight) / 2;
+
+     miniGameCtx.save();
+
+     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.82)";
+     miniGameCtx.strokeStyle = "rgba(255, 255, 255, 0.28)";
+     miniGameCtx.lineWidth = 2;
+     miniGameCtx.shadowColor = "rgba(255, 255, 255, 0.18)";
+     miniGameCtx.shadowBlur = 14;
+
+     miniGameCtx.beginPath();
+     miniGameCtx.roundRect(panelX, panelY, panelWidth, panelHeight, 18);
+     miniGameCtx.fill();
+     miniGameCtx.stroke();
+
+     miniGameCtx.shadowBlur = 0;
+     miniGameCtx.fillStyle = "#ffffff";
+     miniGameCtx.textAlign = "center";
+     miniGameCtx.textBaseline = "top";
+
+     miniGameCtx.font = '24px "Bungee", "Bungee Shade", cursive';
+     miniGameCtx.fillText("MENU", miniGameWidth / 2, panelY + 18);
+
+     miniGameCtx.font = '16px "Noto Sans Mono", monospace';
+     miniGameCtx.textAlign = "left";
+
+     const textX = panelX + 22;
+     let textY = panelY + 62;
+     const lineGap = 28;
+
+     miniGameCtx.fillText("How to Play:", textX, textY);
+     textY += lineGap;
+     miniGameCtx.fillText("Drag joystick to move.", textX, textY);
+     textY += lineGap;
+     miniGameCtx.fillText(`Music: ${musicEnabled ? "On" : "Off"}`, textX, textY);
+     textY += lineGap;
+     miniGameCtx.fillText(`Sound Effects: ${soundEffectsEnabled ? "On" : "Off"}`, textX, textY);
 
      miniGameCtx.restore();
 }

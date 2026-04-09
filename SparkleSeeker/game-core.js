@@ -9,7 +9,6 @@ import {
      bindPointerInput,
      bindResizeHandler,
      updatePauseButtonState,
-     updatePauseButtonBounds,
      updateTouchControlBounds
 } from "./game-input.js";
 
@@ -35,9 +34,9 @@ import {
      drawPlayer,
      drawScore,
      drawHealth,
-     drawPauseButton,
      drawTouchJoystick,
-     drawTouchButtons
+     drawTouchButtons,
+     drawMenuOverlay
 } from "./game-render.js";
 
 import {
@@ -108,6 +107,10 @@ export const maxPlayerHealth = 10;
 export let gameStarted = false;
 export let gamePaused = true;
 
+export let gameMenuOpen = false;
+export let musicEnabled = true;
+export let soundEffectsEnabled = true;
+
 // NOTE: TOUCH CONTROLS
 
 export const touchControls = {
@@ -127,24 +130,25 @@ export const touchControls = {
      leftButton: {
           x: 0,
           y: 0,
-          width: 68,
-          height: 68,
+          width: 60, // Left button size.
+          height: 60, // Left button size.
           isPressed: false,
           pointerId: null,
-          label: "✧" // Left button glyph.
+          label: "⏯"
      },
      rightButton: {
           x: 0,
           y: 0,
-          width: 68,
-          height: 68,
+          width: 60, // Right button size.
+          height: 60, // Right button size.
           isPressed: false,
           pointerId: null,
-          label: "✦" // Right button glyph.
+          label: "☰"
      }
 };
 
-// NOTE: PAUSE BUTTON
+// NOTE: UI BUTTON STATE
+// Reused as a lightweight press-state object for the old pause label and menu interactions if needed later.
 
 export const gameButton = {
      x: 0,
@@ -195,6 +199,9 @@ export function addPlayerHealth(v) { playerHealth += v; }
 
 export function setGameStarted(v) { gameStarted = v; }
 export function setGamePaused(v) { gamePaused = v; }
+export function setGameMenuOpen(v) { gameMenuOpen = v; }
+export function setMusicEnabled(v) { musicEnabled = v; }
+export function setSoundEffectsEnabled(v) { soundEffectsEnabled = v; }
 
 export function setGameSparkleColorEngine(v) { gameSparkleColorEngine = v; }
 
@@ -276,7 +283,6 @@ export function resizeMiniGameCanvasFromCss() {
 
 export function updateMiniGameCanvasSize() {
      resizeMiniGameCanvasFromCss();
-     updatePauseButtonBounds();
      updateTouchControlBounds();
 }
 
@@ -324,7 +330,10 @@ export function syncPlayerHealthState() {
 
 export function updateGame() {
      updatePauseButtonState();
-     if (gamePaused) return;
+
+     if (!gameStarted || gamePaused || gameMenuOpen) { // Fixed error where game began running even if Menu button was clicked.
+          return;
+     }
 
      updatePlayer();
      updatePlayerFaceState();
@@ -346,9 +355,9 @@ export function drawGame() {
      drawPlayer();
      drawScore();
      drawHealth();
-     drawPauseButton();
      drawTouchJoystick();
      drawTouchButtons();
+     drawMenuOverlay();
 }
 
 export function gameLoop() {
@@ -367,6 +376,9 @@ export function resetGameState() {
      playerHealth = playerBaseHealth;
      gameStarted = false;
      gamePaused = true;
+     gameMenuOpen = false;
+     musicEnabled = true;
+     soundEffectsEnabled = true;
 
      sparkles.length = 0;
      obstacles.length = 0;
@@ -386,7 +398,6 @@ export function startSparkleSeeker() {
      updateMiniGameCanvasSize();
 
      resetPlayerPosition();
-     updatePauseButtonBounds();
      updateTouchControlBounds();
 
      bindKeyboardInput();

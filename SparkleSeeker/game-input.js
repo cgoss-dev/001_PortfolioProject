@@ -2,13 +2,12 @@
 
 import {
      miniGameCanvas,
-     miniGameCtx,
      miniGameWidth,
      miniGameHeight,
      keys,
-     gameButton,
      gamePaused,
      gameStarted,
+     gameMenuOpen,
      keyboardInputBound,
      pointerInputBound,
      resizeHandlerBound,
@@ -18,6 +17,7 @@ import {
      setResizeHandlerBound,
      setGameStarted,
      setGamePaused,
+     setGameMenuOpen,
      updateMiniGameCanvasSize,
      touchControls,
      setJoystickActive,
@@ -40,8 +40,8 @@ import {
 // NOTE: TOUCH CONTROL BOUNDS
 
 export function updateTouchControlBounds() {
-     const bottomPadding = 22;
-     const sideGap = 28;
+     const bottomPadding = 15;
+     const sideGap = 15; // Distance between L/R buttons.
 
      const joystick = touchControls.joystick;
      const left = touchControls.leftButton;
@@ -61,6 +61,7 @@ export function updateTouchControlBounds() {
 }
 
 // NOTE: BUTTON LABEL
+// Kept for compatibility with core update cycle even though the old floating label is gone.
 
 export function getPauseButtonLabel() {
      if (!gameStarted || gamePaused) {
@@ -70,49 +71,27 @@ export function getPauseButtonLabel() {
      return "PAUSE";
 }
 
-// NOTE: PAUSE BUTTON BOUNDS
-// Moved to the top-right so it does not overlap the bottom-center joystick.
+// NOTE: LEGACY PAUSE HELPERS
+// Kept as harmless no-op / press-state support so core imports stay stable.
 
 export function updatePauseButtonBounds() {
-     if (!miniGameCtx) {
-          return;
-     }
-
-     const label = getPauseButtonLabel();
-
-     miniGameCtx.save();
-     miniGameCtx.font = '24px "Bungee", "Bungee Shade", cursive';
-
-     const textWidth = miniGameCtx.measureText(label).width;
-
-     gameButton.width = Math.max(132, textWidth + (gameButton.paddingX * 2));
-     gameButton.height = 48;
-
-     const topPadding = 24;
-
-     gameButton.x = (miniGameWidth - gameButton.width) / 2;
-     gameButton.y = topPadding;
-
-     miniGameCtx.restore();
+     // No floating pause label anymore.
 }
-
-// NOTE: PAUSE BUTTON PRESS STATE
-// This keeps the pause/start button press animation alive for a short time.
 
 export function updatePauseButtonState() {
-     if (gameButton.pressTimer > 0) {
-          gameButton.pressTimer -= 1;
-     } else {
-          gameButton.isPressed = false;
-     }
+     // No floating pause label press animation anymore.
 }
 
-// NOTE: PAUSE TOGGLE
+// NOTE: GAME FLOW BUTTONS
 
-export function toggleGamePause() {
+export function toggleStartPause() {
      if (!gameStarted) {
           setGameStarted(true);
           setGamePaused(false);
+          return;
+     }
+
+     if (gameMenuOpen) {
           return;
      }
 
@@ -123,6 +102,21 @@ export function toggleGamePause() {
           resetJoystickState();
           resetTouchButtons();
      }
+}
+
+export function toggleGameMenu() {
+     const nextMenuState = !gameMenuOpen;
+
+     setGameMenuOpen(nextMenuState);
+
+     if (!gameStarted) {
+          setGamePaused(true);
+     } else {
+          setGamePaused(nextMenuState);
+     }
+
+     resetJoystickState();
+     resetTouchButtons();
 }
 
 // NOTE: POINTER POSITION
@@ -137,8 +131,6 @@ export function getCanvasPointerPosition(event) {
 }
 
 // NOTE: POINTER INPUT
-// We still use pointer EVENTS for the joystick and buttons.
-// We just no longer store old pointer-follow movement state in game-core.
 
 export function bindPointerInput() {
      if (!miniGameCanvas || pointerInputBound) {
@@ -152,18 +144,26 @@ export function bindPointerInput() {
 
           const pos = getCanvasPointerPosition(event);
 
-          updatePauseButtonBounds();
           updateTouchControlBounds();
 
-          // PAUSE BUTTON
-          if (isPointInsideRect(pos.x, pos.y, gameButton)) {
-               gameButton.isPressed = true;
-               gameButton.pressTimer = 15;
-               toggleGamePause();
+          // LEFT BUTTON = START / PAUSE
+          if (isPointInsideRect(pos.x, pos.y, touchControls.leftButton)) {
+               setLeftButtonPressed(true);
+               setLeftButtonPointerId(event.pointerId);
+               toggleStartPause();
                return;
           }
 
-          if (gamePaused) {
+          // RIGHT BUTTON = MENU
+          if (isPointInsideRect(pos.x, pos.y, touchControls.rightButton)) {
+               setRightButtonPressed(true);
+               setRightButtonPointerId(event.pointerId);
+               toggleGameMenu();
+               return;
+          }
+
+          // If paused or menu open, joystick should not activate.
+          if (gamePaused || gameMenuOpen) {
                return;
           }
 
@@ -174,21 +174,6 @@ export function bindPointerInput() {
                setJoystickActive(true);
                setJoystickPointerId(event.pointerId);
                miniGameCanvas.setPointerCapture(event.pointerId);
-               return;
-          }
-
-          // LEFT BUTTON
-          if (isPointInsideRect(pos.x, pos.y, touchControls.leftButton)) {
-               setLeftButtonPressed(true);
-               setLeftButtonPointerId(event.pointerId);
-               return;
-          }
-
-          // RIGHT BUTTON
-          if (isPointInsideRect(pos.x, pos.y, touchControls.rightButton)) {
-               setRightButtonPressed(true);
-               setRightButtonPointerId(event.pointerId);
-               return;
           }
      });
 
@@ -288,7 +273,6 @@ export function bindResizeHandler() {
      window.addEventListener("resize", () => {
           updateMiniGameCanvasSize();
           resetPlayerPosition();
-          updatePauseButtonBounds();
           updateTouchControlBounds();
      });
 

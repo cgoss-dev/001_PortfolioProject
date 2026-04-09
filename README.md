@@ -5,8 +5,8 @@ Digital footprint, games, resources.
 <br><br>
 
 ### TO DO
--    Drag button for player movement.
--    Flanking buttons for future dev.
+-    Add WASD function for joystick.
+-    Half heart fill instead of ten hearts.
 -    Obstacle effects affect player size, swap particles, etc.
 -    Swap marquee/border color functionality.
 -    Mobile landscape mode bug.
