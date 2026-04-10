@@ -5,6 +5,21 @@ Digital footprint, games, resources.
 <br><br>
 
 ### TO DO
+-    Remove game canvas from main page. Give it it's own home in "Free Trash".
+-    Reorg SparkleSeeker
+     -    Engine
+          -    State
+          -    Loop
+          -    Input
+     -    Systems
+          -    Player
+          -    Sparkles
+          -    Obstacles
+          -    WinLose
+     -    Visuals
+          -    UI
+          -    Text
+          -    Theme
 -    Add WASD function for joystick.
 -    Obstacle effects.
      -    Slow/speed.

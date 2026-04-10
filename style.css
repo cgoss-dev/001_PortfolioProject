@@ -11,7 +11,7 @@
      --accent-color: var(--rainbow-pink);
 
      /* SHARED RAINBOW COLOR ENGINE PALETTE */
-     /* Core JS + game JS both pull from these. */
+     /* Core JS + background JS can both pull from these if needed. */
 
      --rainbow-pink: #ea76cb;
      --rainbow-red: #d20f39;
@@ -88,16 +88,15 @@
      --bungee-shadow-offset-1: 0 0 0 transparent;
      --bungee-shadow-offset-2: 0 0 0 transparent;
 
-     /* CANVASBOARD */
+     /* NOTE: PANEL / BOX STYLING */
+     /* These were previously used by the game canvas frame too.
+        Keeping the shared variables since the dropdown menu panel still uses them. */
 
-     --canvas-height-responsive: 10rem;
-     --canvas-frame-width: min(100%, calc(100svh - var(--canvas-height-responsive)));
      --canvasboard-radius: 1rem;
      --canvasboard-border-width: 0.25rem;
      --canvasboard-border-color: var(--accent-color);
      --canvasboard-border: var(--canvasboard-border-width) solid var(--canvasboard-border-color);
      --canvasboard-glow-color: var(--accent-color);
-     --canvas-bg: transparent;
 
      /* LAYERS */
 
@@ -129,44 +128,6 @@
 
      --sparkle-respawn-offset-top: -20;
      --sparkle-respawn-offset-bottom: 24;
-
-     /* NOTE: MINI-GAME PARTICLE CONTROL CENTER */
-     /* Sparkles and Obstacles are both particles in the mini-game. */
-     /* These variables are read by game-theme.js and then used by game-entities.js / game-render.js. */
-
-     --game-particle-size-min: 20;
-     --game-particle-size-max: 32;
-
-     --burst-particle-count: 10;
-
-     --burst-particle-size-min: 14;
-     --burst-particle-size-max: 32;
-
-     --burst-particle-speed-min: 0.8;
-     --burst-particle-speed-max: 3.2;
-
-     --burst-particle-life-min: 18;
-     --burst-particle-life-max: 40;
-
-     --burst-particle-center-size: 72;
-
-     /* NOTE: COLLISION TYPE MULTIPLIERS */
-     /* These keep obstacle hits punchier than sparkle pickups while still sharing one base system. */
-
-     --sparkle-burst-count-multiplier: 0.8;
-     --obstacle-burst-count-multiplier: 1.2;
-
-     --sparkle-burst-size-multiplier: 0.85;
-     --obstacle-burst-size-multiplier: 1.15;
-
-     --sparkle-burst-speed-multiplier: 0.85;
-     --obstacle-burst-speed-multiplier: 1.15;
-
-     --sparkle-burst-life-multiplier: 0.85;
-     --obstacle-burst-life-multiplier: 1.15;
-
-     --sparkle-burst-center-size-multiplier: 0.9;
-     --obstacle-burst-center-size-multiplier: 1.15;
 }
 
 /* NOTE: NON-ROOT CORE */
@@ -221,7 +182,7 @@ header {
 
 h1,
 .hero-blurb {
-     width: var(--canvas-frame-width);
+     width: min(100%, 72rem);
      margin: 0;
 }
 
@@ -246,7 +207,7 @@ h1 {
 .dropdown-low {
      position: absolute;
      top: calc(50% + (var(--page-section-gap) / 2));
-     right: calc((100% - var(--canvas-frame-width)) / 2);
+     right: 0;
      transform: translateY(-20%);
      z-index: var(--menu-layer-z);
      display: flex;
@@ -370,6 +331,8 @@ h1 {
 }
 
 /* NOTE: MAIN LAYOUT */
+/* Homepage game canvas removed.
+   Keeping main as a flexible content area so you can restyle this section next. */
 
 .main-squeeze {
      width: 100%;
@@ -378,21 +341,10 @@ h1 {
      overflow: visible;
 
      display: flex;
-     align-items: flex-start;   /* stop vertical centering */
-     justify-content: center;
-
-     padding-top: var(--page-section-gap); /* reuse existing spacing */
-}
-
-.game-shell {
-     width: 100%;
-     height: auto; /* stop forcing full height */
-     min-height: 0;
-     overflow: visible;
-
-     display: flex;
      align-items: flex-start;
      justify-content: center;
+
+     padding-top: var(--page-section-gap);
 }
 
 /* NOTE: BACKGROUND SPARKLE CANVAS */
@@ -406,23 +358,6 @@ h1 {
      pointer-events: none;
      opacity: var(--sparkle-opacity);
      z-index: var(--sparkle-layer-z);
-}
-
-/* NOTE: MAIN GAME CANVAS */
-
-#miniGameCanvas {
-     display: block;
-     width: var(--canvas-frame-width);
-     height: auto;
-     aspect-ratio: 1 / 1;
-     max-width: 100%;
-     max-height: 100%;
-     background: var(--canvas-bg);
-
-     border: var(--canvasboard-border);
-     border-radius: var(--canvasboard-radius);
-     box-shadow: var(--glow-canvasboard);
-     overflow: hidden;
 }
 
 /* NOTE: RESPONSIVE */

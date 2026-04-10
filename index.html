@@ -15,21 +15,11 @@
 
           <header>
                <div class="dropdown-low">
-                    <button
-                         class="nav-button"
-                         type="button"
-                         aria-label="Open navigation menu."
-                         aria-expanded="false"
-                         aria-controls="navMenu"
-                    >
+                    <button class="nav-button" type="button" aria-label="Open navigation menu." aria-expanded="false" aria-controls="navMenu">
                          +
                     </button>
 
-                    <nav
-                         id="navMenu"
-                         class="nav-menu"
-                         aria-label="Main navigation"
-                    >
+                    <nav id="navMenu" class="nav-menu" aria-label="Main navigation">
                          <ul>
                               <li><a href="#">Free Trash</a></li>
                               <li><a href="https://github.com/cgoss-dev" target="_blank" rel="noopener noreferrer">Tiny Crimes</a></li>
@@ -49,18 +39,11 @@
           </header>
 
           <main class="main-squeeze">
-               <div class="game-shell">
-                    <!-- NOTE: ACTUAL GAME CANVAS -->
-                    <canvas id="miniGameCanvas" width="480" height="480"></canvas>
-                    <!-- Gotta have actual px dimensions for canvas to operate. Iphone SE is 640x1136. Keep this at multiples of 16px. -->
-               </div>
+               <!-- Canvas game removed for now so the homepage can be restyled on its own. -->
           </main>
 
      </div>
 
      <script src="script.js"></script>
-     <script type="module" src="./SparkleSeeker/game-core.js"></script>
-     <!-- This is where to swap out different games to appear in the main page canvas. -->
-     <!-- Use module for file folders. -->
 </body>
 </html>
