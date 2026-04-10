@@ -88,6 +88,8 @@ export function toggleStartPause() {
      if (!gameStarted) {
           setGameStarted(true);
           setGamePaused(false);
+          resetJoystickState();
+          resetTouchButtons();
           return;
      }
 
@@ -98,10 +100,8 @@ export function toggleStartPause() {
      const nextPausedState = !gamePaused;
      setGamePaused(nextPausedState);
 
-     if (nextPausedState) {
-          resetJoystickState();
-          resetTouchButtons();
-     }
+     resetJoystickState();
+     resetTouchButtons();
 }
 
 export function toggleGameMenu() {
@@ -109,14 +109,9 @@ export function toggleGameMenu() {
 
      setGameMenuOpen(nextMenuState);
 
-     if (!gameStarted) {
-          setGamePaused(true);
-     } else {
-          setGamePaused(nextMenuState);
-     }
-
      resetJoystickState();
      resetTouchButtons();
+     // Menu should never change game's paused state. This only opens/closes overlay.
 }
 
 // NOTE: POINTER POSITION
