@@ -41,7 +41,7 @@ import {
 
 export function updateTouchControlBounds() {
      const bottomPadding = 15;
-     const sideGap = 15; // Distance between L/R buttons.
+     const sideGap = 25; // Distance between L/R buttons.
 
      const joystick = touchControls.joystick;
      const left = touchControls.leftButton;
@@ -169,9 +169,9 @@ export function bindPointerInput() {
 
           const joystick = touchControls.joystick;
 
-          // JOYSTICK
+          // NOTE: JOYSTICK
           if (isPointInsideCircle(pos.x, pos.y, joystick.centerX, joystick.centerY, joystick.baseRadius)) {
-               setJoystickActive(true);
+               setJoystickActive(true); // Is joystick inside circle? Then it's active.
                setJoystickPointerId(event.pointerId);
                miniGameCanvas.setPointerCapture(event.pointerId);
           }
@@ -183,13 +183,13 @@ export function bindPointerInput() {
           if (joystick.isActive && joystick.pointerId === event.pointerId) {
                const pos = getCanvasPointerPosition(event);
 
-               const dx = pos.x - joystick.centerX;
+               const dx = pos.x - joystick.centerX; // Calc knob offset from center.
                const dy = pos.y - joystick.centerY;
 
-               const distance = Math.sqrt(dx * dx + dy * dy);
+               const distance = Math.sqrt(dx * dx + dy * dy); // Conv into direction using maths.
                const max = joystick.baseRadius;
 
-               const clamped = Math.min(distance, max);
+               const clamped = Math.min(distance, max); // Limit movement within radius.
                const angle = Math.atan2(dy, dx);
 
                const x = Math.cos(angle) * clamped;
@@ -199,9 +199,9 @@ export function bindPointerInput() {
 
                const nx = x / max;
                const ny = y / max;
-               const magnitude = Math.sqrt(nx * nx + ny * ny);
+               const magnitude = Math.sqrt(nx * nx + ny * ny); // Normalize input range on xy...
 
-               if (magnitude < joystick.deadZone) {
+               if (magnitude < joystick.deadZone) { // ... except in the very middle, so player can be still.
                     setJoystickInput(0, 0);
                } else {
                     setJoystickInput(nx, ny);

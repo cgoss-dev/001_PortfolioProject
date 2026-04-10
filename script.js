@@ -632,13 +632,12 @@ const taglineBreaks = [
      "debugging until it ships.",
 
      "turning chaos into commits.",
-     "nosy questions early, fixes things late.",
+     "nosy questions early, fixes bugs late.",
      "feedback in, better code out.",
 
      "gremlin in dev, professional in prod.",
      "unhinged energy, finished tickets.",
      "chaotic process, consistent results.",
-
 
 ];
 

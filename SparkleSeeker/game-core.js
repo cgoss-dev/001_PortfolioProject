@@ -68,14 +68,14 @@ export const player = {
      y: 0,
      char: playerFaces.neutral,
      size: 54,
-     speed: 3,
+     speed: 2,
      radius: 30,
      sparkleFaceTimer: 0,
-     // Counts down how long the temporary sparkle / obstacle face should stay active.
+     // FIXME: Counts down how long the temporary sparkle / obstacle face should stay active.
 };
 
 export const playerBaseHealth = 3;
-export const playerBaseSpeed = 3;
+export const playerBaseSpeed = 2; // FIXME: also in const?
 export const playerSpeedPerHeart = 0.5;
 
 // NOTE: ARRAYS

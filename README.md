@@ -5,13 +5,16 @@ Digital footprint, games, resources.
 <br><br>
 
 ### TO DO
--    ‼️ Fix play button turning into emoji on mobile ‼️
--    Stop game when zero hearts.
+-    🛑 Stop game when zero hearts.
      -    "TRY AGAIN"
      -    Pressing play again starts new game.
--    Modify joystick speed.
 -    Add WASD function for joystick.
--    Obstacle effects affect player size, swap particles, etc.
+-    Obstacle effects.
+     -    Slow/speed.
+     -    Increase/decrease size.
+     -    Rate/type.
+     -    Inc/dec health/points.
+     -    Multipliers.
 -    Swap marquee/border color functionality.
 -    🐞 Mobile landscape mode bug.
 -    Game conditions:
@@ -20,6 +23,6 @@ Digital footprint, games, resources.
      -    Levels begin at 0. Each level 25 points? Add scaling.
 
 ### FUTURE GAMES
--    Farming sim. (32x32 or 48x48)
--    Quiz game. (Pokemon, City, Snack)
--    Ad-lib choose your own adventure. (Mage, Knight, Rogue)
+-    Farming sim. (32x32 or 48x48?)
+-    Quiz game. (Pokemon, City, Snack) (Booleans!)
+-    Ad-lib choose your own adventure. (Mage, Knight, Rogue) (Forms!)
