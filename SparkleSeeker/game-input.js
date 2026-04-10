@@ -1,4 +1,5 @@
 // NOTE: GAME INPUT
+// Handles touch + pointer + keyboard input for the mini-game.
 
 import {
      miniGameCanvas,
@@ -47,6 +48,7 @@ import {
 } from "./game-entities.js";
 
 // NOTE: TOUCH CONTROL BOUNDS
+// Positions the joystick and left/right buttons based on current canvas size.
 
 export function updateTouchControlBounds() {
      const bottomPadding = 15;
@@ -79,17 +81,16 @@ export function getPauseButtonLabel() {
      return "PAUSE";
 }
 
-// NOTE: LEGACY PAUSE HELPERS
+// NOTE: LEGACY PAUSE HELPER
+// game-core still calls this every frame.
+// Keeping it as a no-op avoids import errors even though the old floating pause label is gone. // FIXME: come back to this later for workaround
 
-export function updatePauseButtonBounds() {
+export function updatePauseButtonState() {
      // No floating pause label anymore.
 }
 
-export function updatePauseButtonState() {
-     // No floating pause label press animation anymore.
-}
-
 // NOTE: GAME FLOW BUTTONS
+// These functions control high-level game state like start, pause, and menu open/close.
 
 export function toggleStartPause() {
      if (!gameStarted || gameOver || gameWon) {
@@ -97,10 +98,12 @@ export function toggleStartPause() {
           resetJoystickState();
           resetTouchButtons();
           return;
+          // If the game has not started yet, or it already ended, start a brand new round.
      }
 
      if (gameMenuOpen) {
           return;
+          // Menu open should block pause toggling so buttons do not fight each other.
      }
 
      const nextPausedState = !gamePaused;
@@ -108,6 +111,7 @@ export function toggleStartPause() {
 
      resetJoystickState();
      resetTouchButtons();
+     // Clear held touch input so the player does not "stick" moving after pause changes.
 }
 
 export function toggleGameMenu() {
@@ -117,6 +121,7 @@ export function toggleGameMenu() {
 
      if (nextMenuState) {
           setGameMenuView("main");
+          // Whenever menu opens, return to its main page first.
      }
 
      resetJoystickState();
@@ -147,10 +152,12 @@ export function handleMenuBack() {
      if (gameMenuView === "instructions") {
           setGameMenuView("main");
           return;
+          // If the user is inside a submenu, BACK returns to main menu first.
      }
 
      setGameMenuOpen(false);
      setGameMenuView("main");
+     // Otherwise BACK closes the menu completely.
 }
 
 export function handleMenuCloseOutside() {
@@ -159,6 +166,7 @@ export function handleMenuCloseOutside() {
 }
 
 // NOTE: POINTER POSITION
+// Converts browser/client coordinates into canvas-space coordinates.
 
 export function getCanvasPointerPosition(event) {
      const rect = miniGameCanvas.getBoundingClientRect();
@@ -185,6 +193,7 @@ export function bindPointerInput() {
 
           updateTouchControlBounds();
           updateMenuUiBounds();
+          // Recalculate clickable bounds first in case canvas size changed.
 
           // MENU PANEL INTERACTION
           if (gameMenuOpen) {
@@ -218,9 +227,11 @@ export function bindPointerInput() {
                if (!isPointInsideMenuPanel(pos.x, pos.y)) {
                     handleMenuCloseOutside();
                     return;
+                    // Clicking outside the panel closes the menu.
                }
 
                return;
+               // Clicking inside menu but not on a button does nothing.
           }
 
           // LEFT BUTTON = START / PAUSE / PLAY AGAIN
@@ -239,9 +250,9 @@ export function bindPointerInput() {
                return;
           }
 
-          // If paused, won, lost, or menu open, joystick should not activate.
           if (gamePaused || gameMenuOpen || gameOver || gameWon) {
                return;
+               // If paused, won, lost, or menu open, joystick should not activate.
           }
 
           const joystick = touchControls.joystick;
@@ -267,6 +278,7 @@ export function bindPointerInput() {
 
                const clamped = Math.min(distance, max);
                const angle = Math.atan2(dy, dx);
+               // Clamp the thumb/knob so it stays inside the joystick circle.
 
                const x = Math.cos(angle) * clamped;
                const y = Math.sin(angle) * clamped;
@@ -276,9 +288,11 @@ export function bindPointerInput() {
                const nx = x / max;
                const ny = y / max;
                const magnitude = Math.sqrt(nx * nx + ny * ny);
+               // Normalize to a -1..1-ish range based on radius.
 
                if (magnitude < joystick.deadZone) {
                     setJoystickInput(0, 0);
+                    // Dead zone keeps the player from drifting while near center.
                } else {
                     setJoystickInput(nx, ny);
                }
@@ -340,6 +354,7 @@ export function bindKeyboardInput() {
 }
 
 // NOTE: RESIZE
+// Recompute canvas size, player position, and button bounds when browser size changes.
 
 export function bindResizeHandler() {
      if (resizeHandlerBound) {

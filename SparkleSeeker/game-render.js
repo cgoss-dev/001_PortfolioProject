@@ -347,12 +347,12 @@ function drawMenuRowButton(button, label, value) {
      miniGameCtx.shadowBlur = 0;
      miniGameCtx.textBaseline = "middle";
 
-     miniGameCtx.font = '18px "Bungee", "Bungee Shade", cursive';
+     miniGameCtx.font = '18px "Bungee", "Bungee Shade", cursive'; // Menu options.
      miniGameCtx.textAlign = "left";
      miniGameCtx.fillStyle = "#ffffff";
      miniGameCtx.fillText(label, button.x + 18, button.y + (button.height / 2) + 1);
 
-     miniGameCtx.font = '16px "Noto Sans Mono", monospace';
+     miniGameCtx.font = '14px "Noto Sans Mono", monospace'; // Menu settings.
      miniGameCtx.textAlign = "right";
      miniGameCtx.fillStyle = "rgba(255, 255, 255, 0.92)";
      miniGameCtx.fillText(value, button.x + button.width - 18, button.y + (button.height / 2) + 1);
@@ -377,7 +377,7 @@ function drawMenuBackButton(button, label) {
      miniGameCtx.shadowBlur = 0;
      miniGameCtx.textAlign = "center";
      miniGameCtx.textBaseline = "middle";
-     miniGameCtx.font = '20px "Bungee", "Bungee Shade", cursive';
+     miniGameCtx.font = '24px "Bungee", "Bungee Shade", cursive'; // Back button.
      miniGameCtx.fillStyle = "#ffffff";
      miniGameCtx.fillText(label, button.x + (button.width / 2), button.y + (button.height / 2) + 1);
 
@@ -400,7 +400,7 @@ function drawInstructionsPanelText(panel) {
      miniGameCtx.fillText("HOW TO PLAY", textX, textY);
      textY += lineGap + 6;
 
-     miniGameCtx.font = '17px "Noto Sans Mono", monospace';
+     miniGameCtx.font = '14px "Noto Sans Mono", monospace';
      miniGameCtx.fillText("• Drag the joystick to move your player.", textX, textY);
      textY += lineGap;
      miniGameCtx.fillText("• Collect sparkles to raise your score.", textX, textY);
@@ -410,9 +410,8 @@ function drawInstructionsPanelText(panel) {
      miniGameCtx.fillText("• Reach full hearts to win the round.", textX, textY);
      textY += smallGap + 8;
 
-     miniGameCtx.font = '16px "Noto Sans Mono", monospace';
+     miniGameCtx.font = '14px "Noto Sans Mono", monospace';
      miniGameCtx.fillStyle = "rgba(255, 255, 255, 0.9)";
-     miniGameCtx.fillText("Use BACK below to return to the main menu.", textX, textY);
 
      miniGameCtx.restore();
 }

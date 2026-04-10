@@ -176,8 +176,8 @@ export const touchControls = {
      joystick: {
           centerX: 0,
           centerY: 0,
-          baseRadius: 44,
-          thumbRadius: 22,
+          baseRadius: 64,
+          thumbRadius: 32,
           knobX: 0,
           knobY: 0,
           isActive: false,
@@ -528,7 +528,7 @@ export function syncPauseOverlay() {
           !gameWon;
 
      if (shouldShowPausedOverlay) {
-          showPersistentGameOverlay("PAUSED", "Press ⏯ to continue");
+          showPersistentGameOverlay("PAUSED", "Press \u23EF\uFE0E to continue.");
           return;
      }
 
@@ -589,7 +589,7 @@ export function updateGame() {
           setGameMenuView("main");
           resetTouchControls();
           syncPlayerHealthState();
-          showPersistentGameOverlay("TRY AGAIN!", "Press ⏯ to play again");
+          showPersistentGameOverlay("TRY AGAIN!", "Press ⏯ to play again.");
           return;
      }
 
@@ -602,7 +602,7 @@ export function updateGame() {
           setGameMenuView("main");
           resetTouchControls();
           syncPlayerHealthState();
-          showPersistentGameOverlay("YOU WIN!", "Press ⏯ to play again");
+          showPersistentGameOverlay("YOU WIN!", "Press ⏯ to play again.");
      }
 }
 
