@@ -19,8 +19,16 @@ import {
      touchControls,
      gameStarted,
      gameMenuOpen,
-     musicEnabled,
-     soundEffectsEnabled
+     gameMenuView,
+     gameOver,
+     gameWon,
+     gameOverlayText,
+     gameOverlaySubtext,
+     gameMenuUi,
+     updateMenuUiBounds,
+     getCurrentDifficultyLabel,
+     getCurrentSoundLabel,
+     getGameOverlayAlpha
 } from "./game-core.js";
 
 import {
@@ -111,7 +119,6 @@ export function drawHealth() {
 }
 
 // NOTE: LEGACY PAUSE LABEL
-// Kept as a no-op so core imports remain stable if reused later.
 
 export function drawPauseButton() {
      return;
@@ -284,21 +291,21 @@ export function drawMenuOverlay() {
           return;
      }
 
-     const panelWidth = Math.min(320, miniGameWidth - 48);
-     const panelHeight = 180;
-     const panelX = (miniGameWidth - panelWidth) / 2;
-     const panelY = (miniGameHeight - panelHeight) / 2;
+     updateMenuUiBounds();
+
+     const panel = gameMenuUi.panel;
 
      miniGameCtx.save();
+     miniGameCtx.globalAlpha = 0.9;
 
-     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.82)";
+     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.9)";
      miniGameCtx.strokeStyle = "rgba(255, 255, 255, 0.28)";
      miniGameCtx.lineWidth = 2;
      miniGameCtx.shadowColor = "rgba(255, 255, 255, 0.18)";
      miniGameCtx.shadowBlur = 14;
 
      miniGameCtx.beginPath();
-     miniGameCtx.roundRect(panelX, panelY, panelWidth, panelHeight, 18);
+     miniGameCtx.roundRect(panel.x, panel.y, panel.width, panel.height, 22);
      miniGameCtx.fill();
      miniGameCtx.stroke();
 
@@ -306,24 +313,172 @@ export function drawMenuOverlay() {
      miniGameCtx.fillStyle = "#ffffff";
      miniGameCtx.textAlign = "center";
      miniGameCtx.textBaseline = "top";
+     miniGameCtx.font = '26px "Bungee", "Bungee Shade", cursive';
+     miniGameCtx.fillText("MENU", miniGameWidth / 2, panel.y + 20);
 
-     miniGameCtx.font = '24px "Bungee", "Bungee Shade", cursive';
-     miniGameCtx.fillText("MENU", miniGameWidth / 2, panelY + 18);
+     if (gameMenuView === "main") {
+          drawMenuRowButton(gameMenuUi.newGameButton, "NEW GAME", "Start");
+          drawMenuRowButton(gameMenuUi.instructionsButton, "INSTRUCTIONS", "View");
+          drawMenuRowButton(gameMenuUi.difficultyButton, "DIFFICULTY", getCurrentDifficultyLabel());
+          drawMenuRowButton(gameMenuUi.soundButton, "SOUND", getCurrentSoundLabel());
+          drawMenuBackButton(gameMenuUi.backButton, "BACK");
+     } else {
+          drawInstructionsPanelText(panel);
+          drawMenuBackButton(gameMenuUi.backButton, "BACK");
+     }
+
+     miniGameCtx.restore();
+}
+
+function drawMenuRowButton(button, label, value) {
+     miniGameCtx.save();
+
+     miniGameCtx.fillStyle = "rgba(255, 255, 255, 0.08)";
+     miniGameCtx.strokeStyle = "rgba(255, 255, 255, 0.3)";
+     miniGameCtx.lineWidth = 2;
+     miniGameCtx.shadowColor = "rgba(255, 255, 255, 0.14)";
+     miniGameCtx.shadowBlur = 10;
+
+     miniGameCtx.beginPath();
+     miniGameCtx.roundRect(button.x, button.y, button.width, button.height, 16);
+     miniGameCtx.fill();
+     miniGameCtx.stroke();
+
+     miniGameCtx.shadowBlur = 0;
+     miniGameCtx.textBaseline = "middle";
+
+     miniGameCtx.font = '18px "Bungee", "Bungee Shade", cursive';
+     miniGameCtx.textAlign = "left";
+     miniGameCtx.fillStyle = "#ffffff";
+     miniGameCtx.fillText(label, button.x + 18, button.y + (button.height / 2) + 1);
 
      miniGameCtx.font = '16px "Noto Sans Mono", monospace';
+     miniGameCtx.textAlign = "right";
+     miniGameCtx.fillStyle = "rgba(255, 255, 255, 0.92)";
+     miniGameCtx.fillText(value, button.x + button.width - 18, button.y + (button.height / 2) + 1);
+
+     miniGameCtx.restore();
+}
+
+function drawMenuBackButton(button, label) {
+     miniGameCtx.save();
+
+     miniGameCtx.fillStyle = "rgba(255, 255, 255, 0.12)";
+     miniGameCtx.strokeStyle = "rgba(255, 255, 255, 0.34)";
+     miniGameCtx.lineWidth = 2;
+     miniGameCtx.shadowColor = "rgba(255, 255, 255, 0.16)";
+     miniGameCtx.shadowBlur = 10;
+
+     miniGameCtx.beginPath();
+     miniGameCtx.roundRect(button.x, button.y, button.width, button.height, 16);
+     miniGameCtx.fill();
+     miniGameCtx.stroke();
+
+     miniGameCtx.shadowBlur = 0;
+     miniGameCtx.textAlign = "center";
+     miniGameCtx.textBaseline = "middle";
+     miniGameCtx.font = '20px "Bungee", "Bungee Shade", cursive';
+     miniGameCtx.fillStyle = "#ffffff";
+     miniGameCtx.fillText(label, button.x + (button.width / 2), button.y + (button.height / 2) + 1);
+
+     miniGameCtx.restore();
+}
+
+function drawInstructionsPanelText(panel) {
+     miniGameCtx.save();
+
      miniGameCtx.textAlign = "left";
+     miniGameCtx.textBaseline = "top";
+     miniGameCtx.fillStyle = "#ffffff";
 
-     const textX = panelX + 22;
-     let textY = panelY + 62;
+     const textX = panel.x + 28;
+     let textY = panel.y + 74;
      const lineGap = 28;
+     const smallGap = 20;
 
-     miniGameCtx.fillText("How to Play:", textX, textY);
+     miniGameCtx.font = '18px "Bungee", "Bungee Shade", cursive';
+     miniGameCtx.fillText("HOW TO PLAY", textX, textY);
+     textY += lineGap + 6;
+
+     miniGameCtx.font = '17px "Noto Sans Mono", monospace';
+     miniGameCtx.fillText("• Drag the joystick to move your player.", textX, textY);
      textY += lineGap;
-     miniGameCtx.fillText("Drag joystick to move. Collect sparkles, avoid obstacles.", textX, textY);
+     miniGameCtx.fillText("• Collect sparkles to raise your score.", textX, textY);
      textY += lineGap;
-     miniGameCtx.fillText(`Music: ${musicEnabled ? "On" : "Off"}`, textX, textY);
+     miniGameCtx.fillText("• Avoid obstacle hits so you do not lose hearts.", textX, textY);
      textY += lineGap;
-     miniGameCtx.fillText(`Sound Effects: ${soundEffectsEnabled ? "On" : "Off"}`, textX, textY);
+     miniGameCtx.fillText("• Reach full hearts to win the round.", textX, textY);
+     textY += smallGap + 8;
+
+     miniGameCtx.font = '16px "Noto Sans Mono", monospace';
+     miniGameCtx.fillStyle = "rgba(255, 255, 255, 0.9)";
+     miniGameCtx.fillText("Use BACK below to return to the main menu.", textX, textY);
+
+     miniGameCtx.restore();
+}
+
+// NOTE: GAME STATUS OVERLAY
+
+export function drawGameStatusOverlay() {
+     if (!miniGameCtx || !gameOverlayText) {
+          return;
+     }
+
+     const alpha = getGameOverlayAlpha();
+
+     if (alpha <= 0) {
+          return;
+     }
+
+     const isEndState = gameOver || gameWon || gameOverlayText === "PAUSED";
+     const panelWidth = Math.min(360, miniGameWidth - 40);
+     const panelHeight = isEndState ? 170 : 110;
+     const panelX = (miniGameWidth - panelWidth) / 2;
+     const panelY = (miniGameHeight - panelHeight) / 2;
+     const panelCenterX = panelX + (panelWidth / 2);
+     const panelCenterY = panelY + (panelHeight / 2);
+     const panelScale = 0.97 + (0.03 * alpha);
+
+     miniGameCtx.save();
+     miniGameCtx.globalAlpha = alpha;
+
+     miniGameCtx.translate(panelCenterX, panelCenterY);
+     miniGameCtx.scale(panelScale, panelScale);
+     miniGameCtx.translate(-panelCenterX, -panelCenterY);
+
+     miniGameCtx.fillStyle = isEndState
+          ? "rgba(0, 0, 0, 0.62)"
+          : "rgba(0, 0, 0, 0.32)";
+
+     miniGameCtx.strokeStyle = isEndState
+          ? "rgba(255, 255, 255, 0.24)"
+          : "rgba(255, 255, 255, 0.16)";
+
+     miniGameCtx.lineWidth = 2;
+     miniGameCtx.shadowColor = "rgba(255, 255, 255, 0.16)";
+     miniGameCtx.shadowBlur = 16;
+
+     miniGameCtx.beginPath();
+     miniGameCtx.roundRect(panelX, panelY, panelWidth, panelHeight, 20);
+     miniGameCtx.fill();
+     miniGameCtx.stroke();
+
+     miniGameCtx.shadowBlur = 0;
+     miniGameCtx.textAlign = "center";
+     miniGameCtx.textBaseline = "middle";
+
+     miniGameCtx.font = '34px "Bungee", "Bungee Shade", cursive';
+     miniGameCtx.fillStyle = "#ffffff";
+     miniGameCtx.shadowColor = "rgba(255, 255, 255, 0.35)";
+     miniGameCtx.shadowBlur = 10;
+     miniGameCtx.fillText(gameOverlayText, miniGameWidth / 2, panelY + 56);
+
+     if (gameOverlaySubtext) {
+          miniGameCtx.shadowBlur = 0;
+          miniGameCtx.font = '17px "Noto Sans Mono", monospace';
+          miniGameCtx.fillStyle = "rgba(255, 255, 255, 0.92)";
+          miniGameCtx.fillText(gameOverlaySubtext, miniGameWidth / 2, panelY + 108);
+     }
 
      miniGameCtx.restore();
 }

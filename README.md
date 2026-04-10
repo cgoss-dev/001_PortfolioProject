@@ -5,9 +5,6 @@ Digital footprint, games, resources.
 <br><br>
 
 ### TO DO
--    🛑 Stop game when zero hearts.
-     -    "TRY AGAIN"
-     -    Pressing play again starts new game.
 -    Add WASD function for joystick.
 -    Obstacle effects.
      -    Slow/speed.

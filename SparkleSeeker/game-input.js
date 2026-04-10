@@ -8,16 +8,21 @@ import {
      gamePaused,
      gameStarted,
      gameMenuOpen,
+     gameMenuView,
+     gameOver,
+     gameWon,
      keyboardInputBound,
      pointerInputBound,
      resizeHandlerBound,
      isPointInsideRect,
+     isPointInsideMenuPanel,
+     gameMenuUi,
      setKeyboardInputBound,
      setPointerInputBound,
      setResizeHandlerBound,
-     setGameStarted,
      setGamePaused,
      setGameMenuOpen,
+     setGameMenuView,
      updateMiniGameCanvasSize,
      touchControls,
      setJoystickActive,
@@ -30,7 +35,11 @@ import {
      setRightButtonPointerId,
      resetJoystickState,
      resetTouchButtons,
-     isPointInsideCircle
+     isPointInsideCircle,
+     startNewGameRound,
+     updateMenuUiBounds,
+     cycleDifficulty,
+     toggleAllSound
 } from "./game-core.js";
 
 import {
@@ -41,7 +50,7 @@ import {
 
 export function updateTouchControlBounds() {
      const bottomPadding = 15;
-     const sideGap = 25; // Distance between L/R buttons.
+     const sideGap = 25;
 
      const joystick = touchControls.joystick;
      const left = touchControls.leftButton;
@@ -61,7 +70,6 @@ export function updateTouchControlBounds() {
 }
 
 // NOTE: BUTTON LABEL
-// Kept for compatibility with core update cycle even though the old floating label is gone.
 
 export function getPauseButtonLabel() {
      if (!gameStarted || gamePaused) {
@@ -72,7 +80,6 @@ export function getPauseButtonLabel() {
 }
 
 // NOTE: LEGACY PAUSE HELPERS
-// Kept as harmless no-op / press-state support so core imports stay stable.
 
 export function updatePauseButtonBounds() {
      // No floating pause label anymore.
@@ -85,9 +92,8 @@ export function updatePauseButtonState() {
 // NOTE: GAME FLOW BUTTONS
 
 export function toggleStartPause() {
-     if (!gameStarted) {
-          setGameStarted(true);
-          setGamePaused(false);
+     if (!gameStarted || gameOver || gameWon) {
+          startNewGameRound();
           resetJoystickState();
           resetTouchButtons();
           return;
@@ -109,9 +115,47 @@ export function toggleGameMenu() {
 
      setGameMenuOpen(nextMenuState);
 
+     if (nextMenuState) {
+          setGameMenuView("main");
+     }
+
      resetJoystickState();
      resetTouchButtons();
-     // Menu should never change game's paused state. This only opens/closes overlay.
+}
+
+// NOTE: MENU ACTIONS
+
+export function handleMenuNewGame() {
+     startNewGameRound();
+     resetJoystickState();
+     resetTouchButtons();
+}
+
+export function handleMenuInstructions() {
+     setGameMenuView("instructions");
+}
+
+export function handleMenuDifficulty() {
+     cycleDifficulty();
+}
+
+export function handleMenuSound() {
+     toggleAllSound();
+}
+
+export function handleMenuBack() {
+     if (gameMenuView === "instructions") {
+          setGameMenuView("main");
+          return;
+     }
+
+     setGameMenuOpen(false);
+     setGameMenuView("main");
+}
+
+export function handleMenuCloseOutside() {
+     setGameMenuOpen(false);
+     setGameMenuView("main");
 }
 
 // NOTE: POINTER POSITION
@@ -140,8 +184,46 @@ export function bindPointerInput() {
           const pos = getCanvasPointerPosition(event);
 
           updateTouchControlBounds();
+          updateMenuUiBounds();
 
-          // LEFT BUTTON = START / PAUSE
+          // MENU PANEL INTERACTION
+          if (gameMenuOpen) {
+               if (isPointInsideRect(pos.x, pos.y, gameMenuUi.backButton)) {
+                    handleMenuBack();
+                    return;
+               }
+
+               if (gameMenuView === "main") {
+                    if (isPointInsideRect(pos.x, pos.y, gameMenuUi.newGameButton)) {
+                         handleMenuNewGame();
+                         return;
+                    }
+
+                    if (isPointInsideRect(pos.x, pos.y, gameMenuUi.instructionsButton)) {
+                         handleMenuInstructions();
+                         return;
+                    }
+
+                    if (isPointInsideRect(pos.x, pos.y, gameMenuUi.difficultyButton)) {
+                         handleMenuDifficulty();
+                         return;
+                    }
+
+                    if (isPointInsideRect(pos.x, pos.y, gameMenuUi.soundButton)) {
+                         handleMenuSound();
+                         return;
+                    }
+               }
+
+               if (!isPointInsideMenuPanel(pos.x, pos.y)) {
+                    handleMenuCloseOutside();
+                    return;
+               }
+
+               return;
+          }
+
+          // LEFT BUTTON = START / PAUSE / PLAY AGAIN
           if (isPointInsideRect(pos.x, pos.y, touchControls.leftButton)) {
                setLeftButtonPressed(true);
                setLeftButtonPointerId(event.pointerId);
@@ -157,16 +239,15 @@ export function bindPointerInput() {
                return;
           }
 
-          // If paused or menu open, joystick should not activate.
-          if (gamePaused || gameMenuOpen) {
+          // If paused, won, lost, or menu open, joystick should not activate.
+          if (gamePaused || gameMenuOpen || gameOver || gameWon) {
                return;
           }
 
           const joystick = touchControls.joystick;
 
-          // NOTE: JOYSTICK
           if (isPointInsideCircle(pos.x, pos.y, joystick.centerX, joystick.centerY, joystick.baseRadius)) {
-               setJoystickActive(true); // Is joystick inside circle? Then it's active.
+               setJoystickActive(true);
                setJoystickPointerId(event.pointerId);
                miniGameCanvas.setPointerCapture(event.pointerId);
           }
@@ -178,13 +259,13 @@ export function bindPointerInput() {
           if (joystick.isActive && joystick.pointerId === event.pointerId) {
                const pos = getCanvasPointerPosition(event);
 
-               const dx = pos.x - joystick.centerX; // Calc knob offset from center.
+               const dx = pos.x - joystick.centerX;
                const dy = pos.y - joystick.centerY;
 
-               const distance = Math.sqrt(dx * dx + dy * dy); // Conv into direction using maths.
+               const distance = Math.sqrt(dx * dx + dy * dy);
                const max = joystick.baseRadius;
 
-               const clamped = Math.min(distance, max); // Limit movement within radius.
+               const clamped = Math.min(distance, max);
                const angle = Math.atan2(dy, dx);
 
                const x = Math.cos(angle) * clamped;
@@ -194,9 +275,9 @@ export function bindPointerInput() {
 
                const nx = x / max;
                const ny = y / max;
-               const magnitude = Math.sqrt(nx * nx + ny * ny); // Normalize input range on xy...
+               const magnitude = Math.sqrt(nx * nx + ny * ny);
 
-               if (magnitude < joystick.deadZone) { // ... except in the very middle, so player can be still.
+               if (magnitude < joystick.deadZone) {
                     setJoystickInput(0, 0);
                } else {
                     setJoystickInput(nx, ny);
@@ -269,6 +350,7 @@ export function bindResizeHandler() {
           updateMiniGameCanvasSize();
           resetPlayerPosition();
           updateTouchControlBounds();
+          updateMenuUiBounds();
      });
 
      setResizeHandlerBound(true);
