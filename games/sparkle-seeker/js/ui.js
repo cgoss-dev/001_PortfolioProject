@@ -1,11 +1,5 @@
 // NOTE: UI STATE / MENU / OVERLAY HELPERS
 // Handles non-render UI behavior for the mini-game.
-// This file owns:
-// - menu labels
-// - menu layout bounds
-// - menu hit helpers
-// - overlay text/timer logic
-// - pause overlay sync
 
 import {
      miniGameWidth,
@@ -24,15 +18,22 @@ import {
      musicEnabled,
      soundEffectsEnabled,
      difficultyIndex,
+
+     setGameStarted,
+     setGamePaused,
      setGameMenuOpen,
      setGameMenuView,
-     setMusicEnabled,
-     setSoundEffectsEnabled,
-     setDifficultyIndex,
+     setGameOver,
+     setGameWon,
      setGameOverlayText,
      setGameOverlaySubtext,
      setGameOverlayTimer,
-     setGameOverlayDuration
+     setGameOverlayDuration,
+     setMusicEnabled,
+     setSoundEffectsEnabled,
+     setDifficultyIndex,
+
+     setMiniGameSize
 } from "./state.js";
 
 import {
@@ -42,8 +43,63 @@ import {
 } from "./theme.js";
 
 import {
-     isPointInsideRect
+     isPointInsideRect,
+     updateTouchControlBounds,
+     resetTouchControls
 } from "./input.js";
+
+import {
+     resetPlayerPosition
+} from "./systems/player.js";
+
+
+// NOTE: CANVAS SIZE
+
+export function resizeMiniGameCanvasFromCss() {
+     const canvas = document.getElementById("miniGameCanvas");
+     const ctx = canvas ? canvas.getContext("2d") : null;
+
+     if (!canvas || !ctx) return;
+
+     const rect = canvas.getBoundingClientRect();
+     const dpr = window.devicePixelRatio || 1;
+
+     canvas.width = Math.round(rect.width * dpr);
+     canvas.height = Math.round(rect.height * dpr);
+     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+     setMiniGameSize(rect.width, rect.height);
+}
+
+export function updateMiniGameCanvasSize() {
+     resizeMiniGameCanvasFromCss();
+     updateTouchControlBounds();
+     updateMenuUiBounds();
+}
+
+
+// NOTE: ROUND FLOW
+
+export function startNewGameRound() {
+     resetTouchControls();
+     resetPlayerPosition();
+
+     updateMiniGameCanvasSize();
+     updateTouchControlBounds();
+     updateMenuUiBounds();
+
+     setGameStarted(true);
+     setGamePaused(false);
+     setGameMenuOpen(false);
+     setGameMenuView("main");
+     setGameOver(false);
+     setGameWon(false);
+
+     showTimedGameOverlay("LET'S PLAY!");
+}
+
+
+// NOTE: MENU / SETTINGS
 
 export function getCurrentDifficultyLabel() {
      return difficultyOptions[difficultyIndex] || "Normal";
@@ -62,6 +118,9 @@ export function toggleAllSound() {
      setMusicEnabled(nextEnabled);
      setSoundEffectsEnabled(nextEnabled);
 }
+
+
+// NOTE: MENU LAYOUT
 
 export function updateMenuUiBounds() {
      const panelWidth = Math.max(320, Math.min(miniGameWidth * 0.68, miniGameWidth * 0.78));
@@ -110,6 +169,9 @@ export function isPointInsideMenuPanel(x, y) {
      return isPointInsideRect(x, y, gameMenuUi.panel);
 }
 
+
+// NOTE: OVERLAY SYSTEM
+
 export function clearGameOverlay() {
      setGameOverlayText("");
      setGameOverlaySubtext("");
@@ -142,31 +204,30 @@ export function updateGameOverlayTimer() {
 }
 
 export function getGameOverlayAlpha() {
-     if (!gameOverlayText) {
-          return 0;
-     }
+     if (!gameOverlayText) return 0;
 
-     if (gameOverlayTimer < 0 || gameOverlayDuration < 0) {
-          return 1;
-     }
+     if (gameOverlayTimer < 0 || gameOverlayDuration < 0) return 1;
 
      const elapsed = gameOverlayDuration - gameOverlayTimer;
-     const fadeInAlpha = Math.min(1, elapsed / overlayFadeFrames);
-     const fadeOutAlpha = Math.min(1, gameOverlayTimer / overlayFadeFrames);
+     const fadeIn = Math.min(1, elapsed / overlayFadeFrames);
+     const fadeOut = Math.min(1, gameOverlayTimer / overlayFadeFrames);
 
-     return Math.max(0, Math.min(1, Math.min(fadeInAlpha, fadeOutAlpha)));
+     return Math.max(0, Math.min(1, Math.min(fadeIn, fadeOut)));
 }
 
+
+// NOTE: PAUSE SYNC
+
 export function syncPauseOverlay() {
-     const shouldShowPausedOverlay =
+     const shouldShow =
           gameStarted &&
           gamePaused &&
           !gameMenuOpen &&
           !gameOver &&
           !gameWon;
 
-     if (shouldShowPausedOverlay) {
-          showPersistentGameOverlay("PAUSED", "Press \u23EF\uFE0E to continue.");
+     if (shouldShow) {
+          showPersistentGameOverlay("PAUSED", "Press ⏯ to continue.");
           return;
      }
 

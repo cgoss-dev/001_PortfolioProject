@@ -33,7 +33,7 @@ import {
 import {
      syncPlayerHealthState,
      applyTemporaryPlayerFace
-} from "../winlose.js";
+} from "../winloselevels.js";
 
 import {
      createCollisionBurst

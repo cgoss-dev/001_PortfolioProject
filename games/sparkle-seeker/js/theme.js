@@ -14,7 +14,6 @@ export function setGameSparkleColorEngine(v) { gameSparkleColorEngine = v; }
 
 // NOTE: GAME THEME / SHARED VISUAL HELPERS
 // This file reads CSS custom properties and shares theme helpers with the game files.
-// style.css stores the values.
 // THIS file reads them in JavaScript, then the other game js files read from this.
 
 export function getCssValue(variableName) {
@@ -68,16 +67,16 @@ export function getSparkleSettings() {
 }
 
 // NOTE: MINI-GAME PARTICLE CONTROL CENTER
-// Sparkles and Obstacles are both particles in the mini-game.
+// Sparkles and Obstacles are both particles in mini-game.
 // Their shared visual tuning lives here in one place.
 //
 // particleSize = normal falling mini-game particle size
-// burstParticle = the emitted collision bits
-// burstParticleCenter = the big center pop added during a collision
+// burstParticle = emitted collision bits
+// burstParticleCenter = big center pop added during a collision
 //
-// The base values are shared.
+// Base values are shared.
 // Type-specific multipliers let sparkle hits and obstacle hits still feel different
-// without splitting the whole settings object into two separate systems.
+// without splitting whole settings object into two separate systems.
 
 export function getGameParticleSettings() {
      return {

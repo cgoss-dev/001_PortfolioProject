@@ -1,6 +1,8 @@
 // NOTE: GAME LOOP
 // Handles canvas sizing, round flow, reset flow, startup, and the main update/draw loop.
 
+// NOTE: IMPORTS
+
 import {
      miniGameCanvas,
      miniGameCtx,
@@ -14,7 +16,6 @@ import {
      sparkles,
      obstacles,
      collisionBursts,
-     playerBaseHealth,
 
      setGameStarted,
      setGamePaused,
@@ -30,13 +31,13 @@ import {
      setDifficultyIndex,
      setSparkleSpawnTimer,
      setObstacleSpawnTimer,
-     setMiniGameSize
+     setMiniGameSize,
+     setGameSparkleColorEngine
 } from "./state.js";
 
 import {
      createColorEngine,
-     getRainbowPalette,
-     setGameSparkleColorEngine
+     getRainbowPalette
 } from "./theme.js";
 
 import {
@@ -63,9 +64,10 @@ import {
 
 import {
      syncPlayerHealthState
-} from "./winlose.js";
+} from "./winloselevels.js";
 
 import {
+     playerBaseHealth,
      resetPlayerPosition,
      updatePlayer,
      updatePlayerFaceState
@@ -172,7 +174,7 @@ export function updateGame() {
           setGameMenuView("main");
           resetTouchControls();
           syncPlayerHealthState();
-          showPersistentGameOverlay("WINNER!", "Press ⏯ to play again.");
+          showPersistentGameOverlay("WIN!", "Press ⏯ to play again.");
      }
 }
 
