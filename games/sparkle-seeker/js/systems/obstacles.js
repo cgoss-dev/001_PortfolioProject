@@ -1,17 +1,15 @@
 // NOTE: OBSTACLE SYSTEM
-// Handles obstacle spawning, movement, collision penalties, and damage.
+// Handles obstacle spawning, movement, collision penalties, damage, and obstacle drawing.
 
 import {
+     miniGameCtx,
      miniGameWidth,
      miniGameHeight,
      player,
      playerHealth,
      sparkleScore,
      obstacles,
-     obstacleTypes,
      obstacleSpawnTimer,
-     obstacleSpawnDelay,
-     obstacleSpawnCap,
      gameSparkleColorEngine,
      setObstacleSpawnTimer,
      setSparkleScore,
@@ -24,11 +22,17 @@ import {
 } from "../state.js";
 
 import {
-     playerFaces,
+     obstacleSpawnDelay,
+     obstacleSpawnCap,
      createColorEngine,
      getRainbowPalette,
-     getGameParticleSettings
+     getGameParticleSettings,
+     getGlowSettings
 } from "../theme.js";
+
+import {
+     playerFaces
+} from "./player.js";
 
 import {
      syncPlayerHealthState,
@@ -45,12 +49,14 @@ export const obstacleTypes = [
      { name: "affectType", char: "⚠\uFE0E", effect: ["swapSparkleObjects"], penalty: 1 }
 ];
 
+// NOTE: CREATE OBSTACLE
+
 export function createObstacle() {
      const type = randomItem(obstacleTypes);
      const settings = getGameParticleSettings();
 
      if (!gameSparkleColorEngine) {
-          setGameSparkleColorEngine(createColorEngine(getRainbowPalette));
+          setGameSparkleColorEngine(createColorEngine(getRainbowPalette()));
      }
 
      const x = Math.random() * (miniGameWidth - 20) + 10;
@@ -71,6 +77,8 @@ export function createObstacle() {
      });
 }
 
+// NOTE: SPAWN TIMER
+
 export function updateObstacleSpawns() {
      const nextObstacleSpawnTimer = obstacleSpawnTimer + 1;
      setObstacleSpawnTimer(nextObstacleSpawnTimer);
@@ -83,6 +91,8 @@ export function updateObstacleSpawns() {
           setObstacleSpawnTimer(0);
      }
 }
+
+// NOTE: MOVEMENT
 
 export function updateObstacles() {
      for (let i = obstacles.length - 1; i >= 0; i -= 1) {
@@ -97,6 +107,8 @@ export function updateObstacles() {
           }
      }
 }
+
+// NOTE: COLLISION DAMAGE
 
 export function hitObstacles() {
      for (let i = obstacles.length - 1; i >= 0; i -= 1) {
@@ -117,6 +129,8 @@ export function hitObstacles() {
           }
      }
 }
+
+// NOTE: DRAWING
 
 export function drawObstacles() {
      if (!miniGameCtx) {

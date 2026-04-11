@@ -2,17 +2,20 @@
 // Handles the little burst particles that appear when sparkles or obstacles are hit.
 
 import {
+     miniGameCtx,
      collisionBursts,
-     burstChars,
      randomItem,
      randomNumber
 } from "../state.js";
 
 import {
-     getGameParticleSettings
+     getGameParticleSettings,
+     getGlowSettings
 } from "../theme.js";
 
 export const burstChars = ["✦", "✧", "·", "•"];
+
+// NOTE: CREATE BURST
 
 export function createCollisionBurst(x, y, color, burstType) {
      const settings = getGameParticleSettings();
@@ -66,6 +69,8 @@ export function createCollisionBurst(x, y, color, burstType) {
           });
      }
 
+     // NOTE:
+     // This is the bigger "center pop" that helps collisions feel punchier.
      collisionBursts.push({
           x,
           y,
@@ -84,6 +89,8 @@ export function createCollisionBurst(x, y, color, burstType) {
      });
 }
 
+// NOTE: UPDATE BURSTS
+
 export function updateCollisionBursts() {
      for (let i = collisionBursts.length - 1; i >= 0; i -= 1) {
           const burst = collisionBursts[i];
@@ -98,6 +105,8 @@ export function updateCollisionBursts() {
           }
      }
 }
+
+// NOTE: DRAW BURSTS
 
 export function drawCollisionBursts() {
      if (!miniGameCtx) {
@@ -132,4 +141,3 @@ export function drawCollisionBursts() {
           miniGameCtx.restore();
      }
 }
-

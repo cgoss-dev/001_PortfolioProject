@@ -1,78 +1,83 @@
-// NOTE: IMPORTS
+// NOTE: MASTER RENDER
+// Handles only top-level draw orchestration and shared background layers.
 
 import {
-     miniGameCanvas,
+     miniGameCtx,
      miniGameWidth,
-     miniGameHeight,
-     keys,
-     gamePaused,
-     gameStarted,
-     gameMenuOpen,
-     gameMenuView,
-     gameOver,
-     gameWon,
-     keyboardInputBound,
-     pointerInputBound,
-     resizeHandlerBound,
-     gameMenuUi,
-     touchControls,
-     setKeyboardInputBound,
-     setPointerInputBound,
-     setResizeHandlerBound,
-     setGamePaused,
-     setGameMenuOpen,
-     setGameMenuView,
-     setJoystickActive,
-     setJoystickPointerId,
-     setJoystickKnobOffset,
-     setJoystickInput,
-     setLeftButtonPressed,
-     setLeftButtonPointerId,
-     setRightButtonPressed,
-     setRightButtonPointerId
+     miniGameHeight
 } from "./state.js";
 
 import {
-     updateMiniGameCanvasSize,
-     startNewGameRound
-} from "./loop.js";
-
-import {
-     isPointInsideMenuPanel,
-     updateMenuUiBounds,
-     cycleDifficulty,
-     toggleAllSound
-} from "./ui.js";
-
-import {
-     resetPlayerPosition
+     drawPlayer
 } from "./systems/player.js";
 
-export function resetJoystickState() {
-     const j = touchControls.joystick;
-     j.knobX = j.knobY = j.inputX = j.inputY = 0;
-     j.isActive = false;
-     j.pointerId = null;
+import {
+     drawSparkles
+} from "./systems/sparkles.js";
+
+import {
+     drawObstacles
+} from "./systems/obstacles.js";
+
+import {
+     drawCollisionBursts
+} from "./systems/collisions.js";
+
+import {
+     drawScore,
+     drawHealth,
+     drawTouchJoystick,
+     drawTouchButtons,
+     drawMenuOverlay,
+     drawGameStatusOverlay
+} from "./ui.js";
+
+export function drawMiniGameBackground() {
+     if (!miniGameCtx) {
+          return;
+     }
+
+     miniGameCtx.clearRect(0, 0, miniGameWidth, miniGameHeight);
+     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.75)";
+     miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 }
 
-export function resetTouchButtons() {
-     touchControls.leftButton.isPressed = false;
-     touchControls.leftButton.pointerId = null;
-     touchControls.rightButton.isPressed = false;
-     touchControls.rightButton.pointerId = null;
+export function drawUiUnderlay() {
+     if (!miniGameCtx) {
+          return;
+     }
+
+     const centerX = miniGameWidth / 2;
+     const centerY = miniGameHeight / 2 + miniGameHeight * 0.1;
+     const distanceToCorner = Math.sqrt((centerX * centerX) + (centerY * centerY));
+
+     const underlayGradient = miniGameCtx.createRadialGradient(
+          centerX, centerY, distanceToCorner * 0.1,
+          centerX, centerY, distanceToCorner
+     );
+
+     underlayGradient.addColorStop(0, "rgba(255, 255, 255, 0)");
+     underlayGradient.addColorStop(0.6, "rgba(255, 255, 255, 0)");
+     underlayGradient.addColorStop(0.8, "rgba(255, 255, 255, 0.1)");
+     underlayGradient.addColorStop(1, "rgba(255, 255, 255, 0.2)");
+
+     miniGameCtx.save();
+     miniGameCtx.fillStyle = underlayGradient;
+     miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
+     miniGameCtx.restore();
 }
 
-export function resetTouchControls() {
-     resetJoystickState();
-     resetTouchButtons();
-}
-
-export function isPointInsideCircle(x, y, cx, cy, r) {
-     const dx = x - cx;
-     const dy = y - cy;
-     return Math.sqrt(dx * dx + dy * dy) <= r;
-}
-
-export function isPointInsideRect(x, y, r) {
-     return x >= r.x && x <= r.x + r.width && y >= r.y && y <= r.y + r.height;
+export function drawGame() {
+     drawMiniGameBackground();
+     drawUiUnderlay();
+     drawSparkles();
+     drawObstacles();
+     drawCollisionBursts();
+     drawPlayer();
+     drawScore();
+     drawHealth();
+     drawTouchJoystick();
+     drawTouchButtons();
+     drawMenuOverlay();
+     drawGameStatusOverlay();
 }

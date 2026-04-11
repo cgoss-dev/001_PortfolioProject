@@ -67,6 +67,9 @@ export function drawUiUnderlay() {
      miniGameCtx.restore();
 }
 
+// NOTE: MASTER DRAW ORDER
+// This keeps the scene layering in one place so it is easy to tweak later.
+
 export function drawGame() {
      drawMiniGameBackground();
      drawUiUnderlay();

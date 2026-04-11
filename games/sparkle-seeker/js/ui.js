@@ -1,7 +1,9 @@
 // NOTE: UI STATE / MENU / OVERLAY HELPERS
 // Handles non-render UI behavior for the mini-game.
+// Also includes UI-specific draw functions used by render.js.
 
 import {
+     miniGameCtx,
      miniGameWidth,
      miniGameHeight,
      gameStarted,
@@ -18,6 +20,9 @@ import {
      musicEnabled,
      soundEffectsEnabled,
      difficultyIndex,
+     sparkleScore,
+     playerHealth,
+     touchControls,
 
      setGameStarted,
      setGamePaused,
@@ -32,7 +37,6 @@ import {
      setMusicEnabled,
      setSoundEffectsEnabled,
      setDifficultyIndex,
-
      setMiniGameSize
 } from "./state.js";
 
@@ -81,6 +85,9 @@ export function updateMiniGameCanvasSize() {
 // NOTE: ROUND FLOW
 
 export function startNewGameRound() {
+     // NOTE:
+     // Starting a new round resets touch input first so the player
+     // does not begin the round with a stuck joystick or button state.
      resetTouchControls();
      resetPlayerPosition();
 
@@ -195,9 +202,10 @@ export function showPersistentGameOverlay(text, subtext = "") {
 
 export function updateGameOverlayTimer() {
      if (gameOverlayTimer > 0) {
-          setGameOverlayTimer(gameOverlayTimer - 1);
+          const nextTimer = gameOverlayTimer - 1;
+          setGameOverlayTimer(nextTimer);
 
-          if (gameOverlayTimer - 1 === 0) {
+          if (nextTimer === 0) {
                clearGameOverlay();
           }
      }
@@ -237,4 +245,213 @@ export function syncPauseOverlay() {
      ) {
           clearGameOverlay();
      }
+}
+
+
+// NOTE: UI DRAW FUNCTIONS
+// Used by render.js
+
+export function drawScore() {
+     if (!miniGameCtx) return;
+
+     miniGameCtx.save();
+     miniGameCtx.fillStyle = "#ffffff";
+     miniGameCtx.font = "18px Arial, Helvetica, sans-serif";
+     miniGameCtx.textAlign = "left";
+     miniGameCtx.textBaseline = "top";
+     miniGameCtx.fillText(`Score: ${sparkleScore}`, 12, 12);
+     miniGameCtx.restore();
+}
+
+export function drawHealth() {
+     if (!miniGameCtx) return;
+
+     miniGameCtx.save();
+     miniGameCtx.fillStyle = "#ffffff";
+     miniGameCtx.font = "18px Arial, Helvetica, sans-serif";
+     miniGameCtx.textAlign = "right";
+     miniGameCtx.textBaseline = "top";
+     miniGameCtx.fillText(`HP: ${playerHealth}`, miniGameWidth - 12, 12);
+     miniGameCtx.restore();
+}
+
+export function drawTouchJoystick() {
+     if (!miniGameCtx) return;
+
+     const j = touchControls.joystick;
+
+     miniGameCtx.save();
+     miniGameCtx.globalAlpha = 0.3;
+
+     miniGameCtx.beginPath();
+     miniGameCtx.arc(j.centerX, j.centerY, j.baseRadius, 0, Math.PI * 2);
+     miniGameCtx.fillStyle = "#888";
+     miniGameCtx.fill();
+
+     miniGameCtx.beginPath();
+     miniGameCtx.arc(
+          j.centerX + j.knobX,
+          j.centerY + j.knobY,
+          j.thumbRadius,
+          0,
+          Math.PI * 2
+     );
+     miniGameCtx.fillStyle = "#ccc";
+     miniGameCtx.fill();
+
+     miniGameCtx.restore();
+}
+
+export function drawTouchButtons() {
+     if (!miniGameCtx) return;
+
+     const left = touchControls.leftButton;
+     const right = touchControls.rightButton;
+
+     miniGameCtx.save();
+     miniGameCtx.globalAlpha = 0.4;
+
+     miniGameCtx.fillStyle = "#aaa";
+     miniGameCtx.fillRect(left.x, left.y, left.width, left.height);
+     miniGameCtx.fillRect(right.x, right.y, right.width, right.height);
+
+     miniGameCtx.fillStyle = "#000";
+     miniGameCtx.textAlign = "center";
+     miniGameCtx.textBaseline = "middle";
+     miniGameCtx.font = "18px Arial, Helvetica, sans-serif";
+
+     miniGameCtx.fillText(
+          left.label,
+          left.x + left.width / 2,
+          left.y + left.height / 2
+     );
+
+     miniGameCtx.fillText(
+          right.label,
+          right.x + right.width / 2,
+          right.y + right.height / 2
+     );
+
+     miniGameCtx.restore();
+}
+
+export function drawMenuOverlay() {
+     if (!miniGameCtx || !gameMenuOpen) return;
+
+     miniGameCtx.save();
+     miniGameCtx.globalAlpha = 0.92;
+
+     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.85)";
+     miniGameCtx.fillRect(
+          gameMenuUi.panel.x,
+          gameMenuUi.panel.y,
+          gameMenuUi.panel.width,
+          gameMenuUi.panel.height
+     );
+
+     miniGameCtx.strokeStyle = "#ffffff";
+     miniGameCtx.lineWidth = 2;
+     miniGameCtx.strokeRect(
+          gameMenuUi.panel.x,
+          gameMenuUi.panel.y,
+          gameMenuUi.panel.width,
+          gameMenuUi.panel.height
+     );
+
+     miniGameCtx.fillStyle = "#ffffff";
+     miniGameCtx.textAlign = "center";
+     miniGameCtx.textBaseline = "top";
+
+     miniGameCtx.font = "26px Arial, Helvetica, sans-serif";
+     miniGameCtx.fillText(
+          "MENU",
+          gameMenuUi.panel.x + (gameMenuUi.panel.width / 2),
+          gameMenuUi.panel.y + 18
+     );
+
+     if (gameMenuView === "main") {
+          drawMenuButton(gameMenuUi.newGameButton, "New Game");
+          drawMenuButton(gameMenuUi.instructionsButton, "Instructions");
+          drawMenuButton(gameMenuUi.difficultyButton, `Difficulty: ${getCurrentDifficultyLabel()}`);
+          drawMenuButton(gameMenuUi.soundButton, `Sound: ${getCurrentSoundLabel()}`);
+     } else if (gameMenuView === "instructions") {
+          drawInstructionsText();
+     }
+
+     drawMenuButton(gameMenuUi.backButton, "Back");
+
+     miniGameCtx.restore();
+}
+
+function drawMenuButton(button, label) {
+     miniGameCtx.save();
+
+     miniGameCtx.fillStyle = "rgba(255, 255, 255, 0.12)";
+     miniGameCtx.fillRect(button.x, button.y, button.width, button.height);
+
+     miniGameCtx.strokeStyle = "#ffffff";
+     miniGameCtx.lineWidth = 1.5;
+     miniGameCtx.strokeRect(button.x, button.y, button.width, button.height);
+
+     miniGameCtx.fillStyle = "#ffffff";
+     miniGameCtx.textAlign = "center";
+     miniGameCtx.textBaseline = "middle";
+     miniGameCtx.font = "18px Arial, Helvetica, sans-serif";
+     miniGameCtx.fillText(
+          label,
+          button.x + (button.width / 2),
+          button.y + (button.height / 2)
+     );
+
+     miniGameCtx.restore();
+}
+
+function drawInstructionsText() {
+     miniGameCtx.save();
+
+     miniGameCtx.fillStyle = "#ffffff";
+     miniGameCtx.textAlign = "left";
+     miniGameCtx.textBaseline = "top";
+     miniGameCtx.font = "16px Arial, Helvetica, sans-serif";
+
+     const textX = gameMenuUi.panel.x + 24;
+     let textY = gameMenuUi.panel.y + 86;
+     const lineGap = 26;
+
+     miniGameCtx.fillText("Move with WASD, arrow keys, or the joystick.", textX, textY);
+     textY += lineGap;
+     miniGameCtx.fillText("Collect sparkles to gain score and heal.", textX, textY);
+     textY += lineGap;
+     miniGameCtx.fillText("Avoid obstacles or you lose health.", textX, textY);
+     textY += lineGap;
+     miniGameCtx.fillText("Fill your hearts to win the round.", textX, textY);
+
+     miniGameCtx.restore();
+}
+
+export function drawGameStatusOverlay() {
+     if (!miniGameCtx || !gameOverlayText) return;
+
+     const alpha = getGameOverlayAlpha();
+
+     miniGameCtx.save();
+     miniGameCtx.globalAlpha = alpha;
+
+     miniGameCtx.fillStyle = "#ffffff";
+     miniGameCtx.textAlign = "center";
+     miniGameCtx.textBaseline = "middle";
+
+     miniGameCtx.font = "36px Arial, Helvetica, sans-serif";
+     miniGameCtx.fillText(gameOverlayText, miniGameWidth / 2, miniGameHeight / 2);
+
+     if (gameOverlaySubtext) {
+          miniGameCtx.font = "16px Arial, Helvetica, sans-serif";
+          miniGameCtx.fillText(
+               gameOverlaySubtext,
+               miniGameWidth / 2,
+               miniGameHeight / 2 + 30
+          );
+     }
+
+     miniGameCtx.restore();
 }

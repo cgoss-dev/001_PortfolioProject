@@ -1,10 +1,20 @@
-import { playerFaces } from "./theme.js";
+// NOTE: GAME STATE
+// This file holds all runtime state for the mini-game.
+// Other files should READ from here and WRITE via setters.
+
+// NOTE: IMPORTS
+
+import { playerFaces } from "./systems/player.js";
+
+// NOTE: CANVAS
 
 export const miniGameCanvas = document.getElementById("miniGameCanvas");
 export const miniGameCtx = miniGameCanvas ? miniGameCanvas.getContext("2d") : null;
 
 export let miniGameWidth = 0;
 export let miniGameHeight = 0;
+
+// NOTE: PLAYER
 
 export const player = {
      x: 0,
@@ -13,20 +23,26 @@ export const player = {
      size: 54,
      speed: 2,
      radius: 30,
-     sparkleFaceTimer: 0,
-     // FIXME: Counts down how long the temporary sparkle / obstacle face should stay active.
+     sparkleFaceTimer: 0
+     // NOTE: Counts down how long temporary face states last.
 };
+
+// NOTE: INPUT + ENTITY ARRAYS
 
 export const keys = {};
 export const sparkles = [];
 export const obstacles = [];
 export const collisionBursts = [];
 
+// NOTE: SCORE / HEALTH
+
 export let sparkleScore = 0;
 export let sparkleHealProgress = 0;
 
 export let playerHealth = 3;
 export const maxPlayerHealth = 10;
+
+// NOTE: GAME FLOW
 
 export let gameStarted = false;
 export let gamePaused = true;
@@ -42,49 +58,25 @@ export let difficultyIndex = 1;
 export let gameOver = false;
 export let gameWon = false;
 
+// NOTE: OVERLAY
+
 export let gameOverlayText = "";
 export let gameOverlaySubtext = "";
 export let gameOverlayTimer = 0;
 export let gameOverlayDuration = 0;
 
+// NOTE: MENU UI
+
 export const gameMenuUi = {
-     panel: {
-          x: 0,
-          y: 0,
-          width: 0,
-          height: 0
-     },
-     newGameButton: {
-          x: 0,
-          y: 0,
-          width: 0,
-          height: 0
-     },
-     instructionsButton: {
-          x: 0,
-          y: 0,
-          width: 0,
-          height: 0
-     },
-     difficultyButton: {
-          x: 0,
-          y: 0,
-          width: 0,
-          height: 0
-     },
-     soundButton: {
-          x: 0,
-          y: 0,
-          width: 0,
-          height: 0
-     },
-     backButton: {
-          x: 0,
-          y: 0,
-          width: 0,
-          height: 0
-     }
+     panel: { x: 0, y: 0, width: 0, height: 0 },
+     newGameButton: { x: 0, y: 0, width: 0, height: 0 },
+     instructionsButton: { x: 0, y: 0, width: 0, height: 0 },
+     difficultyButton: { x: 0, y: 0, width: 0, height: 0 },
+     soundButton: { x: 0, y: 0, width: 0, height: 0 },
+     backButton: { x: 0, y: 0, width: 0, height: 0 }
 };
+
+// NOTE: TOUCH CONTROLS
 
 export const touchControls = {
      joystick: {
@@ -101,42 +93,38 @@ export const touchControls = {
           deadZone: 0.18
      },
      leftButton: {
-          x: 0,
-          y: 0,
-          width: 60,
-          height: 60,
+          x: 0, y: 0, width: 60, height: 60,
           isPressed: false,
           pointerId: null,
           label: "\u23EF\uFE0E"
      },
      rightButton: {
-          x: 0,
-          y: 0,
-          width: 60,
-          height: 60,
+          x: 0, y: 0, width: 60, height: 60,
           isPressed: false,
           pointerId: null,
           label: "\u2630\uFE0E"
      }
 };
 
-export const gameButton = {
-     x: 0,
-     y: 0,
-     width: 0,
-     height: 0,
-     paddingX: 16,
-     paddingY: 10,
-     isPressed: false,
-     pressTimer: 0
-};
+// NOTE: INTERNAL FLAGS
 
 export let pointerInputBound = false;
 export let keyboardInputBound = false;
 export let resizeHandlerBound = false;
 
+// NOTE: SPAWN TIMERS
+
 export let sparkleSpawnTimer = 0;
 export let obstacleSpawnTimer = 0;
+
+// NOTE: COLOR ENGINE (moved fully here — single source of truth)
+
+export let gameSparkleColorEngine = null;
+export function setGameSparkleColorEngine(v) {
+     gameSparkleColorEngine = v;
+}
+
+// NOTE: SETTERS
 
 export function setPointerInputBound(v) { pointerInputBound = v; }
 export function setKeyboardInputBound(v) { keyboardInputBound = v; }
@@ -163,6 +151,7 @@ export function setGameStarted(v) { gameStarted = v; }
 export function setGamePaused(v) { gamePaused = v; }
 export function setGameMenuOpen(v) { gameMenuOpen = v; }
 export function setGameMenuView(v) { gameMenuView = v; }
+
 export function setMusicEnabled(v) { musicEnabled = v; }
 export function setSoundEffectsEnabled(v) { soundEffectsEnabled = v; }
 export function setDifficultyIndex(v) { difficultyIndex = v; }
@@ -175,12 +164,16 @@ export function setGameOverlaySubtext(v) { gameOverlaySubtext = v; }
 export function setGameOverlayTimer(v) { gameOverlayTimer = v; }
 export function setGameOverlayDuration(v) { gameOverlayDuration = v; }
 
+// NOTE: JOYSTICK SETTERS
+
 export function setJoystickActive(v) { touchControls.joystick.isActive = v; }
 export function setJoystickPointerId(v) { touchControls.joystick.pointerId = v; }
+
 export function setJoystickKnobOffset(x, y) {
      touchControls.joystick.knobX = x;
      touchControls.joystick.knobY = y;
 }
+
 export function setJoystickInput(x, y) {
      touchControls.joystick.inputX = x;
      touchControls.joystick.inputY = y;
@@ -191,7 +184,7 @@ export function setLeftButtonPointerId(v) { touchControls.leftButton.pointerId =
 export function setRightButtonPressed(v) { touchControls.rightButton.isPressed = v; }
 export function setRightButtonPointerId(v) { touchControls.rightButton.pointerId = v; }
 
-// NOTE: SHARED HELPERS
+// NOTE: HELPERS
 
 export function randomItem(a) {
      return a[Math.floor(Math.random() * a.length)];

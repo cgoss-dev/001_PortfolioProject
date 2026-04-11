@@ -1,3 +1,19 @@
+// NOTE: WIN / LOSE / PLAYER HEALTH STATE
+// Handles player face switching and speed changes based on health.
+
+import {
+     player,
+     playerHealth,
+     maxPlayerHealth
+} from "./state.js";
+
+import {
+     playerFaces,
+     playerBaseHealth,
+     playerBaseSpeed,
+     playerSpeedPerHeart
+} from "./systems/player.js";
+
 export function getDefaultPlayerFace() {
      if (playerHealth <= 0) return playerFaces.dead;
      if (playerHealth === maxPlayerHealth) return playerFaces.maxHealth;
@@ -15,6 +31,9 @@ export function refreshPlayerStateFace() {
 }
 
 export function applyTemporaryPlayerFace(face, duration) {
+     // NOTE:
+     // If the player is already in a "forced" health state
+     // (dead, max health, or low health), that state wins.
      if (playerHealth <= 0 || playerHealth === maxPlayerHealth || playerHealth <= 2) {
           player.sparkleFaceTimer = 0;
           refreshPlayerStateFace();

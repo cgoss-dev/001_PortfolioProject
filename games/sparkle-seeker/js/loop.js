@@ -16,7 +16,6 @@ import {
      sparkles,
      obstacles,
      collisionBursts,
-
      setGameStarted,
      setGamePaused,
      setGameMenuOpen,

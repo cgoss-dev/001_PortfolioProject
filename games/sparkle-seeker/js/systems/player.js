@@ -1,7 +1,8 @@
 // NOTE: PLAYER SYSTEM
-// Handles player position, movement, and temporary face-state timing.
+// Handles player position, movement, drawing, and temporary face-state timing.
 
 import {
+     miniGameCtx,
      miniGameWidth,
      miniGameHeight,
      player,
@@ -11,7 +12,7 @@ import {
 
 import {
      refreshPlayerStateFace
-} from "../winlose.js";
+} from "../winloselevels.js";
 
 export const playerFaces = {
      neutral: "😐",
@@ -25,6 +26,8 @@ export const playerFaces = {
 export const playerBaseHealth = 3;
 export const playerBaseSpeed = 2;
 export const playerSpeedPerHeart = 0.5;
+
+// NOTE: POSITION HELPERS
 
 export function resetPlayerPosition() {
      player.x = miniGameWidth / 2;
@@ -45,10 +48,13 @@ export function clampPlayerToCanvas() {
      );
 }
 
+// NOTE: MOVEMENT
+
 export function updatePlayer() {
      let movedByKeyboard = false;
 
-     // KEYBOARD INPUT
+     // NOTE: KEYBOARD INPUT
+     // Keyboard wins over joystick if both are active at once.
      if (keys["w"] || keys["arrowup"]) {
           player.y -= player.speed;
           movedByKeyboard = true;
@@ -69,7 +75,8 @@ export function updatePlayer() {
           movedByKeyboard = true;
      }
 
-     // JOYSTICK INPUT
+     // NOTE: JOYSTICK INPUT
+     // Only used when keyboard input did not move the player this frame.
      if (!movedByKeyboard) {
           const inputX = touchControls.joystick.inputX;
           const inputY = touchControls.joystick.inputY;
@@ -83,6 +90,8 @@ export function updatePlayer() {
      clampPlayerToCanvas();
 }
 
+// NOTE: FACE TIMER
+
 export function updatePlayerFaceState() {
      if (player.sparkleFaceTimer > 0) {
           player.sparkleFaceTimer -= 1;
@@ -91,4 +100,32 @@ export function updatePlayerFaceState() {
      if (player.sparkleFaceTimer <= 0) {
           refreshPlayerStateFace();
      }
+}
+
+// NOTE: DRAWING
+
+export function drawPlayer() {
+     if (!miniGameCtx) {
+          return;
+     }
+
+     miniGameCtx.save();
+
+     miniGameCtx.font = `${player.size}px Arial, Helvetica, sans-serif`;
+     miniGameCtx.textAlign = "center";
+     miniGameCtx.textBaseline = "middle";
+     miniGameCtx.fillStyle = "#ffffff";
+
+     let playerYOffset = 0;
+
+     // NOTE:
+     // The neutral face sits a little differently visually,
+     // so this tiny offset keeps it centered better.
+     if (player.char === playerFaces.neutral) {
+          playerYOffset = 3;
+     }
+
+     miniGameCtx.fillText(player.char, player.x, player.y + playerYOffset);
+
+     miniGameCtx.restore();
 }
