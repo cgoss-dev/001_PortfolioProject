@@ -5,8 +5,6 @@ Digital footprint, games, resources.
 <br><br>
 
 ### TO DO
--    Reorg SparkleSeeker
--    Add WASD function for joystick.
 -    Obstacle effects.
      -    Slow/speed.
      -    Increase/decrease size.
@@ -16,9 +14,8 @@ Digital footprint, games, resources.
 -    Swap marquee/border color functionality.
 -    🐞 Mobile landscape mode bug.
 -    Game conditions:
-     -    Text overlay: LET'S PLAY, TRY AGAIN", "YOU WIN".
      -    Max hearts = 2x points (gained & lost).
-     -    Levels begin at 0. Each level 25 points? Add scaling.
+     -    Levels begin at 0. Each level 25 points? Add level scaling.
 
 ### FUTURE GAMES
 -    Farming sim. (32x32 or 48x48?)

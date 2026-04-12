@@ -42,7 +42,7 @@ import {
      isPointInsideMenuPanel
 } from "./ui.js";
 
-// NOTE: KEY HELPERS
+// KEY HELPERS
 
 function normalizeKeyName(key) {
      if (!key) {
@@ -97,21 +97,42 @@ export function updateTouchControlBounds() {
      const leftButton = touchControls.leftButton;
      const rightButton = touchControls.rightButton;
 
-     joystick.centerX = Math.max(96, joystick.baseRadius + 24);
-     joystick.centerY = Math.max(96, miniGameHeight - joystick.baseRadius - 24);
+     // CONTROL SCALE
+     // Scale controls based on the smaller canvas dimension,
+     // then clamp so they do not get too tiny or too huge.
+     const controlScaleBase = Math.min(miniGameWidth, miniGameHeight);
 
-     leftButton.width = 64;
-     leftButton.height = 64;
-     leftButton.x = miniGameWidth - 156;
+     const joystickBaseRadius = Math.max(48, Math.min(72, controlScaleBase * 0.13));
+     const joystickThumbRadius = Math.max(22, Math.min(38, joystickBaseRadius * 0.5));
+
+     const buttonSize = Math.max(52, Math.min(72, controlScaleBase * 0.13));
+     const edgePadding = Math.max(20, Math.min(32, controlScaleBase * 0.05));
+     const buttonGap = Math.max(10, Math.min(16, controlScaleBase * 0.025));
+
+     // JOYSTICK SIZE + POSITION
+     joystick.baseRadius = joystickBaseRadius;
+     joystick.thumbRadius = joystickThumbRadius;
+
+     joystick.centerX = edgePadding + joystick.baseRadius;
+     joystick.centerY = miniGameHeight - edgePadding - joystick.baseRadius;
+
+     // BUTTON SIZE
+     leftButton.width = buttonSize;
+     leftButton.height = buttonSize;
+
+     rightButton.width = buttonSize;
+     rightButton.height = buttonSize;
+
+     // BUTTON POSITION
+     // Keep both buttons centered horizontally with the joystick center line.
+     leftButton.x = miniGameWidth - edgePadding - (buttonSize * 2) - buttonGap;
      leftButton.y = joystick.centerY - (leftButton.height / 2);
 
-     rightButton.width = 64;
-     rightButton.height = 64;
-     rightButton.x = miniGameWidth - 82;
+     rightButton.x = miniGameWidth - edgePadding - buttonSize;
      rightButton.y = joystick.centerY - (rightButton.height / 2);
 }
 
-// NOTE: TOUCH RESET
+// TOUCH RESET
 
 export function resetTouchControls() {
      setJoystickActive(false);
@@ -126,14 +147,14 @@ export function resetTouchControls() {
      setRightButtonPointerId(null);
 }
 
-// NOTE: BUTTON LABEL SYNC
+// BUTTON LABEL SYNC
 
 export function updatePauseButtonState() {
      touchControls.leftButton.label = "\u23EF\uFE0E";
      touchControls.rightButton.label = "\u2630\uFE0E";
 }
 
-// NOTE: ROUND + MENU ACTIONS
+// ROUND + MENU ACTIONS
 
 function triggerPauseAction() {
      if (!gameStarted || gameOver || gameWon) {
@@ -228,7 +249,7 @@ function handleMenuClick(x, y) {
      return true;
 }
 
-// NOTE: KEYBOARD INPUT
+// KEYBOARD INPUT
 
 function onKeyDown(event) {
      const key = normalizeKeyName(event.key);
@@ -292,7 +313,7 @@ export function bindKeyboardInput() {
      setKeyboardInputBound(true);
 }
 
-// NOTE: JOYSTICK MATH
+// JOYSTICK MATH
 // Converts pointer position into:
 // - knob position (visual)
 // - normalized movement input (-1 to 1)
@@ -350,7 +371,7 @@ function updateJoystickFromPointer(event) {
      setJoystickInput(nx * safeMagnitude, ny * safeMagnitude);
 }
 
-// NOTE: JOYSTICK RESET
+// JOYSTICK RESET
 // When touch ends, fully reset joystick state
 
 function clearJoystick(pointerId) {
@@ -384,7 +405,7 @@ function clearButtons(pointerId) {
      }
 }
 
-// NOTE: POINTER INPUT
+// POINTER INPUT
 
 function onPointerDown(event) {
      if (!miniGameCanvas) {
@@ -417,7 +438,7 @@ function onPointerDown(event) {
           return;
      }
 
-     // NOTE: JOYSTICK ACTIVATE
+     // JOYSTICK ACTIVATE
      // Only activate if touch starts inside joystick base
      if (isPointInsideCircle(pos.x, pos.y, joystick.centerX, joystick.centerY, joystick.baseRadius)) {
           setJoystickActive(true);

@@ -84,7 +84,7 @@ import {
 } from "./entities.js";
 
 // ==================================================
-// NOTE: UI CONSTANTS
+// UI CONSTANTS
 // ==================================================
 
 export const difficultyOptions = ["Easy", "Normal", "Hard"];
@@ -92,7 +92,7 @@ export const startOverlayDuration = 120;
 export const overlayFadeFrames = 30;
 
 // ==================================================
-// NOTE: CSS HELPERS (via root)
+// CSS HELPERS
 // ==================================================
 
 const siteTheme = window.SiteTheme;
@@ -106,7 +106,7 @@ function getCssNumber(variableName, fallback = 0) {
 }
 
 // ==================================================
-// NOTE: SHARED UI THEME
+// SHARED UI THEME
 // ==================================================
 
 function getUiTheme() {
@@ -174,7 +174,7 @@ function getUiTheme() {
 }
 
 // ==================================================
-// NOTE: SHARED DRAW HELPERS
+// SHARED DRAW HELPERS
 // ==================================================
 
 function isPointInsideRect(x, y, rect) {
@@ -255,7 +255,7 @@ function drawControlButton(button, isPressed, theme) {
 }
 
 // ==================================================
-// NOTE: BACKGROUND / MASTER DRAW HELPERS
+// BACKGROUND / MASTER DRAW HELPERS
 // ==================================================
 
 function drawMiniGameBackground() {
@@ -269,7 +269,7 @@ function drawMiniGameBackground() {
 }
 
 // ==================================================
-// NOTE: CANVAS SIZE
+// CANVAS
 // ==================================================
 
 export function resizeMiniGameCanvasFromCss() {
@@ -294,7 +294,7 @@ export function updateMiniGameCanvasSize() {
 }
 
 // ==================================================
-// NOTE: ROUND FLOW
+// ROUNDS
 // ==================================================
 
 export function startNewGameRound() {
@@ -318,7 +318,7 @@ export function startNewGameRound() {
 }
 
 // ==================================================
-// NOTE: MENU HELPERS
+// MENU
 // ==================================================
 
 export function getCurrentDifficultyLabel() {
@@ -338,10 +338,6 @@ export function toggleAllSound() {
      setMusicEnabled(next);
      setSoundEffectsEnabled(next);
 }
-
-// ==================================================
-// NOTE: MENU LAYOUT
-// ==================================================
 
 export function updateMenuUiBounds() {
      const panelWidth = Math.max(300, Math.min(miniGameWidth * 0.66, 420));
@@ -394,7 +390,7 @@ export function isPointInsideMenuPanel(x, y) {
 }
 
 // ==================================================
-// NOTE: OVERLAY SYSTEM
+// OVERLAY SYSTEM
 // ==================================================
 
 export function clearGameOverlay() {
@@ -441,7 +437,7 @@ export function getGameOverlayAlpha() {
 }
 
 // ==================================================
-// NOTE: PAUSE SYNC
+// PAUSE SYNC
 // ==================================================
 
 export function syncPauseOverlay() {
@@ -458,7 +454,7 @@ export function syncPauseOverlay() {
 }
 
 // ==================================================
-// NOTE: GAME UPDATE / DRAW
+// GAME UPDATE / DRAW
 // ==================================================
 
 export function updateGame() {
@@ -528,7 +524,7 @@ function gameLoop() {
 }
 
 // ==================================================
-// NOTE: UI DRAW FUNCTIONS
+// UI DRAW FUNCTIONS
 // ==================================================
 
 function drawScore() {
@@ -638,7 +634,7 @@ export function drawTouchJoystick() {
 
      miniGameCtx.textAlign = "center";
      miniGameCtx.textBaseline = "middle";
-     miniGameCtx.font = '18px "Noto Sans Mono", monospace';
+     miniGameCtx.font = `${joystick.baseRadius * 0.28}px "Noto Sans Mono", monospace`;
 
      const offset = joystick.baseRadius * 0.7;
      const cx = joystick.centerX;
@@ -652,7 +648,7 @@ export function drawTouchJoystick() {
      miniGameCtx.restore();
 
      // ==================================================
-     // NOTE: JOYSTICK KNOB
+     // JOYSTICK KNOB
      // ==================================================
 
      miniGameCtx.beginPath();
@@ -692,10 +688,10 @@ export function drawTouchButtons() {
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
 
-     miniGameCtx.font = `26px ${fonts.symbol}`;
+     miniGameCtx.font = `${leftButton.height * 0.42}px ${fonts.symbol}`; //REVIEW -  revisit button size
      miniGameCtx.fillText(leftButton.label, leftButton.x + leftButton.width / 2, leftButton.y + leftButton.height / 2 + 1);
 
-     miniGameCtx.font = `22px ${fonts.symbol}`;
+     miniGameCtx.font = `${rightButton.height * 0.36}px ${fonts.symbol}`;
      miniGameCtx.fillText(rightButton.label, rightButton.x + rightButton.width / 2, rightButton.y + rightButton.height / 2 + 1);
 
      miniGameCtx.restore();

@@ -40,11 +40,6 @@ import {
      isCollidingWithSparkle
 } from "./state.js";
 
-// ==================================================
-// NOTE: SHARED ROOT HELPERS
-// These come from ../../script.js, which is loaded before ui.js.
-// ==================================================
-
 const siteTheme = window.SiteTheme;
 
 // ==================================================
@@ -61,7 +56,7 @@ export const obstacleSpawnCap = 6;
 export const collisionBurstParticleCount = 10;
 
 // ==================================================
-// NOTE: PLAYER
+// PLAYER
 // ==================================================
 
 export const playerFaces = {
@@ -78,7 +73,7 @@ export const playerBaseSpeed = 2;
 export const playerSpeedPerHeart = 0.5;
 
 // ==================================================
-// NOTE: SHARED VISUAL HELPERS
+// SHARED VISUAL HELPERS
 // Pull visual values from root helpers when possible.
 // Keep safe fallbacks in case something is missing.
 // ==================================================
@@ -111,7 +106,7 @@ function getRainbowPalette() {
 }
 
 // ==================================================
-// NOTE: COLOR ROTATION
+// COLOR ROTATION
 // Uses the shared root color engine instead of a local duplicate.
 // ==================================================
 
@@ -188,7 +183,7 @@ export function applyTemporaryPlayerFace(face, duration) {
 }
 
 // ==================================================
-// NOTE: PLAYER MOVEMENT
+// PLAYER MOVEMENT
 // ==================================================
 
 export function resetPlayerPosition() {
@@ -238,7 +233,7 @@ export function updatePlayer() {
           dy = touchControls.joystick.inputY;
      }
 
-     // NOTE: NORMALIZE DIAGONALS
+     // NORMALIZE DIAGONALS
      // Without this, diagonal movement is faster than straight movement.
      const magnitude = Math.hypot(dx, dy);
 
@@ -311,7 +306,6 @@ export function updateSparkleSpawns() {
      const nextSparkleSpawnTimer = sparkleSpawnTimer + 1;
      setSparkleSpawnTimer(nextSparkleSpawnTimer);
 
-     // NOTE: SMALL SPAWN JITTER
      // This keeps sparkles from spawning on a perfectly robotic rhythm.
      const sparkleSpawnJitter = Math.random() * 8;
 
@@ -426,7 +420,7 @@ export function updateObstacleSpawns() {
      const nextObstacleSpawnTimer = obstacleSpawnTimer + 1;
      setObstacleSpawnTimer(nextObstacleSpawnTimer);
 
-     // NOTE: LIGHT DIFFICULTY SCALING
+     // LIGHT DIFFICULTY SCALING
      // As score rises, obstacles arrive a little sooner.
      const difficultyBoost = Math.min(24, sparkleScore * 0.4);
 

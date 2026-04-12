@@ -8,17 +8,11 @@
 
 export const miniGameCanvas = document.getElementById("miniGameCanvas");
 
-// NOTE:
-// Canvas may not exist immediately during page load,
-// so we guard against null here.
+// Canvas may not exist immediately during page load, so we guard against null here.
 export const miniGameCtx = miniGameCanvas ? miniGameCanvas.getContext("2d") : null;
 
-// ==================================================
-// NOTE: CANVAS SIZE
 // These track the CSS-sized play area used by gameplay logic.
 // The real canvas pixel size can still be scaled elsewhere for DPR.
-// ==================================================
-
 export let miniGameWidth = 0;
 export let miniGameHeight = 0;
 
@@ -41,7 +35,7 @@ export const player = {
 };
 
 // ==================================================
-// NOTE: INPUT + SHARED ENTITY ARRAYS
+// INPUT + SHARED ENTITY ARRAYS
 // These are mutated during gameplay, so they stay centralized here.
 // ==================================================
 
@@ -61,7 +55,7 @@ export let playerHealth = 3;
 export const maxPlayerHealth = 10;
 
 // ==================================================
-// NOTE: GAME FLOW FLAGS
+// GAME FLOW FLAGS
 // ==================================================
 
 export let gameStarted = false;
@@ -79,7 +73,7 @@ export let gameOver = false;
 export let gameWon = false;
 
 // ==================================================
-// NOTE: OVERLAY STATE
+// OVERLAY STATE
 // Used by UI code for short messages like win / lose / start text.
 // ==================================================
 
@@ -146,7 +140,7 @@ export const touchControls = {
 };
 
 // ==================================================
-// NOTE: ONE-TIME BIND FLAGS
+// ONE-TIME BIND FLAGS
 // These prevent accidental duplicate event listeners.
 // ==================================================
 
@@ -155,14 +149,14 @@ export let keyboardInputBound = false;
 export let resizeHandlerBound = false;
 
 // ==================================================
-// NOTE: SPAWN TIMERS
+// SPAWN TIMERS
 // ==================================================
 
 export let sparkleSpawnTimer = 0;
 export let obstacleSpawnTimer = 0;
 
 // ==================================================
-// NOTE: BASIC SETTERS
+// BASIC SETTERS
 // ==================================================
 
 export function setMiniGameSize(width, height) {
@@ -191,7 +185,7 @@ export function setObstacleSpawnTimer(value) {
 }
 
 // ==================================================
-// NOTE: SCORE + HEALTH SETTERS
+// SCORE + HEALTH SETTERS
 // ==================================================
 
 export function setSparkleScore(value) {
@@ -219,7 +213,7 @@ export function addPlayerHealth(value) {
 }
 
 // ==================================================
-// NOTE: GAME FLOW SETTERS
+// GAME FLOW SETTERS
 // ==================================================
 
 export function setGameStarted(value) {
@@ -259,7 +253,7 @@ export function setGameWon(value) {
 }
 
 // ==================================================
-// NOTE: OVERLAY SETTERS
+// OVERLAY SETTERS
 // ==================================================
 
 export function setGameOverlayText(value) {
@@ -279,7 +273,7 @@ export function setGameOverlayDuration(value) {
 }
 
 // ==================================================
-// NOTE: JOYSTICK SETTERS
+// JOYSTICK SETTERS
 // ==================================================
 
 export function setJoystickActive(value) {
@@ -301,7 +295,7 @@ export function setJoystickInput(x, y) {
 }
 
 // ==================================================
-// NOTE: TOUCH BUTTON SETTERS
+// TOUCH BUTTON SETTERS
 // ==================================================
 
 export function setLeftButtonPressed(value) {
@@ -359,7 +353,7 @@ export function resetGameState() {
 }
 
 // ==================================================
-// NOTE: SMALL SHARED HELPERS
+// SMALL SHARED HELPERS
 // ==================================================
 
 export function randomItem(array) {
