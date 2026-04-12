@@ -81,40 +81,46 @@ function getCanvasPointerPosition(event) {
      const safeWidth = rect.width || 1;
      const safeHeight = rect.height || 1;
 
-     // NOTE:
      // miniGameWidth / miniGameHeight may still be 0 during early startup.
-     // If that happens, fall back to the visible canvas size from the DOM rect
-     // so pointer math still works on first interaction.
+     // If that happens, fall back to the visible canvas size from the DOM rect so pointer math still works on first interaction.
      return {
           x: ((event.clientX - rect.left) / safeWidth) * (miniGameWidth || safeWidth),
           y: ((event.clientY - rect.top) / safeHeight) * (miniGameHeight || safeHeight)
      };
 }
 
-// NOTE: TOUCH CONTROL LAYOUT
+// TOUCH CONTROL LAYOUT
+
 export function updateTouchControlBounds() {
      const joystick = touchControls.joystick;
      const leftButton = touchControls.leftButton;
      const rightButton = touchControls.rightButton;
 
      // CONTROL SCALE
-     // Scale controls based on the smaller canvas dimension,
-     // then clamp so they do not get too tiny or too huge.
      const controlScaleBase = Math.min(miniGameWidth, miniGameHeight);
 
-     const joystickBaseRadius = Math.max(48, Math.min(72, controlScaleBase * 0.13));
-     const joystickThumbRadius = Math.max(22, Math.min(38, joystickBaseRadius * 0.5));
+     // Static joystick.
+     const joystickBaseRadius = Math.max(36, Math.min(56, controlScaleBase * 0.10));
+     // Mobile joystick.
+     const joystickThumbRadius = Math.max(22, Math.min(38, joystickBaseRadius * 0.5)); 
 
-     const buttonSize = Math.max(52, Math.min(72, controlScaleBase * 0.13));
+     const buttonSize = Math.max(40, Math.min(56, controlScaleBase * 0.10));
+
+     // Base edge spacing
      const edgePadding = Math.max(20, Math.min(32, controlScaleBase * 0.05));
-     const buttonGap = Math.max(10, Math.min(16, controlScaleBase * 0.025));
+
+     // Independent spacing controls used here
+     const joystickEdgePadding = edgePadding * 0.5;
+     const buttonEdgePadding = edgePadding * 0.5;
+
+     const buttonGap = Math.max(4, Math.min(10, controlScaleBase * 0.01));
 
      // JOYSTICK SIZE + POSITION
      joystick.baseRadius = joystickBaseRadius;
      joystick.thumbRadius = joystickThumbRadius;
 
-     joystick.centerX = edgePadding + joystick.baseRadius;
-     joystick.centerY = miniGameHeight - edgePadding - joystick.baseRadius;
+     joystick.centerX = joystickEdgePadding + joystick.baseRadius;
+     joystick.centerY = miniGameHeight - joystickEdgePadding - joystick.baseRadius;
 
      // BUTTON SIZE
      leftButton.width = buttonSize;
@@ -124,12 +130,14 @@ export function updateTouchControlBounds() {
      rightButton.height = buttonSize;
 
      // BUTTON POSITION
-     // Keep both buttons centered horizontally with the joystick center line.
-     leftButton.x = miniGameWidth - edgePadding - (buttonSize * 2) - buttonGap;
-     leftButton.y = joystick.centerY - (leftButton.height / 2);
+     // Button group pulled closer to right canvas edge using reduced padding.
+     // Vertical alignment tied to joystick outer circle.
 
-     rightButton.x = miniGameWidth - edgePadding - buttonSize;
-     rightButton.y = joystick.centerY - (rightButton.height / 2);
+     leftButton.x = miniGameWidth - buttonEdgePadding - (buttonSize * 2) - buttonGap;
+     leftButton.y = joystick.centerY + joystick.baseRadius - leftButton.height;
+
+     rightButton.x = miniGameWidth - buttonEdgePadding - buttonSize;
+     rightButton.y = joystick.centerY - joystick.baseRadius;
 }
 
 // TOUCH RESET
@@ -154,6 +162,22 @@ export function updatePauseButtonState() {
      touchControls.rightButton.label = "\u2630\uFE0E";
 }
 
+// MENU CLOSE HELPER
+// The menu has 2 separate pieces of state:
+// 1. gameMenuOpen = whether the menu is visible
+// 2. gameMenuView = which screen inside the menu is showing
+// If we only close the menu, it will remember the old screen and reopen there next time.
+// This helper makes sure every close resets back to the main menu.
+function closeMenuAndResetView() {
+     setGameMenuOpen(false);
+     setGameMenuView("main");
+
+     // If the player is mid-game and not in a win/lose state, closing the menu should also unpause gameplay.
+     if (gameStarted && !gameOver && !gameWon) {
+          setGamePaused(false);
+     }
+}
+
 // ROUND + MENU ACTIONS
 
 function triggerPauseAction() {
@@ -162,10 +186,10 @@ function triggerPauseAction() {
           return;
      }
 
+     // If the pause/play button is pressed while the menu is open,
+     // treat it as a full menu close and reset back to the main menu.
      if (gameMenuOpen) {
-          setGameMenuOpen(false);
-          setGameMenuView("main");
-          setGamePaused(false);
+          closeMenuAndResetView();
           return;
      }
 
@@ -174,21 +198,21 @@ function triggerPauseAction() {
 
 function triggerMenuAction() {
      if (gameMenuOpen) {
+          // If the menu is open on a submenu like "instructions",
+          // the first menu-button press returns to the main menu.
           if (gameMenuView !== "main") {
                setGameMenuView("main");
                return;
           }
 
-          setGameMenuOpen(false);
-
-          if (gameStarted && !gameOver && !gameWon) {
-               setGamePaused(false);
-          }
-
+          // If already on the main menu, pressing the menu button closes it fully.
+          closeMenuAndResetView();
           return;
      }
 
+     // Always open fresh on the main menu screen.
      setGameMenuOpen(true);
+     setGameMenuView("main");
 
      if (gameStarted && !gameOver && !gameWon) {
           setGamePaused(true);
@@ -200,13 +224,10 @@ function handleMenuClick(x, y) {
           return false;
      }
 
+     // Clicking outside the menu panel closes it completely
+     // and resets the view so the next open starts at main.
      if (!isPointInsideMenuPanel(x, y)) {
-          setGameMenuOpen(false);
-
-          if (gameStarted && !gameOver && !gameWon) {
-               setGamePaused(false);
-          }
-
+          closeMenuAndResetView();
           return true;
      }
 
@@ -233,14 +254,13 @@ function handleMenuClick(x, y) {
      }
 
      if (isPointInsideRect(x, y, gameMenuUi.backButton)) {
+          // Back behaves in two different ways:
+          // - from a submenu -> return to main menu
+          // - from main menu -> close the menu fully
           if (gameMenuView !== "main") {
                setGameMenuView("main");
           } else {
-               setGameMenuOpen(false);
-
-               if (gameStarted && !gameOver && !gameWon) {
-                    setGamePaused(false);
-               }
+               closeMenuAndResetView();
           }
 
           return true;
@@ -276,14 +296,12 @@ function onKeyDown(event) {
                if (gameMenuView !== "main") {
                     setGameMenuView("main");
                } else {
-                    setGameMenuOpen(false);
-
-                    if (gameStarted && !gameOver && !gameWon) {
-                         setGamePaused(false);
-                    }
+                    closeMenuAndResetView();
                }
           } else {
+               // ESC always opens to the main menu, never the last submenu.
                setGameMenuOpen(true);
+               setGameMenuView("main");
 
                if (gameStarted && !gameOver && !gameWon) {
                     setGamePaused(true);
@@ -347,23 +365,21 @@ function updateJoystickFromPointer(event) {
      const nx = x / max;
      const ny = y / max;
 
-     // NOTE:
-     // Instead of sqrt(nx*nx + ny*ny), we can reuse clamped/max
+     // Instead of sqrt(nx*nx + ny*ny), we can reuse clamped/max.
      const magnitude = clamped / max;
 
-     // NOTE: DEADZONE
+     // DEADZONE
      // Very tiny movements near the center are usually accidental.
-     // We do not want full movement there.
      if (magnitude < joystick.deadZone) {
-          // NOTE: SOFT CENTER
-          // Instead of snapping straight to zero forever,
-          // gently scale small motion near the center.
+          // SOFT CENTER
+          // Instead of snapping instantly to zero,
+          // scale small movement down near the center.
           const scale = magnitude / joystick.deadZone;
           setJoystickInput(nx * scale, ny * scale);
           return;
      }
 
-     // NOTE: SMOOTH RAMP
+     // SMOOTH RAMP
      // Scale movement smoothly after leaving the deadzone.
      const adjustedMagnitude = (magnitude - joystick.deadZone) / (1 - joystick.deadZone);
      const safeMagnitude = Math.max(0, Math.min(1, adjustedMagnitude));
@@ -377,7 +393,7 @@ function updateJoystickFromPointer(event) {
 function clearJoystick(pointerId) {
      const joystick = touchControls.joystick;
 
-     // Only the pointer that started this joystick can release it
+     // Only the pointer that started this joystick can release it.
      if (joystick.pointerId !== pointerId) {
           return;
      }
@@ -387,7 +403,7 @@ function clearJoystick(pointerId) {
      setJoystickKnobOffset(0, 0);
      setJoystickInput(0, 0);
 
-     // Release pointer capture so future touches work normally
+     // Release pointer capture so future touches work normally.
      if (miniGameCanvas?.hasPointerCapture(pointerId)) {
           miniGameCanvas.releasePointerCapture(pointerId);
      }
@@ -439,16 +455,16 @@ function onPointerDown(event) {
      }
 
      // JOYSTICK ACTIVATE
-     // Only activate if touch starts inside joystick base
+     // Only activate if touch starts inside joystick base.
      if (isPointInsideCircle(pos.x, pos.y, joystick.centerX, joystick.centerY, joystick.baseRadius)) {
           setJoystickActive(true);
           setJoystickPointerId(event.pointerId);
 
-          // Immediately update knob so it feels responsive on first touch
+          // Immediately update knob so it feels responsive on first touch.
           updateJoystickFromPointer(event);
 
-          // Lock this pointer to the canvas
-          // Prevents losing control if finger drifts outside
+          // Lock this pointer to the canvas so we do not lose control
+          // if the finger drifts slightly outside.
           if (miniGameCanvas?.setPointerCapture) {
                miniGameCanvas.setPointerCapture(event.pointerId);
           }
@@ -460,7 +476,7 @@ function onPointerDown(event) {
 function onPointerMove(event) {
      const joystick = touchControls.joystick;
 
-     // Only the active pointer can move the joystick
+     // Only the active pointer can move the joystick.
      if (joystick.isActive && joystick.pointerId === event.pointerId) {
           updateJoystickFromPointer(event);
           event.preventDefault();
@@ -468,7 +484,7 @@ function onPointerMove(event) {
 }
 
 function onPointerUp(event) {
-     // Reset controls tied to this pointer
+     // Reset any control that belongs to this pointer.
      clearJoystick(event.pointerId);
      clearButtons(event.pointerId);
 }
@@ -492,8 +508,8 @@ export function bindPointerInput() {
 // NOTE: RESIZE
 
 function handleWindowResize() {
-     // Canvas sizing is handled by ui.js.
-     // This file only refreshes input-related layout after the size changes.
+     // Canvas sizing itself is handled by ui.js.
+     // This file only refreshes input layout after the size changes.
      updateTouchControlBounds();
      updateMenuUiBounds();
 }

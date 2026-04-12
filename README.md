@@ -5,6 +5,9 @@ Digital footprint, games, resources.
 <br><br>
 
 ### TO DO
+-    Make the joystick base a classic cross d-pad, keep the round joystick overlay.
+-    Make SparkleSeeker page title font split or shrink on window resize.
+-    Make Header same width as game canvas on resize.
 -    Obstacle effects.
      -    Slow/speed.
      -    Increase/decrease size.

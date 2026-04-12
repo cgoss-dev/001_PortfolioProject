@@ -1,7 +1,7 @@
 // NOTE: UI / MENU / OVERLAY / STARTUP
-// This file is the game entry file loaded by the page.
+// Game entry file loaded by page.
 //
-// It owns:
+// Owned here:
 // - canvas size syncing
 // - round/startup flow
 // - menu layout + menu helpers
@@ -10,7 +10,7 @@
 // - draw orchestration
 // - game UI drawing
 //
-// Shared visual values come from the root CSS through window.SiteTheme.
+// Shared visual values pulled from root CSS through window.SiteTheme.
 
 import {
      miniGameCanvas,
@@ -83,17 +83,13 @@ import {
      drawCollisionBursts
 } from "./entities.js";
 
-// ==================================================
 // UI CONSTANTS
-// ==================================================
 
 export const difficultyOptions = ["Easy", "Normal", "Hard"];
 export const startOverlayDuration = 120;
 export const overlayFadeFrames = 30;
 
-// ==================================================
 // CSS HELPERS
-// ==================================================
 
 const siteTheme = window.SiteTheme;
 
@@ -105,42 +101,82 @@ function getCssNumber(variableName, fallback = 0) {
      return siteTheme?.getCssNumber?.(variableName, fallback) ?? fallback;
 }
 
-// ==================================================
+// STRING VALUE HELPER
+// Font-family values pulled from root CSS here.
+function getCssString(variableName, fallback = "") {
+     if (!document?.documentElement) {
+          return fallback;
+     }
+
+     const value = getComputedStyle(document.documentElement).getPropertyValue(variableName).trim();
+     return value || fallback;
+}
+
+// PIXEL SIZE HELPER
+// clamp()/rem values from root CSS resolved into px here for canvas text. Canvas needs a real number, not raw CSS text.
+function getCssPixelSize(variableName, fallback = 16) {
+     if (!document?.body) {
+          return fallback;
+     }
+
+     const probe = document.createElement("span");
+     probe.style.position = "absolute";
+     probe.style.visibility = "hidden";
+     probe.style.pointerEvents = "none";
+     probe.style.fontSize = `var(${variableName})`;
+     probe.textContent = "M";
+
+     document.body.appendChild(probe);
+     const resolved = parseFloat(getComputedStyle(probe).fontSize);
+     document.body.removeChild(probe);
+
+     return Number.isFinite(resolved) ? resolved : fallback;
+}
+
 // SHARED UI THEME
-// ==================================================
 
 function getUiTheme() {
      return {
           fonts: {
-               display: '"Bungee Shade", cursive',
-               body: '"Noto Sans Mono", monospace',
+               display: getCssString("--font-fancy", '"Bungee Shade", cursive'),
+               body: getCssString("--font-body", '"Noto Sans Mono", monospace'),
                symbol: '"Segoe UI Symbol", "Apple Color Emoji", "Noto Color Emoji", sans-serif'
           },
 
           colors: {
                white: getCssColor("--text-color", "#ffffff"),
-               softWhite: "rgba(255, 255, 255, 0.72)",
+               softWhite: getCssColor("--text-color-medium", "rgba(255, 255, 255, 0.75)"),
 
                accent: getCssColor("--accent-color", "#ea76cb"),
-               panelFill: "rgba(0, 0, 0, 0.88)",
-               panelStroke: getCssColor("--canvasboard-border-color", getCssColor("--accent-color", "#ea76cb")),
+               panelFill: "rgba(0, 0, 0, 0.9)",
 
-               buttonFill: "rgba(255, 255, 255, 0.05)",
-               buttonStroke: getCssColor("--canvasboard-border-color", getCssColor("--accent-color", "#ea76cb")),
-               buttonText: getCssColor("--text-color", "#ffffff"),
+               // OUTLINE GROUP A
+               // Menu popup outline + touch button outline + joystick knob outline.
+               outlineStrong: getCssColor("--accent-color", "#ea76cb"),
 
-               controlFill: "rgba(255, 255, 255, 0.08)",
-               controlFillPressed: "rgba(255, 255, 255, 0.18)",
+               // OUTLINE GROUP B
+               // Menu option button outline + joystick static circle outlines.
+               outlineSoft: "rgba(255, 255, 255, 0.25)",
+
+               panelStroke: getCssColor("--accent-color", "#ea76cb"),
+
+               buttonFill: "rgba(255, 255, 255, 0.1)",
+               buttonStroke: "rgba(255, 255, 255, 0.25)",
+               buttonText: getCssColor("--text-color-medium", "#ffffff"),
+
+               controlFill: "rgba(255, 255, 255, 0.1)",
+               controlFillPressed: "rgba(255, 255, 255, 0.25)",
                controlStroke: getCssColor("--accent-color", "#ea76cb"),
                controlText: getCssColor("--text-color", "#ffffff"),
+
                controlGlow: getCssColor("--accent-color", "#ea76cb"),
 
                overlayGlow: getCssColor("--accent-color", "#ea76cb"),
                scoreGlow: getCssColor("--accent-color", "#ea76cb"),
 
-               joystickOuter: "rgba(255, 255, 255, 0.05)",
-               joystickInner: "rgba(255, 255, 255, 0.18)",
-               joystickStroke: getCssColor("--accent-color", "#ea76cb"),
+               joystickOuter: "rgba(255, 255, 255, 0.1)",
+               joystickInner: "rgba(255, 255, 255, 0.25)",
+               joystickStroke: "rgba(255, 255, 255, 0.25)",
 
                heartFull: "#ea76cb",
                heartGlow: "#ea76cb"
@@ -148,8 +184,8 @@ function getUiTheme() {
 
           sizes: {
                scoreFont: 26,
-               scoreX: 12,
-               scoreY: 12,
+               scoreX: 10,
+               scoreY: 10,
 
                heartFont: 18,
                heartGap: 16,
@@ -157,10 +193,11 @@ function getUiTheme() {
                heartXPadding: 12,
 
                overlayTitleFont: 36,
-               overlaySubFont: 18,
+               overlaySubFont: getCssPixelSize("--text-size-medium", 18),
 
-               menuTitleFont: 28,
-               menuButtonFont: 18,
+               menuTitleFont: 0,
+               menuButtonFont: getCssPixelSize("--text-size-small", 14),
+               menuSmallFont: getCssPixelSize("--text-size-small", 14),
 
                controlRadius: getCssNumber("--canvasboard-radius", 12)
           },
@@ -173,9 +210,7 @@ function getUiTheme() {
      };
 }
 
-// ==================================================
 // SHARED DRAW HELPERS
-// ==================================================
 
 function isPointInsideRect(x, y, rect) {
      return (
@@ -206,16 +241,25 @@ function drawRoundedRect(x, y, width, height, radius) {
      miniGameCtx.closePath();
 }
 
+// Center point reused for label and circle alignment here.
+function getRectCenter(rect) {
+     return {
+          x: rect.x + (rect.width / 2),
+          y: rect.y + (rect.height / 2)
+     };
+}
+
 function drawMenuButton(button, label, theme) {
      if (!miniGameCtx) {
           return;
      }
 
      const { colors, sizes, fonts, glow } = theme;
+     const center = getRectCenter(button);
 
      miniGameCtx.save();
      miniGameCtx.fillStyle = colors.buttonFill;
-     miniGameCtx.strokeStyle = colors.buttonStroke;
+     miniGameCtx.strokeStyle = colors.outlineSoft;
      miniGameCtx.lineWidth = 1.5;
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
@@ -229,8 +273,12 @@ function drawMenuButton(button, label, theme) {
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
-     miniGameCtx.font = `${sizes.menuButtonFont}px ${fonts.body}`;
-     miniGameCtx.fillText(label, button.x + (button.width / 2), button.y + (button.height / 2) + 1);
+
+     // FONT STRING
+     // Explicit normal weight used here so "Back" stays on body font consistently.
+     miniGameCtx.font = `400 ${sizes.menuButtonFont}px ${fonts.body}`;
+     miniGameCtx.fillText(label, center.x, center.y + 1);
+
      miniGameCtx.restore();
 }
 
@@ -239,24 +287,28 @@ function drawControlButton(button, isPressed, theme) {
           return;
      }
 
-     const { colors, sizes, glow } = theme;
+     const { colors, glow } = theme;
+     const center = getRectCenter(button);
+     const radius = button.width / 2;
 
      miniGameCtx.save();
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = isPressed ? glow.uiStrongGlow : glow.uiMediumGlow;
-     miniGameCtx.lineWidth = 1.6;
-     miniGameCtx.fillStyle = isPressed ? colors.controlFillPressed : colors.controlFill;
-     miniGameCtx.strokeStyle = colors.controlStroke;
 
-     drawRoundedRect(button.x, button.y, button.width, button.height, sizes.controlRadius);
+     miniGameCtx.beginPath();
+     miniGameCtx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+
+     miniGameCtx.fillStyle = isPressed ? colors.controlFillPressed : colors.controlFill;
      miniGameCtx.fill();
+
+     miniGameCtx.lineWidth = 1.5;
+     miniGameCtx.strokeStyle = colors.outlineStrong;
      miniGameCtx.stroke();
+
      miniGameCtx.restore();
 }
 
-// ==================================================
 // BACKGROUND / MASTER DRAW HELPERS
-// ==================================================
 
 function drawMiniGameBackground() {
      if (!miniGameCtx) {
@@ -264,13 +316,11 @@ function drawMiniGameBackground() {
      }
 
      miniGameCtx.clearRect(0, 0, miniGameWidth, miniGameHeight);
-     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.75)";
+     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 }
 
-// ==================================================
 // CANVAS
-// ==================================================
 
 export function resizeMiniGameCanvasFromCss() {
      if (!miniGameCanvas || !miniGameCtx) {
@@ -293,9 +343,7 @@ export function updateMiniGameCanvasSize() {
      updateMenuUiBounds();
 }
 
-// ==================================================
 // ROUNDS
-// ==================================================
 
 export function startNewGameRound() {
      resetGameState();
@@ -317,9 +365,7 @@ export function startNewGameRound() {
      showTimedGameOverlay("LET'S PLAY!");
 }
 
-// ==================================================
 // MENU
-// ==================================================
 
 export function getCurrentDifficultyLabel() {
      return difficultyOptions[difficultyIndex] || "Normal";
@@ -340,8 +386,8 @@ export function toggleAllSound() {
 }
 
 export function updateMenuUiBounds() {
-     const panelWidth = Math.max(300, Math.min(miniGameWidth * 0.66, 420));
-     const panelHeight = Math.max(320, Math.min(miniGameHeight * 0.78, 430));
+     const panelWidth = Math.max(280, Math.min(miniGameWidth * 0.72, 400));
+     const panelHeight = Math.max(280, Math.min(miniGameHeight * 0.72, 380));
      const panelX = (miniGameWidth - panelWidth) / 2;
      const panelY = (miniGameHeight - panelHeight) / 2;
 
@@ -354,10 +400,9 @@ export function updateMenuUiBounds() {
      const buttonX = panelX + sidePadding;
      const buttonWidth = panelWidth - (sidePadding * 2);
 
-     // Smaller buttons so they fit cleanly inside the menu.
-     const buttonHeight = 42;
+     const buttonHeight = 38;
      const buttonGap = 10;
-     const firstButtonY = panelY + 74;
+     const firstButtonY = panelY + 28;
 
      gameMenuUi.newGameButton.x = buttonX;
      gameMenuUi.newGameButton.y = firstButtonY;
@@ -380,18 +425,16 @@ export function updateMenuUiBounds() {
      gameMenuUi.soundButton.height = buttonHeight;
 
      gameMenuUi.backButton.x = buttonX;
-     gameMenuUi.backButton.y = panelY + panelHeight - 58;
+     gameMenuUi.backButton.y = panelY + panelHeight - 50;
      gameMenuUi.backButton.width = buttonWidth;
-     gameMenuUi.backButton.height = 38;
+     gameMenuUi.backButton.height = 34;
 }
 
 export function isPointInsideMenuPanel(x, y) {
      return isPointInsideRect(x, y, gameMenuUi.panel);
 }
 
-// ==================================================
 // OVERLAY SYSTEM
-// ==================================================
 
 export function clearGameOverlay() {
      setGameOverlayText("");
@@ -436,9 +479,7 @@ export function getGameOverlayAlpha() {
      return Math.max(0, Math.min(1, Math.min(fadeIn, fadeOut)));
 }
 
-// ==================================================
 // PAUSE SYNC
-// ==================================================
 
 export function syncPauseOverlay() {
      const shouldShow = gameStarted && gamePaused && !gameMenuOpen && !gameOver && !gameWon;
@@ -453,9 +494,7 @@ export function syncPauseOverlay() {
      }
 }
 
-// ==================================================
 // GAME UPDATE / DRAW
-// ==================================================
 
 export function updateGame() {
      updatePauseButtonState();
@@ -523,9 +562,7 @@ function gameLoop() {
      requestAnimationFrame(gameLoop);
 }
 
-// ==================================================
 // UI DRAW FUNCTIONS
-// ==================================================
 
 function drawScore() {
      if (!miniGameCtx) {
@@ -543,7 +580,7 @@ function drawScore() {
      miniGameCtx.shadowColor = "rgba(255, 255, 255, 0.35)";
      miniGameCtx.shadowBlur = 8;
 
-     miniGameCtx.fillText(formattedScore, 16, 14);
+     miniGameCtx.fillText(formattedScore, 10, 12);
 
      miniGameCtx.restore();
 }
@@ -562,7 +599,8 @@ function drawHealth() {
      let topRow = "";
      let bottomRow = "";
 
-     // TOP ROW: hearts 10 → 6
+     // TOP ROW
+     // Hearts 10 → 6.
      for (let i = maxPlayerHealth - 1; i >= heartsPerRow; i -= 1) {
           if (i < playerHealth) {
                topRow += filledHeart;
@@ -571,7 +609,8 @@ function drawHealth() {
           }
      }
 
-     // BOTTOM ROW: hearts 5 → 1
+     // BOTTOM ROW
+     // Hearts 5 → 1.
      for (let i = heartsPerRow - 1; i >= 0; i -= 1) {
           if (i < playerHealth) {
                bottomRow += filledHeart;
@@ -587,8 +626,8 @@ function drawHealth() {
      miniGameCtx.shadowColor = "#ea76cb";
      miniGameCtx.shadowBlur = 8;
 
-     const healthX = miniGameWidth - 16;
-     const healthY = 15;
+     const healthX = miniGameWidth - 10;
+     const healthY = 10;
      const rowGap = 15;
 
      miniGameCtx.fillText(topRow, healthX, healthY);
@@ -602,12 +641,13 @@ export function drawTouchJoystick() {
           return;
      }
 
-     const { colors, glow } = getUiTheme();
+     const theme = getUiTheme();
+     const { colors, glow, fonts, sizes } = theme;
      const joystick = touchControls.joystick;
 
      miniGameCtx.save();
      miniGameCtx.shadowColor = colors.controlGlow;
-     miniGameCtx.shadowBlur = glow.uiMediumGlow;
+     miniGameCtx.shadowBlur = glow.uiSoftGlow;
 
      // JOYSTICK BASE
 
@@ -616,15 +656,19 @@ export function drawTouchJoystick() {
      miniGameCtx.fillStyle = colors.joystickOuter;
      miniGameCtx.fill();
      miniGameCtx.lineWidth = 1.5;
-     miniGameCtx.strokeStyle = colors.joystickStroke;
+     miniGameCtx.strokeStyle = colors.outlineSoft; // Joystick outer static circle.
      miniGameCtx.stroke();
 
      miniGameCtx.beginPath();
      miniGameCtx.arc(joystick.centerX, joystick.centerY, joystick.baseRadius * 0.52, 0, Math.PI * 2);
-     miniGameCtx.fillStyle = "rgba(255, 255, 255, 0.06)";
+     miniGameCtx.fillStyle = "rgba(255, 255, 255, 0.01)";
      miniGameCtx.fill();
+     miniGameCtx.lineWidth = 1.5;
+     miniGameCtx.strokeStyle = colors.outlineSoft; // Joystick inner static circle.
+     miniGameCtx.stroke();
 
      // WASD LABELS
+     // Menu option font styling reused here. Small text size pulled from root CSS here.
 
      miniGameCtx.save();
 
@@ -634,9 +678,9 @@ export function drawTouchJoystick() {
 
      miniGameCtx.textAlign = "center";
      miniGameCtx.textBaseline = "middle";
-     miniGameCtx.font = `${joystick.baseRadius * 0.28}px "Noto Sans Mono", monospace`;
+     miniGameCtx.font = `400 ${sizes.menuSmallFont}px ${fonts.body}`;
 
-     const offset = joystick.baseRadius * 0.7;
+     const offset = joystick.baseRadius * 0.75;
      const cx = joystick.centerX;
      const cy = joystick.centerY;
 
@@ -647,9 +691,10 @@ export function drawTouchJoystick() {
 
      miniGameCtx.restore();
 
-     // ==================================================
      // JOYSTICK KNOB
-     // ==================================================
+
+     miniGameCtx.shadowColor = colors.controlGlow;
+     miniGameCtx.shadowBlur = glow.uiMediumGlow;
 
      miniGameCtx.beginPath();
      miniGameCtx.arc(
@@ -661,8 +706,8 @@ export function drawTouchJoystick() {
      );
      miniGameCtx.fillStyle = colors.joystickInner;
      miniGameCtx.fill();
-     miniGameCtx.lineWidth = 1.2;
-     miniGameCtx.strokeStyle = colors.joystickStroke;
+     miniGameCtx.lineWidth = 2;
+     miniGameCtx.strokeStyle = colors.outlineStrong;
      miniGameCtx.stroke();
 
      miniGameCtx.restore();
@@ -678,21 +723,34 @@ export function drawTouchButtons() {
      const leftButton = touchControls.leftButton;
      const rightButton = touchControls.rightButton;
 
+     // BUTTON DRAW
+     // Circular button rendering handled in drawControlButton.
      drawControlButton(leftButton, leftButton.isPressed, theme);
      drawControlButton(rightButton, rightButton.isPressed, theme);
 
+     const leftCenter = getRectCenter(leftButton);
+     const rightCenter = getRectCenter(rightButton);
+
      miniGameCtx.save();
+
      miniGameCtx.fillStyle = colors.controlText;
      miniGameCtx.textAlign = "center";
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
 
-     miniGameCtx.font = `${leftButton.height * 0.5}px ${fonts.symbol}`;
-     miniGameCtx.fillText(leftButton.label, leftButton.x + leftButton.width / 2, leftButton.y + leftButton.height / 2 + 3);
+     // TEXT SIZE
+     // Scaled from button size here for consistent visual balance.
+     const leftFontSize = leftButton.height * 0.5;
+     const rightFontSize = rightButton.height * 0.5;
 
-     miniGameCtx.font = `${rightButton.height * 0.5}px ${fonts.symbol}`;
-     miniGameCtx.fillText(rightButton.label, rightButton.x + rightButton.width / 2, rightButton.y + rightButton.height / 2 - 0.75);
+     // LEFT BUTTON LABEL
+     miniGameCtx.font = `${leftFontSize}px ${fonts.symbol}`;
+     miniGameCtx.fillText(leftButton.label, leftCenter.x, leftCenter.y + 1);
+
+     // RIGHT BUTTON LABEL
+     miniGameCtx.font = `${rightFontSize}px ${fonts.symbol}`;
+     miniGameCtx.fillText(rightButton.label, rightCenter.x, rightCenter.y + 1);
 
      miniGameCtx.restore();
 }
@@ -703,7 +761,7 @@ export function drawMenuOverlay() {
      }
 
      const theme = getUiTheme();
-     const { colors, sizes, fonts, glow } = theme;
+     const { colors, fonts, glow, sizes } = theme;
 
      miniGameCtx.save();
      miniGameCtx.globalAlpha = 1;
@@ -715,30 +773,22 @@ export function drawMenuOverlay() {
           gameMenuUi.panel.y,
           gameMenuUi.panel.width,
           gameMenuUi.panel.height,
-          sizes.controlRadius
+          theme.sizes.controlRadius
      );
      miniGameCtx.fillStyle = colors.panelFill;
      miniGameCtx.fill();
 
      miniGameCtx.shadowBlur = 0;
-     miniGameCtx.strokeStyle = colors.panelStroke;
+     miniGameCtx.strokeStyle = colors.outlineStrong;
      miniGameCtx.lineWidth = 2;
      drawRoundedRect(
           gameMenuUi.panel.x,
           gameMenuUi.panel.y,
           gameMenuUi.panel.width,
           gameMenuUi.panel.height,
-          sizes.controlRadius
+          theme.sizes.controlRadius
      );
      miniGameCtx.stroke();
-
-     miniGameCtx.fillStyle = colors.white;
-     miniGameCtx.textAlign = "center";
-     miniGameCtx.textBaseline = "top";
-     miniGameCtx.shadowColor = colors.overlayGlow;
-     miniGameCtx.shadowBlur = glow.uiMediumGlow;
-     miniGameCtx.font = `${sizes.menuTitleFont}px ${fonts.display}`;
-     miniGameCtx.fillText("Menu", gameMenuUi.panel.x + (gameMenuUi.panel.width / 2), gameMenuUi.panel.y + 14);
 
      if (gameMenuView === "main") {
           drawMenuButton(gameMenuUi.newGameButton, "New Game", theme);
@@ -751,19 +801,15 @@ export function drawMenuOverlay() {
           miniGameCtx.fillStyle = colors.softWhite;
           miniGameCtx.textAlign = "left";
           miniGameCtx.textBaseline = "top";
-
-          const instructionFontSize = Math.max(12, Math.floor(gameMenuUi.panel.width * 0.038));
-          miniGameCtx.font = `${instructionFontSize}px ${fonts.body}`;
+          miniGameCtx.font = `400 ${sizes.menuSmallFont}px ${fonts.body}`;
 
           const textX = gameMenuUi.panel.x + 24;
-          let textY = gameMenuUi.panel.y + 78;
-          const lineGap = Math.round(instructionFontSize * 1.5);
+          let textY = gameMenuUi.panel.y + 34;
+          const lineGap = 24;
 
           miniGameCtx.fillText("Move with arrows, WASD, or joystick.", textX, textY);
           textY += lineGap;
-          textY += lineGap;
           miniGameCtx.fillText("Collect sparkles, avoid obstacles.", textX, textY);
-          textY += lineGap;
           textY += lineGap;
           miniGameCtx.fillText("Max hearts to win.", textX, textY);
      }
@@ -792,16 +838,14 @@ export function drawGameStatusOverlay() {
 
      if (gameOverlaySubtext) {
           miniGameCtx.shadowBlur = glow.uiSoftGlow;
-          miniGameCtx.font = `${sizes.overlaySubFont}px ${fonts.body}`;
+          miniGameCtx.font = `400 ${sizes.overlaySubFont}px ${fonts.body}`;
           miniGameCtx.fillText(gameOverlaySubtext, miniGameWidth / 2, miniGameHeight / 2 + 34);
      }
 
      miniGameCtx.restore();
 }
 
-// ==================================================
 // NOTE: STARTUP
-// ==================================================
 
 export function startSparkleSeeker() {
      resetGameState();

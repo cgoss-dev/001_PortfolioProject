@@ -26,7 +26,7 @@
      --rainbow-lavender: #7287fd;
      --rainbow-violet: #8839ef;
 
-     /* NOTE: PAGE LAYOUT */
+     /* PAGE LAYOUT */
 
      --page-width-wide: 72rem;
      --page-padding-y: clamp(1rem, 2vw, 1.5rem);
@@ -40,18 +40,18 @@
      --menu-edge-gap-y: 1rem;
      --menu-stack-gap: calc(var(--menu-edge-gap-y) / 2);
 
-     /* NOTE: TEXT */
+     /* TEXT */
 
      --font-body: "Noto Sans Mono", monospace;
      --font-fancy: "Bungee Shade", monospace;
 
-     --text-size-marquee: clamp(3rem, 5vw, 4rem);
-     --text-size-dropdown: var(--text-size-marquee);
-     --text-size-tagline: clamp(0.8rem, 1.2vw, 1rem);
+     --text-size-marquee: clamp(2.5rem, 3.5vw, 3.5rem);
+     --text-size-medium: var(1.5rem, 3vw, 2.5rem);
+     --text-size-small: clamp(0.8rem, 1.2vw, 1rem);
 
      --text-color-marquee: var(--text-color);
-     --text-color-dropdown: var(--text-color);
-     --text-color-tagline: var(--text-color);
+     --text-color-medium: var(--text-color);
+     --text-color-small: var(--text-color);
 
      /* JS TEXT COLOR CYCLE CONTROL */
      /* Core JS reads this exact variable name. */
@@ -60,7 +60,7 @@
      --text-rainbow-transition-speed: 0.2s;
      --text-rainbow-transition-style: ease-in-out;
 
-     /* NOTE: GLOW */
+     /* GLOW */
 
      --glow-depth: 0 0.75rem 1.75rem rgba(0, 0, 0, 0.5);
 
@@ -79,7 +79,7 @@
           var(--glow-wide) var(--canvasboard-glow-color),
           var(--glow-max) var(--canvasboard-glow-color);
 
-     /* Core JS reads these exact names for the bungee-style +/- glow. */
+     /* Core JS reads these exact names for bungee-style +/- glow. */
      /* Leaving these variables in place so JS does not break, but neutralizing them. */
      --glow-bg-particle-blur: 12;
      --glow-game-particle-blur: 16;
@@ -87,7 +87,7 @@
      --bungee-shadow-offset-1: 0 0 0 transparent;
      --bungee-shadow-offset-2: 0 0 0 transparent;
 
-     /* NOTE: PANEL / BOX STYLING */
+     /* PANEL / BOX STYLING */
 
      --canvasboard-radius: 1rem;
      --canvasboard-border-width: 0.25rem;
@@ -101,7 +101,7 @@
      --ui-layer-z: 2;
      --menu-layer-z: 20;
 
-     /* NOTE: BACKGROUND SPARKLE CONTROL CENTER */
+     /* BACKGROUND SPARKLE CONTROL CENTER */
 
      --sparkle-opacity: 1;
      --sparkle-count-max: 180;
@@ -126,7 +126,7 @@
      --sparkle-respawn-offset-bottom: 24;
 }
 
-/* NOTE: NON-ROOT CORE */
+/* NON-ROOT CORE */
 
 *,
 *::before,
@@ -191,8 +191,8 @@ h1 {
 
 .tagline {
      margin: 0;
-     color: var(--text-color-tagline);
-     font-size: var(--text-size-tagline);
+     color: var(--text-color-small);
+     font-size: var(--text-size-small);
      line-height: 1.5;
 }
 
@@ -226,7 +226,7 @@ h1 {
      cursor: pointer;
 
      font-family: var(--font-fancy);
-     font-size: var(--text-size-dropdown);
+     font-size: var(--text-size-marquee);
      line-height: 1.5;
      color: var(--menu-button-color);
      -webkit-text-fill-color: currentColor;
@@ -288,7 +288,7 @@ h1 {
      display: block;
      padding: var(--menu-item-padding);
      text-decoration: none;
-     color: var(--text-color-dropdown);
+     color: var(--text-color-medium);
      background: transparent;
      transition:
           background-color 0.2s ease-in-out,
@@ -341,7 +341,7 @@ h1 {
      padding-top: var(--page-section-gap);
 }
 
-/* NOTE: BACKGROUND SPARKLE CANVAS */
+/* BACKGROUND SPARKLE CANVAS */
 
 .site-bg-canvas {
      position: fixed;
