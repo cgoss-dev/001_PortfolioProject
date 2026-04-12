@@ -1,7 +1,13 @@
 // NOTE: ENTITIES
-// Combines player, sparkles, obstacles, and collision bursts in one file.
-
-// NOTE: IMPORTS
+// This file combines:
+// - player logic
+// - sparkle logic
+// - obstacle logic
+// - collision burst logic
+// - player health/face sync helpers
+//
+// Gameplay balance values stay in JS.
+// Shared visual/theme helpers come from root script.js through window.SiteTheme.
 
 import {
      miniGameCtx,
@@ -19,7 +25,6 @@ import {
      collisionBursts,
      sparkleSpawnTimer,
      obstacleSpawnTimer,
-     gameSparkleColorEngine,
 
      setSparkleSpawnTimer,
      setObstacleSpawnTimer,
@@ -29,30 +34,35 @@ import {
      addSparkleHealProgress,
      addSparkleScore,
      addPlayerHealth,
-     setGameSparkleColorEngine,
 
      randomItem,
      randomNumber,
      isCollidingWithSparkle
-} from "../state.js";
+} from "./state.js";
 
-import {
-     sparkleSpawnDelay,
-     sparkleSpawnCap,
-     obstacleSpawnDelay,
-     obstacleSpawnCap,
-     createColorEngine,
-     getRainbowPalette,
-     getGameParticleSettings,
-     getGlowSettings
-} from "../theme.js";
+// ==================================================
+// NOTE: SHARED ROOT HELPERS
+// These come from ../../script.js, which is loaded before ui.js.
+// ==================================================
 
-import {
-     syncPlayerHealthState,
-     applyTemporaryPlayerFace
-} from "../winloselevels.js";
+const siteTheme = window.SiteTheme;
 
+// ==================================================
+// NOTE: GAMEPLAY BALANCE
+// These are game rules, so they belong in JS.
+// ==================================================
+
+export const sparkleSpawnDelay = 40;
+export const sparkleSpawnCap = 10;
+
+export const obstacleSpawnDelay = 90;
+export const obstacleSpawnCap = 6;
+
+export const collisionBurstParticleCount = 10;
+
+// ==================================================
 // NOTE: PLAYER
+// ==================================================
 
 export const playerFaces = {
      neutral: "🙂",
@@ -67,7 +77,79 @@ export const playerBaseHealth = 3;
 export const playerBaseSpeed = 2;
 export const playerSpeedPerHeart = 0.5;
 
-// NOTE: PLAYER HELPERS
+// ==================================================
+// NOTE: SHARED VISUAL HELPERS
+// Pull visual values from root helpers when possible.
+// Keep safe fallbacks in case something is missing.
+// ==================================================
+
+function getGameGlowBlur() {
+     return siteTheme?.getGlowSettings?.().gameParticleBlur ?? 16;
+}
+
+function getGameParticleSizeMin() {
+     return siteTheme?.getSparkleSettings?.().sizeMin ?? 20;
+}
+
+function getGameParticleSizeMax() {
+     return siteTheme?.getSparkleSettings?.().sizeMax ?? 25;
+}
+
+function getRainbowPalette() {
+     return siteTheme?.getRainbowPalette?.() ?? [
+          "#ea76cb",
+          "#d20f39",
+          "#fe640b",
+          "#df8e1d",
+          "#40a02b",
+          "#179299",
+          "#04a5e5",
+          "#1e66f5",
+          "#7287fd",
+          "#8839ef"
+     ];
+}
+
+// ==================================================
+// NOTE: COLOR ROTATION
+// Uses the shared root color engine instead of a local duplicate.
+// ==================================================
+
+const sparkleColorEngine = {
+     engine: null
+};
+
+function ensureSparkleColorEngine() {
+     if (!sparkleColorEngine.engine) {
+          const createEngine = siteTheme?.createColorEngine;
+
+          sparkleColorEngine.engine = createEngine
+               ? createEngine(getRainbowPalette)
+               : {
+                    next() {
+                         const palette = getRainbowPalette();
+                         return palette[0] || "#ffffff";
+                    }
+               };
+     }
+}
+
+function getNextSparkleColor() {
+     ensureSparkleColorEngine();
+     return sparkleColorEngine.engine.next() || "#ffffff";
+}
+
+export function resetEntityColorCycle() {
+     if (sparkleColorEngine.engine?.reset) {
+          sparkleColorEngine.engine.reset();
+     }
+
+     sparkleColorEngine.engine = null;
+}
+
+// ==================================================
+// NOTE: PLAYER HEALTH / FACE HELPERS
+// ==================================================
 
 export function getDefaultPlayerFace() {
      if (playerHealth <= 0) return playerFaces.dead;
@@ -80,11 +162,40 @@ export function refreshPlayerFaceFromHealth() {
      player.char = getDefaultPlayerFace();
 }
 
+export function updatePlayerSpeedFromHealth() {
+     const diff = playerHealth - playerBaseHealth;
+     player.speed = Math.max(0, playerBaseSpeed + (diff * playerSpeedPerHeart));
+}
+
+export function syncPlayerHealthState() {
+     updatePlayerSpeedFromHealth();
+     refreshPlayerFaceFromHealth();
+}
+
+export function applyTemporaryPlayerFace(face, duration) {
+     if (
+          playerHealth <= 0 ||
+          playerHealth === maxPlayerHealth ||
+          playerHealth <= 2
+     ) {
+          player.sparkleFaceTimer = 0;
+          refreshPlayerFaceFromHealth();
+          return;
+     }
+
+     player.char = face;
+     player.sparkleFaceTimer = duration;
+}
+
+// ==================================================
+// NOTE: PLAYER MOVEMENT
+// ==================================================
+
 export function resetPlayerPosition() {
      player.x = miniGameWidth / 2;
      player.y = miniGameHeight / 2;
-     refreshPlayerFaceFromHealth();
      player.sparkleFaceTimer = 0;
+     syncPlayerHealthState();
 }
 
 export function clampPlayerToCanvas() {
@@ -102,37 +213,42 @@ export function clampPlayerToCanvas() {
 }
 
 export function updatePlayer() {
-     let movedByKeyboard = false;
+     let dx = 0;
+     let dy = 0;
 
      if (keys["w"] || keys["arrowup"]) {
-          player.y -= player.speed;
-          movedByKeyboard = true;
+          dy -= 1;
      }
 
      if (keys["s"] || keys["arrowdown"]) {
-          player.y += player.speed;
-          movedByKeyboard = true;
+          dy += 1;
      }
 
      if (keys["a"] || keys["arrowleft"]) {
-          player.x -= player.speed;
-          movedByKeyboard = true;
+          dx -= 1;
      }
 
      if (keys["d"] || keys["arrowright"]) {
-          player.x += player.speed;
-          movedByKeyboard = true;
+          dx += 1;
      }
 
-     if (!movedByKeyboard) {
-          const inputX = touchControls.joystick.inputX;
-          const inputY = touchControls.joystick.inputY;
-
-          if (inputX !== 0 || inputY !== 0) {
-               player.x += inputX * player.speed;
-               player.y += inputY * player.speed;
-          }
+     // If keyboard is not moving the player, use joystick input instead.
+     if (dx === 0 && dy === 0) {
+          dx = touchControls.joystick.inputX;
+          dy = touchControls.joystick.inputY;
      }
+
+     // NOTE: NORMALIZE DIAGONALS
+     // Without this, diagonal movement is faster than straight movement.
+     const magnitude = Math.hypot(dx, dy);
+
+     if (magnitude > 0) {
+          dx /= magnitude;
+          dy /= magnitude;
+     }
+
+     player.x += dx * player.speed;
+     player.y += dy * player.speed;
 
      clampPlayerToCanvas();
 }
@@ -159,6 +275,7 @@ export function drawPlayer() {
      miniGameCtx.fillStyle = "#ffffff";
 
      let playerYOffset = 0;
+
      if (player.char === playerFaces.neutral) {
           playerYOffset = 3;
      }
@@ -167,27 +284,23 @@ export function drawPlayer() {
      miniGameCtx.restore();
 }
 
+// ==================================================
 // NOTE: SPARKLES
+// ==================================================
 
 export const sparkleChars = ["✦", "✧"];
 
 export function createSparkle() {
-     if (!gameSparkleColorEngine) {
-          setGameSparkleColorEngine(createColorEngine(getRainbowPalette()));
-     }
-
-     const settings = getGameParticleSettings();
      const x = Math.random() * (miniGameWidth - 20) + 10;
-     const nextSparkleColor = gameSparkleColorEngine.next() || "#ffffff";
 
      sparkles.push({
           x,
           baseX: x,
           y: -20,
           speed: 0.25 + Math.random() * 0.5,
-          size: randomNumber(settings.particleSizeMin, settings.particleSizeMax),
+          size: randomNumber(getGameParticleSizeMin(), getGameParticleSizeMax()),
           char: randomItem(sparkleChars),
-          color: nextSparkleColor,
+          color: getNextSparkleColor(),
           wobbleOffset: Math.random() * Math.PI * 2,
           wobbleSpeed: 0.02 + Math.random() * 0.03,
           wobbleAmount: 5 + Math.random() * 10
@@ -198,7 +311,11 @@ export function updateSparkleSpawns() {
      const nextSparkleSpawnTimer = sparkleSpawnTimer + 1;
      setSparkleSpawnTimer(nextSparkleSpawnTimer);
 
-     if (nextSparkleSpawnTimer >= sparkleSpawnDelay) {
+     // NOTE: SMALL SPAWN JITTER
+     // This keeps sparkles from spawning on a perfectly robotic rhythm.
+     const sparkleSpawnJitter = Math.random() * 8;
+
+     if (nextSparkleSpawnTimer >= sparkleSpawnDelay + sparkleSpawnJitter) {
           if (sparkles.length < sparkleSpawnCap) {
                createSparkle();
           }
@@ -232,11 +349,14 @@ export function collectSparkles() {
                addSparkleScore(1);
                addSparkleHealProgress(1);
 
-               while (sparkleHealProgress >= 10 && playerHealth < maxPlayerHealth) {
-                    setSparkleHealProgress(sparkleHealProgress - 10);
+               let progress = sparkleHealProgress;
+
+               while (progress >= 10 && playerHealth < maxPlayerHealth) {
+                    progress -= 10;
                     addPlayerHealth(1);
                }
 
+               setSparkleHealProgress(progress);
                syncPlayerHealthState();
                applyTemporaryPlayerFace(playerFaces.sparkle, 60);
           }
@@ -248,7 +368,7 @@ export function drawSparkles() {
           return;
      }
 
-     const glowSettings = getGlowSettings();
+     const glowBlur = getGameGlowBlur();
 
      miniGameCtx.textAlign = "center";
      miniGameCtx.textBaseline = "middle";
@@ -260,7 +380,7 @@ export function drawSparkles() {
           miniGameCtx.font = `${Math.max(16, sparkle.size)}px Arial, Helvetica, sans-serif`;
           miniGameCtx.fillStyle = sparkle.color;
           miniGameCtx.shadowColor = sparkle.color;
-          miniGameCtx.shadowBlur = glowSettings.gameParticleBlur;
+          miniGameCtx.shadowBlur = glowBlur;
 
           miniGameCtx.globalAlpha = 0.95;
           miniGameCtx.fillText(sparkle.char, sparkle.x, sparkle.y);
@@ -273,7 +393,9 @@ export function drawSparkles() {
      }
 }
 
+// ==================================================
 // NOTE: OBSTACLES
+// ==================================================
 
 export const obstacleTypes = [
      { name: "affectSize", char: "☢\uFE0E", effect: ["playerGrow", "playerShrink"], penalty: 1 },
@@ -283,24 +405,17 @@ export const obstacleTypes = [
 
 export function createObstacle() {
      const type = randomItem(obstacleTypes);
-     const settings = getGameParticleSettings();
-
-     if (!gameSparkleColorEngine) {
-          setGameSparkleColorEngine(createColorEngine(getRainbowPalette()));
-     }
-
      const x = Math.random() * (miniGameWidth - 20) + 10;
-     const nextObstacleColor = gameSparkleColorEngine.next() || "#ffffff";
 
      obstacles.push({
           x,
           baseX: x,
           y: -20,
           speed: 0.5 + Math.random() * 0.7,
-          size: randomNumber(settings.particleSizeMin, settings.particleSizeMax),
+          size: randomNumber(getGameParticleSizeMin(), getGameParticleSizeMax()),
           char: type.char,
           type,
-          color: nextObstacleColor,
+          color: getNextSparkleColor(),
           wobbleOffset: Math.random() * Math.PI * 2,
           wobbleSpeed: 0.02 + Math.random() * 0.03,
           wobbleAmount: 5 + Math.random() * 10
@@ -311,7 +426,11 @@ export function updateObstacleSpawns() {
      const nextObstacleSpawnTimer = obstacleSpawnTimer + 1;
      setObstacleSpawnTimer(nextObstacleSpawnTimer);
 
-     if (nextObstacleSpawnTimer >= obstacleSpawnDelay) {
+     // NOTE: LIGHT DIFFICULTY SCALING
+     // As score rises, obstacles arrive a little sooner.
+     const difficultyBoost = Math.min(24, sparkleScore * 0.4);
+
+     if (nextObstacleSpawnTimer >= obstacleSpawnDelay - difficultyBoost) {
           if (obstacles.length < obstacleSpawnCap) {
                createObstacle();
           }
@@ -342,8 +461,7 @@ export function hitObstacles() {
                createCollisionBurst(obstacle.x, obstacle.y, obstacle.color, "obstacle");
                obstacles.splice(i, 1);
 
-               addSparkleScore(-obstacle.type.penalty);
-               setSparkleScore(Math.max(0, sparkleScore));
+               setSparkleScore(Math.max(0, sparkleScore - obstacle.type.penalty));
                setPlayerHealth(Math.max(0, playerHealth - 1));
 
                syncPlayerHealthState();
@@ -357,7 +475,7 @@ export function drawObstacles() {
           return;
      }
 
-     const glowSettings = getGlowSettings();
+     const glowBlur = getGameGlowBlur();
 
      miniGameCtx.textAlign = "center";
      miniGameCtx.textBaseline = "middle";
@@ -369,7 +487,7 @@ export function drawObstacles() {
           miniGameCtx.font = `${Math.max(18, obstacle.size)}px Arial, Helvetica, sans-serif`;
           miniGameCtx.fillStyle = obstacle.color;
           miniGameCtx.shadowColor = obstacle.color;
-          miniGameCtx.shadowBlur = glowSettings.gameParticleBlur;
+          miniGameCtx.shadowBlur = glowBlur;
 
           miniGameCtx.globalAlpha = 0.95;
           miniGameCtx.fillText(obstacle.char, obstacle.x, obstacle.y);
@@ -382,15 +500,14 @@ export function drawObstacles() {
      }
 }
 
+// ==================================================
 // NOTE: COLLISION BURSTS
+// ==================================================
 
 export const burstChars = ["✦", "✧", "·", "•"];
 
 export function createCollisionBurst(x, y, color, burstType) {
-     const settings = getGameParticleSettings();
-     const particleCount = settings.burstParticleCount;
-
-     for (let i = 0; i < particleCount; i += 1) {
+     for (let i = 0; i < collisionBurstParticleCount; i += 1) {
           const angle = randomNumber(0, Math.PI * 2);
           const speed = burstType === "obstacle"
                ? randomNumber(1.1, 2.6)
@@ -431,7 +548,7 @@ export function drawCollisionBursts() {
           return;
      }
 
-     const glowSettings = getGlowSettings();
+     const glowBlur = getGameGlowBlur();
 
      miniGameCtx.textAlign = "center";
      miniGameCtx.textBaseline = "middle";
@@ -446,7 +563,7 @@ export function drawCollisionBursts() {
           miniGameCtx.font = `${burstSize}px Arial, Helvetica, sans-serif`;
           miniGameCtx.fillStyle = burst.color;
           miniGameCtx.shadowColor = burst.color;
-          miniGameCtx.shadowBlur = glowSettings.gameParticleBlur * burst.glowBoost * lifeRatio;
+          miniGameCtx.shadowBlur = glowBlur * burst.glowBoost * lifeRatio;
 
           miniGameCtx.globalAlpha = Math.max(0, lifeRatio * 0.95);
           miniGameCtx.fillText(burst.char, burst.x, burst.y);

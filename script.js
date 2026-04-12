@@ -629,25 +629,43 @@ function drawSparkleRain() {
 const taglineBreaks = [
      "making CSS do weird stuff on purpose.",
      "weaponizing side projects.",
-     "debugging until it ships.",
-
      "turning chaos into commits.",
-     "nosy questions early, fixes bugs late.",
+     "nosy early, googles later.",
      "feedback in, better code out.",
-
      "gremlin in dev, professional in prod.",
      "unhinged energy, finished tickets.",
-     "chaotic process, consistent results.",
-
 ];
 
 function setRandomTaglineBreak() {
      const el = document.querySelector(".tagline-break");
      if (!el) return;
 
-    const randomIndex = Math.floor(Math.random() * taglineBreaks.length);
+     const randomIndex = Math.floor(Math.random() * taglineBreaks.length);
      el.textContent = taglineBreaks[randomIndex];
 }
+
+/* NOTE: SHARED HELPERS FOR GAME PAGES */
+/* Expose reusable site-wide helpers so module files can reuse the same CSS/theme/math logic instead of redefining it in every game file. */
+
+if (!window.SiteTheme) {
+     window.SiteTheme = {};
+}
+
+Object.assign(window.SiteTheme, {
+     getCssValue,
+     getCssNumber,
+     getCssColor,
+     getTextSettings,
+     getGlowSettings,
+     getSparkleSettings,
+     getRainbowPalette,
+     createColorEngine,
+     randomNumber,
+     randomWholeNumber,
+     randomItem,
+     randomItemExcept,
+     shuffleArray
+});
 
 /* NOTE: STARTUP */
 

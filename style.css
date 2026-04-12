@@ -30,7 +30,7 @@
 
      --page-width-wide: 72rem;
      --page-padding-y: clamp(1rem, 2vw, 1.5rem);
-     --page-padding-x: calc(var(--page-padding-y) * 1); /* Be mindful of small screen widths */
+     --page-padding-x: calc(var(--page-padding-y) * 1);
      --page-section-gap: var(--page-padding-y);
 
      --menu-button-color: var(--text-color);
@@ -63,7 +63,6 @@
      /* NOTE: GLOW */
 
      --glow-depth: 0 0.75rem 1.75rem rgba(0, 0, 0, 0.5);
-     /* offset-x   offset-y   blur-radius   color */
 
      --glow-core: 0 0 clamp(0.02rem, 0.08vw, 0.05rem);
      --glow-soft: 0 0 clamp(0.08rem, 0.3vw, 0.25rem);
@@ -89,8 +88,6 @@
      --bungee-shadow-offset-2: 0 0 0 transparent;
 
      /* NOTE: PANEL / BOX STYLING */
-     /* These were previously used by the game canvas frame too.
-        Keeping the shared variables since the dropdown menu panel still uses them. */
 
      --canvasboard-radius: 1rem;
      --canvasboard-border-width: 0.25rem;
@@ -105,7 +102,6 @@
      --menu-layer-z: 20;
 
      /* NOTE: BACKGROUND SPARKLE CONTROL CENTER */
-     /* These control the root-page sparkle rain behind the site. */
 
      --sparkle-opacity: 1;
      --sparkle-count-max: 180;
@@ -139,7 +135,7 @@
 }
 
 html {
-     font-size: 16px; /* BASE FONT SIZE, KEEP THIS AT 16px! */
+     font-size: 16px;
 }
 
 body {
@@ -150,7 +146,6 @@ body {
      font-family: var(--font-body);
      position: relative;
      overflow: hidden;
-     /* Stop scroll function */
 }
 
 .body-ody {
@@ -330,20 +325,19 @@ h1 {
      text-shadow: var(--glow-text);
 }
 
-/* NOTE: MAIN LAYOUT */
-/* Homepage game canvas removed.
-   Keeping main as a flexible content area so you can restyle this section next. */
+/* NOTE: SHARED MAIN LAYOUT */
 
 .main-squeeze {
      width: 100%;
      flex: 1 1 auto;
      min-height: 0;
-     overflow: visible;
 
      display: flex;
-     align-items: flex-start;
-     justify-content: center;
+     flex-direction: column;
+     align-items: center;
+     justify-content: flex-start;
 
+     gap: 0.75rem;
      padding-top: var(--page-section-gap);
 }
 
@@ -380,10 +374,33 @@ h1 {
      }
 
      #marquee span:nth-child(6) {
-          /* Line break at the space between first/last name. */
           display: block;
           width: 100%;
           height: 0;
           overflow: hidden;
      }
+}
+
+/* NOTE: SPARKLE SEEKER PAGE */
+
+.game-container {
+     width: min(100%, 40rem);
+     aspect-ratio: 1 / 1;
+     margin: 0 auto;
+     border: var(--canvasboard-border);
+     border-radius: var(--canvasboard-radius);
+     box-shadow: var(--glow-canvasboard);
+     background: rgba(0, 0, 0, 0.75);
+     overflow: hidden;
+
+     display: flex;
+     align-items: stretch;
+     justify-content: stretch;
+}
+
+#miniGameCanvas {
+     width: 100%;
+     height: 100%;
+     display: block;
+     border-radius: inherit;
 }
