@@ -688,11 +688,11 @@ export function drawTouchButtons() {
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
 
-     miniGameCtx.font = `${leftButton.height * 0.42}px ${fonts.symbol}`; //REVIEW -  revisit button size
-     miniGameCtx.fillText(leftButton.label, leftButton.x + leftButton.width / 2, leftButton.y + leftButton.height / 2 + 1);
+     miniGameCtx.font = `${leftButton.height * 0.5}px ${fonts.symbol}`;
+     miniGameCtx.fillText(leftButton.label, leftButton.x + leftButton.width / 2, leftButton.y + leftButton.height / 2 + 3);
 
-     miniGameCtx.font = `${rightButton.height * 0.36}px ${fonts.symbol}`;
-     miniGameCtx.fillText(rightButton.label, rightButton.x + rightButton.width / 2, rightButton.y + rightButton.height / 2 + 1);
+     miniGameCtx.font = `${rightButton.height * 0.5}px ${fonts.symbol}`;
+     miniGameCtx.fillText(rightButton.label, rightButton.x + rightButton.width / 2, rightButton.y + rightButton.height / 2 - 0.75);
 
      miniGameCtx.restore();
 }
@@ -745,24 +745,27 @@ export function drawMenuOverlay() {
           drawMenuButton(gameMenuUi.instructionsButton, "Instructions", theme);
           drawMenuButton(gameMenuUi.difficultyButton, `Difficulty: ${getCurrentDifficultyLabel()}`, theme);
           drawMenuButton(gameMenuUi.soundButton, `Sound: ${getCurrentSoundLabel()}`, theme);
+
      } else if (gameMenuView === "instructions") {
           miniGameCtx.shadowBlur = 0;
           miniGameCtx.fillStyle = colors.softWhite;
           miniGameCtx.textAlign = "left";
           miniGameCtx.textBaseline = "top";
-          miniGameCtx.font = `16px ${fonts.body}`;
+
+          const instructionFontSize = Math.max(12, Math.floor(gameMenuUi.panel.width * 0.038));
+          miniGameCtx.font = `${instructionFontSize}px ${fonts.body}`;
 
           const textX = gameMenuUi.panel.x + 24;
-          let textY = gameMenuUi.panel.y + 86;
-          const lineGap = 26;
+          let textY = gameMenuUi.panel.y + 78;
+          const lineGap = Math.round(instructionFontSize * 1.5);
 
-          miniGameCtx.fillText("Move with WASD, arrow keys, or the joystick.", textX, textY);
+          miniGameCtx.fillText("Move with arrows, WASD, or joystick.", textX, textY);
           textY += lineGap;
-          miniGameCtx.fillText("Collect sparkles to gain score and heal.", textX, textY);
           textY += lineGap;
-          miniGameCtx.fillText("Avoid obstacles or you lose health.", textX, textY);
+          miniGameCtx.fillText("Collect sparkles, avoid obstacles.", textX, textY);
           textY += lineGap;
-          miniGameCtx.fillText("Fill your hearts to win the round.", textX, textY);
+          textY += lineGap;
+          miniGameCtx.fillText("Max hearts to win.", textX, textY);
      }
 
      drawMenuButton(gameMenuUi.backButton, "Back", theme);
