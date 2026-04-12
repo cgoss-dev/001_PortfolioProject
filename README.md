@@ -7,8 +7,10 @@ Digital footprint, games, resources.
 ### TO DO
 -    Make the joystick base a classic cross d-pad, keep the round joystick overlay.
 -    Add slight visual button press animation, like increase size by 0.1% on press.
--    Make SparkleSeeker page title font split or shrink on window resize.
--    Make Header same width as game canvas on resize.
+-    Marquee Formatting.
+     -    Make SparkleSeeker page title font split or shrink on window resize.
+     -    Make marquee a class, and then use id's like marquee-main, marquee-sparkle, to break title lines in the correct place on page resize.
+     -    Make Header same width as game canvas on resize.
 -    Unify menu stying. Background opacity, border thickness/color, glow.
      -    Large menu popup.
      -    Small menu popup.

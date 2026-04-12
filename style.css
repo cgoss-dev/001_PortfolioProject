@@ -46,7 +46,7 @@
      --font-fancy: "Bungee Shade", monospace;
 
      --text-size-marquee: clamp(2.5rem, 3.5vw, 3.5rem);
-     --text-size-medium: var(1.5rem, 3vw, 2.5rem);
+     --text-size-medium: clamp(1.5rem, 3vw, 2.5rem);
      --text-size-small: clamp(0.8rem, 1.2vw, 1rem);
 
      --text-color-marquee: var(--text-color);
@@ -168,8 +168,8 @@ header {
      position: relative;
      display: flex;
      flex-direction: column;
-     align-items: center;
-     justify-content: flex-start;
+     text-align: left;
+     align-items: flex-start;
      flex: 0 0 auto;
      min-height: 0;
      gap: var(--page-section-gap);
@@ -307,7 +307,7 @@ h1 {
 /* NOTE: MARQUEE */
 
 #marquee {
-     display: inline-block;
+     display: inline;
      color: var(--text-color-marquee);
      text-decoration: none;
      font-family: var(--font-fancy);
@@ -317,12 +317,12 @@ h1 {
 }
 
 #marquee span {
-     display: inline-block;
+     display: inline;
+     text-shadow: var(--glow-text);
+
      transition:
           color var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style),
           text-shadow var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style);
-
-     text-shadow: var(--glow-text);
 }
 
 /* NOTE: SHARED MAIN LAYOUT */
@@ -373,7 +373,9 @@ h1 {
           display: inline-block;
      }
 
-     #marquee span:nth-child(6) {
+     /* MAIN PAGE BREAK (Chris Goss) */
+     /* Break after 5 letters → 6th span */
+     #marquee span:nth-child(5) {
           display: block;
           width: 100%;
           height: 0;
