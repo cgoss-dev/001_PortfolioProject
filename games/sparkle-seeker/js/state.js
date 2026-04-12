@@ -2,39 +2,33 @@
 // This file holds all runtime state for the mini-game.
 // Other files should READ from here and WRITE via setters.
 
-// NOTE: IMPORTS
-
-import { playerFaces } from "./systems/player.js";
-
-// NOTE: CANVAS
-
 export const miniGameCanvas = document.getElementById("miniGameCanvas");
 export const miniGameCtx = miniGameCanvas ? miniGameCanvas.getContext("2d") : null;
 
 export let miniGameWidth = 0;
 export let miniGameHeight = 0;
 
-// NOTE: PLAYER
+// PLAYER
 
 export const player = {
      x: 0,
      y: 0,
-     char: playerFaces.neutral,
+     char: "😐",
      size: 54,
      speed: 2,
      radius: 30,
      sparkleFaceTimer: 0
-     // NOTE: Counts down how long temporary face states last.
+     // FIXME: Counts down how long temporary face states last.
 };
 
-// NOTE: INPUT + ENTITY ARRAYS
+// INPUT + SHARED ARRAYS
 
 export const keys = {};
 export const sparkles = [];
 export const obstacles = [];
 export const collisionBursts = [];
 
-// NOTE: SCORE / HEALTH
+// SCORE + HEALTH
 
 export let sparkleScore = 0;
 export let sparkleHealProgress = 0;
@@ -42,7 +36,7 @@ export let sparkleHealProgress = 0;
 export let playerHealth = 3;
 export const maxPlayerHealth = 10;
 
-// NOTE: GAME FLOW
+//GAME FLOW
 
 export let gameStarted = false;
 export let gamePaused = true;
@@ -58,14 +52,14 @@ export let difficultyIndex = 1;
 export let gameOver = false;
 export let gameWon = false;
 
-// NOTE: OVERLAY
+// OVERLAY
 
 export let gameOverlayText = "";
 export let gameOverlaySubtext = "";
 export let gameOverlayTimer = 0;
 export let gameOverlayDuration = 0;
 
-// NOTE: MENU UI
+// MENU UI BOUNDS
 
 export const gameMenuUi = {
      panel: { x: 0, y: 0, width: 0, height: 0 },
@@ -76,7 +70,7 @@ export const gameMenuUi = {
      backButton: { x: 0, y: 0, width: 0, height: 0 }
 };
 
-// NOTE: TOUCH CONTROLS
+// TOUCH CONTROLS
 
 export const touchControls = {
      joystick: {
@@ -92,82 +86,167 @@ export const touchControls = {
           inputY: 0,
           deadZone: 0.18
      },
+
      leftButton: {
-          x: 0, y: 0, width: 60, height: 60,
+          x: 0,
+          y: 0,
+          width: 60,
+          height: 60,
           isPressed: false,
           pointerId: null,
           label: "\u23EF\uFE0E"
      },
+
      rightButton: {
-          x: 0, y: 0, width: 60, height: 60,
+          x: 0,
+          y: 0,
+          width: 60,
+          height: 60,
           isPressed: false,
           pointerId: null,
           label: "\u2630\uFE0E"
      }
 };
 
-// NOTE: INTERNAL FLAGS
+// INTERNAL BIND FLAGS
 
 export let pointerInputBound = false;
 export let keyboardInputBound = false;
 export let resizeHandlerBound = false;
 
-// NOTE: SPAWN TIMERS
+// SPAWN TIMERS
 
 export let sparkleSpawnTimer = 0;
 export let obstacleSpawnTimer = 0;
 
-// NOTE: COLOR ENGINE (moved fully here — single source of truth)
+// COLOR ENGINE
 
 export let gameSparkleColorEngine = null;
-export function setGameSparkleColorEngine(v) {
-     gameSparkleColorEngine = v;
+
+// BASIC SETTERS
+
+export function setMiniGameSize(width, height) {
+     miniGameWidth = width;
+     miniGameHeight = height;
 }
 
-// NOTE: SETTERS
-
-export function setPointerInputBound(v) { pointerInputBound = v; }
-export function setKeyboardInputBound(v) { keyboardInputBound = v; }
-export function setResizeHandlerBound(v) { resizeHandlerBound = v; }
-
-export function setSparkleSpawnTimer(v) { sparkleSpawnTimer = v; }
-export function setObstacleSpawnTimer(v) { obstacleSpawnTimer = v; }
-
-export function setSparkleScore(v) { sparkleScore = v; }
-export function addSparkleScore(v) { sparkleScore += v; }
-
-export function setSparkleHealProgress(v) { sparkleHealProgress = v; }
-export function addSparkleHealProgress(v) { sparkleHealProgress += v; }
-
-export function setPlayerHealth(v) {
-     playerHealth = Math.max(0, Math.min(maxPlayerHealth, v));
+export function setGameSparkleColorEngine(value) {
+     gameSparkleColorEngine = value;
 }
 
-export function addPlayerHealth(v) {
-     playerHealth = Math.max(0, Math.min(maxPlayerHealth, playerHealth + v));
+export function setPointerInputBound(value) {
+     pointerInputBound = value;
 }
 
-export function setGameStarted(v) { gameStarted = v; }
-export function setGamePaused(v) { gamePaused = v; }
-export function setGameMenuOpen(v) { gameMenuOpen = v; }
-export function setGameMenuView(v) { gameMenuView = v; }
+export function setKeyboardInputBound(value) {
+     keyboardInputBound = value;
+}
 
-export function setMusicEnabled(v) { musicEnabled = v; }
-export function setSoundEffectsEnabled(v) { soundEffectsEnabled = v; }
-export function setDifficultyIndex(v) { difficultyIndex = v; }
+export function setResizeHandlerBound(value) {
+     resizeHandlerBound = value;
+}
 
-export function setGameOver(v) { gameOver = v; }
-export function setGameWon(v) { gameWon = v; }
+export function setSparkleSpawnTimer(value) {
+     sparkleSpawnTimer = value;
+}
 
-export function setGameOverlayText(v) { gameOverlayText = v; }
-export function setGameOverlaySubtext(v) { gameOverlaySubtext = v; }
-export function setGameOverlayTimer(v) { gameOverlayTimer = v; }
-export function setGameOverlayDuration(v) { gameOverlayDuration = v; }
+export function setObstacleSpawnTimer(value) {
+     obstacleSpawnTimer = value;
+}
 
-// NOTE: JOYSTICK SETTERS
+// SCORE + HEALTH SETTERS
 
-export function setJoystickActive(v) { touchControls.joystick.isActive = v; }
-export function setJoystickPointerId(v) { touchControls.joystick.pointerId = v; }
+export function setSparkleScore(value) {
+     sparkleScore = value;
+}
+
+export function addSparkleScore(value) {
+     sparkleScore += value;
+}
+
+export function setSparkleHealProgress(value) {
+     sparkleHealProgress = value;
+}
+
+export function addSparkleHealProgress(value) {
+     sparkleHealProgress += value;
+}
+
+// PLAYER HEALTH SETTERS
+
+export function setPlayerHealth(value) {
+     playerHealth = Math.max(0, Math.min(maxPlayerHealth, value));
+}
+
+export function addPlayerHealth(value) {
+     playerHealth = Math.max(0, Math.min(maxPlayerHealth, playerHealth + value));
+}
+
+// GAME FLOW SETTERS
+
+export function setGameStarted(value) {
+     gameStarted = value;
+}
+
+export function setGamePaused(value) {
+     gamePaused = value;
+}
+
+export function setGameMenuOpen(value) {
+     gameMenuOpen = value;
+}
+
+export function setGameMenuView(value) {
+     gameMenuView = value;
+}
+
+export function setMusicEnabled(value) {
+     musicEnabled = value;
+}
+
+export function setSoundEffectsEnabled(value) {
+     soundEffectsEnabled = value;
+}
+
+export function setDifficultyIndex(value) {
+     difficultyIndex = value;
+}
+
+export function setGameOver(value) {
+     gameOver = value;
+}
+
+export function setGameWon(value) {
+     gameWon = value;
+}
+
+// OVERLAY SETTERS
+
+export function setGameOverlayText(value) {
+     gameOverlayText = value;
+}
+
+export function setGameOverlaySubtext(value) {
+     gameOverlaySubtext = value;
+}
+
+export function setGameOverlayTimer(value) {
+     gameOverlayTimer = value;
+}
+
+export function setGameOverlayDuration(value) {
+     gameOverlayDuration = value;
+}
+
+// JOYSTICK SETTERS
+
+export function setJoystickActive(value) {
+     touchControls.joystick.isActive = value;
+}
+
+export function setJoystickPointerId(value) {
+     touchControls.joystick.pointerId = value;
+}
 
 export function setJoystickKnobOffset(x, y) {
      touchControls.joystick.knobX = x;
@@ -179,28 +258,344 @@ export function setJoystickInput(x, y) {
      touchControls.joystick.inputY = y;
 }
 
-export function setLeftButtonPressed(v) { touchControls.leftButton.isPressed = v; }
-export function setLeftButtonPointerId(v) { touchControls.leftButton.pointerId = v; }
-export function setRightButtonPressed(v) { touchControls.rightButton.isPressed = v; }
-export function setRightButtonPointerId(v) { touchControls.rightButton.pointerId = v; }
+// TOUCH BUTTON SETTERS
 
-// NOTE: HELPERS
+export function setLeftButtonPressed(value) {
+     touchControls.leftButton.isPressed = value;
+}
 
-export function randomItem(a) {
-     return a[Math.floor(Math.random() * a.length)];
+export function setLeftButtonPointerId(value) {
+     touchControls.leftButton.pointerId = value;
+}
+
+export function setRightButtonPressed(value) {
+     touchControls.rightButton.isPressed = value;
+}
+
+export function setRightButtonPointerId(value) {
+     touchControls.rightButton.pointerId = value;
+}
+
+// HELPERS
+
+export function randomItem(array) {
+     return array[Math.floor(Math.random() * array.length)];
 }
 
 export function randomNumber(min, max) {
      return Math.random() * (max - min) + min;
 }
 
-export function isCollidingWithSparkle(p, s) {
-     const dx = p.x - s.x;
-     const dy = p.y - s.y;
-     return Math.sqrt(dx * dx + dy * dy) < p.radius + (s.size * 0.25);
+export function isCollidingWithSparkle(playerObject, sparkleObject) {
+     const dx = playerObject.x - sparkleObject.x;
+     const dy = playerObject.y - sparkleObject.y;
+
+     return Math.sqrt((dx * dx) + (dy * dy)) < playerObject.radius + (sparkleObject.size * 0.25);
 }
 
-export function setMiniGameSize(width, height) {
-     miniGameWidth = width;
-     miniGameHeight = height;
+
+
+
+
+
+// WIN / LOSE / PLAYER HEALTH STATE
+// Handles player face switching and speed changes based on health.
+
+import {
+     player,
+     playerHealth,
+     maxPlayerHealth
+} from "./state.js";
+
+import {
+     playerBaseHealth,
+     playerBaseSpeed,
+     playerSpeedPerHeart,
+     refreshPlayerFaceFromHealth
+} from "./systems/player.js";
+
+export function updatePlayerSpeedFromHealth() {
+     const diff = playerHealth - playerBaseHealth;
+     player.speed = Math.max(0, playerBaseSpeed + (diff * playerSpeedPerHeart));
+}
+
+export function refreshPlayerStateFace() {
+     refreshPlayerFaceFromHealth();
+}
+
+export function applyTemporaryPlayerFace(face, duration) {
+     // If the player is already in a "forced" health state (dead, max health, or low health), that state wins.
+     if (
+          playerHealth <= 0 ||
+          playerHealth === maxPlayerHealth ||
+          playerHealth <= 2
+     ) {
+          player.sparkleFaceTimer = 0;
+          refreshPlayerFaceFromHealth();
+          return;
+     }
+
+     player.char = face;
+     player.sparkleFaceTimer = duration;
+}
+
+export function syncPlayerHealthState() {
+     updatePlayerSpeedFromHealth();
+     refreshPlayerFaceFromHealth();
+}
+
+
+
+
+
+
+
+
+
+// NOTE: GAME LOOP
+// Handles canvas sizing, round flow, reset flow, startup, and the main update/draw loop.
+
+function drawMiniGameBackground(ctx, width, height) {
+     ctx.clearRect(0, 0, width, height);
+     ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+     ctx.fillRect(0, 0, width, height);
+}
+
+// IMPORTS
+
+import {
+     miniGameCanvas,
+     miniGameCtx,
+     gameStarted,
+     gamePaused,
+     gameMenuOpen,
+     gameOver,
+     gameWon,
+     playerHealth,
+     maxPlayerHealth,
+     sparkles,
+     obstacles,
+     collisionBursts,
+     setGameStarted,
+     setGamePaused,
+     setGameMenuOpen,
+     setGameMenuView,
+     setGameOver,
+     setGameWon,
+     setPlayerHealth,
+     setSparkleScore,
+     setSparkleHealProgress,
+     setMusicEnabled,
+     setSoundEffectsEnabled,
+     setDifficultyIndex,
+     setSparkleSpawnTimer,
+     setObstacleSpawnTimer,
+     setMiniGameSize,
+     setGameSparkleColorEngine
+} from "./state.js";
+
+import {
+     createColorEngine,
+     getRainbowPalette
+} from "./theme.js";
+
+import {
+     bindKeyboardInput,
+     bindPointerInput,
+     bindResizeHandler,
+     updatePauseButtonState,
+     updateTouchControlBounds,
+     resetTouchControls
+} from "./input.js";
+
+import {
+     updateMenuUiBounds,
+     showTimedGameOverlay,
+     showPersistentGameOverlay,
+     updateGameOverlayTimer,
+     syncPauseOverlay,
+     clearGameOverlay
+} from "./ui.js";
+
+import {
+     drawGame
+} from "./render.js";
+
+import {
+     syncPlayerHealthState
+} from "./winloselevels.js";
+
+import {
+     playerBaseHealth,
+     resetPlayerPosition,
+     updatePlayer,
+     updatePlayerFaceState
+} from "./systems/player.js";
+
+import {
+     updateSparkleSpawns,
+     updateSparkles,
+     collectSparkles
+} from "./systems/sparkles.js";
+
+import {
+     updateObstacleSpawns,
+     updateObstacles,
+     hitObstacles
+} from "./systems/obstacles.js";
+
+import {
+     updateCollisionBursts
+} from "./systems/collisions.js";
+
+// NOTE: CANVAS SIZE
+
+export function resizeMiniGameCanvasFromCss() {
+     if (!miniGameCanvas || !miniGameCtx) {
+          return;
+     }
+
+     const rect = miniGameCanvas.getBoundingClientRect();
+     const dpr = window.devicePixelRatio || 1;
+
+     miniGameCanvas.width = Math.round(rect.width * dpr);
+     miniGameCanvas.height = Math.round(rect.height * dpr);
+     miniGameCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+     setMiniGameSize(rect.width, rect.height);
+}
+
+export function updateMiniGameCanvasSize() {
+     resizeMiniGameCanvasFromCss();
+     updateTouchControlBounds();
+     updateMenuUiBounds();
+}
+
+// ROUND FLOW
+
+export function startNewGameRound() {
+     resetGameState();
+     updateMiniGameCanvasSize();
+     resetPlayerPosition();
+     updateTouchControlBounds();
+     updateMenuUiBounds();
+
+     setGameStarted(true);
+     setGamePaused(false);
+     setGameMenuOpen(false);
+     setGameMenuView("main");
+     setGameOver(false);
+     setGameWon(false);
+
+     showTimedGameOverlay("LET'S PLAY!");
+}
+
+// MAIN UPDATE
+
+export function updateGame() {
+     updatePauseButtonState();
+     updateGameOverlayTimer();
+     syncPauseOverlay();
+
+     if (!gameStarted || gamePaused || gameMenuOpen || gameOver || gameWon) {
+          return;
+     }
+
+     updatePlayer();
+     updatePlayerFaceState();
+     updateSparkleSpawns();
+     updateObstacleSpawns();
+     updateSparkles();
+     updateObstacles();
+     updateCollisionBursts();
+     collectSparkles();
+     hitObstacles();
+
+     if (playerHealth <= 0) {
+          setPlayerHealth(0);
+          setGameOver(true);
+          setGameWon(false);
+          setGamePaused(true);
+          setGameMenuOpen(false);
+          setGameMenuView("main");
+          resetTouchControls();
+          syncPlayerHealthState();
+          showPersistentGameOverlay("TRY AGAIN!", "Press ⏯ to play again.");
+          return;
+     }
+
+     if (playerHealth >= maxPlayerHealth) {
+          setPlayerHealth(maxPlayerHealth);
+          setGameWon(true);
+          setGameOver(false);
+          setGamePaused(true);
+          setGameMenuOpen(false);
+          setGameMenuView("main");
+          resetTouchControls();
+          syncPlayerHealthState();
+          showPersistentGameOverlay("WIN!", "Press ⏯ to play again.");
+     }
+}
+
+// LOOP
+
+export function gameLoop() {
+     updateGame();
+     drawGame();
+     requestAnimationFrame(gameLoop);
+}
+
+// RESET
+
+export function resetGameState() {
+     setGameSparkleColorEngine(createColorEngine(getRainbowPalette));
+
+     setSparkleScore(0);
+     setSparkleHealProgress(0);
+     setPlayerHealth(playerBaseHealth);
+     setGameStarted(false);
+     setGamePaused(true);
+     setGameMenuOpen(false);
+     setGameMenuView("main");
+     setMusicEnabled(true);
+     setSoundEffectsEnabled(true);
+     setDifficultyIndex(1);
+     setGameOver(false);
+     setGameWon(false);
+
+     sparkles.length = 0;
+     obstacles.length = 0;
+     collisionBursts.length = 0;
+
+     setSparkleSpawnTimer(0);
+     setObstacleSpawnTimer(0);
+
+     clearGameOverlay();
+     resetTouchControls();
+     syncPlayerHealthState();
+}
+
+// NOTE: STARTUP
+
+export function startSparkleSeeker() {
+     resetGameState();
+     updateMiniGameCanvasSize();
+
+     resetPlayerPosition();
+     updateTouchControlBounds();
+     updateMenuUiBounds();
+
+     bindKeyboardInput();
+     bindPointerInput();
+     bindResizeHandler();
+
+     gameLoop();
+}
+
+// NOTE: AUTO START
+
+if (!miniGameCanvas || !miniGameCtx) {
+     console.warn("Sparkle Seeker could not find #miniGameCanvas.");
+} else {
+     startSparkleSeeker();
 }
