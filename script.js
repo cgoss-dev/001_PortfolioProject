@@ -394,7 +394,8 @@ let marqueeColorEngine = null;
 
 /* NOTE: MARQUEE FIT */
 /* The marquee size can be gently reduced until the full one-line title fits inside its available width. */
-/* This can help longer page titles behave more like shorter ones during resize. */
+/* The menu button size can then be matched to the marquee's final fitted size. */
+/* The shared top row can also be checked here so the button does not push into the title on smaller screens. */
 
 function getMarqueeFitSettings() {
      const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
@@ -415,24 +416,79 @@ function resetMarqueeFitSize(marqueeElement) {
      marqueeElement.style.removeProperty("--marquee-fit-size");
 }
 
+function resetNavButtonFitSize(marqueeElement) {
+     if (!marqueeElement) {
+          return;
+     }
+
+     const headerTopElement = marqueeElement.closest(".header-top");
+
+     if (!headerTopElement) {
+          return;
+     }
+
+     const navButtonElement = headerTopElement.querySelector(".nav-button");
+
+     if (!navButtonElement) {
+          return;
+     }
+
+     navButtonElement.style.removeProperty("--nav-button-fit-size");
+}
+
+function syncNavButtonToSize(marqueeElement, fittedSize) {
+     if (!marqueeElement || !fittedSize) {
+          return;
+     }
+
+     const headerTopElement = marqueeElement.closest(".header-top");
+
+     if (!headerTopElement) {
+          return;
+     }
+
+     const navButtonElement = headerTopElement.querySelector(".nav-button");
+
+     if (!navButtonElement) {
+          return;
+     }
+
+     // The button can be given the same fitted size as the marquee text here.
+     navButtonElement.style.setProperty("--nav-button-fit-size", fittedSize);
+}
+
 function fitMarqueeToContainer(marqueeElement) {
      if (!marqueeElement) {
           return;
      }
 
      const fitSettings = getMarqueeFitSettings();
+     const headerTopElement = marqueeElement.closest(".header-top");
      const computedStyle = window.getComputedStyle(marqueeElement);
      const lineHeight = computedStyle.lineHeight;
 
      resetMarqueeFitSize(marqueeElement);
+     resetNavButtonFitSize(marqueeElement);
 
      marqueeElement.style.setProperty("--marquee-fit-size", `${fitSettings.maxFontSize}px`);
+     syncNavButtonToSize(marqueeElement, `${fitSettings.maxFontSize}px`);
 
      let currentSize = fitSettings.maxFontSize;
 
-     while (currentSize > fitSettings.minFontSize && marqueeElement.scrollWidth > marqueeElement.clientWidth) {
+     while (currentSize > fitSettings.minFontSize) {
+          const marqueeTooWide = marqueeElement.scrollWidth > marqueeElement.clientWidth;
+          const headerRowTooWide = headerTopElement
+               ? headerTopElement.scrollWidth > headerTopElement.clientWidth
+               : false;
+
+          if (!marqueeTooWide && !headerRowTooWide) {
+               break;
+          }
+
           currentSize -= fitSettings.step;
+
           marqueeElement.style.setProperty("--marquee-fit-size", `${currentSize}px`);
+          syncNavButtonToSize(marqueeElement, `${currentSize}px`);
      }
 
      // This helps the clickable area and header height stay in sync with the fitted text size.

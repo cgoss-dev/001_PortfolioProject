@@ -50,7 +50,7 @@
 
      --header-text-align: left;
 
-     --text-size-marquee: clamp(1.5rem, 10vw, 4rem);
+     --text-size-marquee: clamp(1.5rem, 6vw, 3rem);
      --text-size-medium: clamp(1rem, 3vw, 2.5rem);
      --text-size-small: clamp(0.8rem, 1.2vw, 1rem);
 
@@ -189,22 +189,28 @@ header {
 h1 {
      /* border: yellow, solid, 5px; */
 
-     width: 100%;
      margin: 0;
      padding: 0;
      text-align: left;
      line-height: 1.5;
+
+     /* Title area can be allowed to shrink inside the shared top row. */
+     width: auto;
+     flex: 1 1 auto;
+     min-width: 0;
 }
 
-/* SHARED TAGLINE + MENU ROW */
-/* A single row can be used here so the tagline stays left and the menu stays right. */
+/* NOTE: MARQUEE + NAV ROW */
+/* Both elements can live on one line so they scale together and stay aligned. */
 
-.header-row {
+.header-top {
      width: 100%;
      display: flex;
      align-items: center;
      justify-content: space-between;
      gap: 1rem;
+     min-width: 0;
+     padding-bottom: 0.25rem;
 }
 
 .hero-blurb {
@@ -213,10 +219,12 @@ h1 {
      display: flex;
      align-items: center;
      min-width: 0;
+     margin-bottom: 0.75rem;
 }
 
 .tagline {
      margin: 0;
+     padding-bottom: 0.75rem;
      color: var(--text-color-small);
      font-size: var(--text-size-small);
      line-height: 1.5;
@@ -233,7 +241,6 @@ h1 {
      flex-direction: column;
      align-items: flex-end;
      justify-content: center;
-     gap: var(--menu-stack-gap);
      flex: 0 0 auto;
 }
 
@@ -242,8 +249,8 @@ h1 {
      display: inline-flex;
      align-items: center;
      justify-content: center;
-     min-width: max(2.75rem, 1em);
-     min-height: max(2.75rem, 1em);
+     min-width: 1em;
+     min-height: 1em;
      padding: 0;
      margin: 0;
      background: none;
@@ -252,8 +259,11 @@ h1 {
      cursor: pointer;
 
      font-family: var(--font-fancy);
-     font-size: var(--text-size-marquee);
-     line-height: 1.5;
+
+     /* Button size can be matched to the marquee's fitted size from JS. */
+     font-size: var(--nav-button-fit-size, var(--text-size-marquee));
+
+     line-height: 1;
      color: var(--menu-button-color);
      -webkit-text-fill-color: currentColor;
      text-shadow: var(--glow-text);
@@ -269,16 +279,15 @@ h1 {
           filter 0.2s ease-in-out;
 }
 
-
-
-
-
 /* NOTE: PANEL */
 /* Hidden by default. Opens when parent wrapper gets .menu-open from JS. */
 
 .nav-menu {
+     position: absolute;
+     top: 100%;
+     right: 0;
      list-style: none;
-     margin: 0;
+     margin: 0.5rem 0 0 0;
      padding: 0;
 
      min-width: var(--menu-canvasboard-width-min);
@@ -297,7 +306,6 @@ h1 {
           transform 0.25s ease-in-out;
 }
 
-/* Panel can now open directly under button inside shared row. */
 .dropdown-low.menu-open .nav-menu {
      opacity: 1;
      transform: translateX(0) translateY(0);
@@ -345,14 +353,24 @@ h1 {
      width: 100%;
      max-width: 100%;
      margin: 0;
-     padding: 0;
+
+     /* A little extra vertical padding can help prevent tall letters from being clipped during resize. */
+     padding-top: 0.15em;
+     padding-left: 0.25em;
+     padding-bottom: 0.25em;
+     /* "rem" is relative to base html font size (16px), this does not resize.
+          "em" is relative to parent element's font size, this does resize.*/
+
      text-align: left;
 
      color: var(--text-color-marquee);
      text-decoration: none;
      font-family: var(--font-fancy);
      font-size: var(--marquee-fit-size, var(--text-size-marquee));
-     line-height: 1.5;
+
+     /* A slightly roomier line-height can help protect the top and bottom of the glyphs. */
+     line-height: 1.25;
+
      white-space: nowrap;
      overflow: hidden;
 }
@@ -364,12 +382,6 @@ h1 {
           color var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style),
           text-shadow var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style);
 }
-
-
-
-
-
-
 
 /* BACKGROUND SPARKLE CANVAS */
 

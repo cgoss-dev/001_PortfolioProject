@@ -11,19 +11,13 @@
      <canvas id="siteBgCanvas" class="site-bg-canvas" aria-hidden="true"></canvas><!-- NOTE: BACKGROUND SPARKLE CANVAS (shared with homepage) -->
      <div class="body-ody">
           <header>
-               <h1>
-                    <a href="../../index.html" class="marquee" id="marquee-sparkleseeker">
-                         <span class="marquee-word">Sparkle</span> <span class="marquee-break">Seeker</span>
-                    </a>
-               </h1>
-
-               <!-- NOTE: TAGLINE + MENU can be grouped into one shared header row. -->
-               <div class="header-row">
-                    <div class="hero-blurb">
-                         <p class="tagline">
-                              Dodge. Collect. Survive.
-                         </p>
-                    </div>
+               <!-- NOTE: MARQUEE + MENU can be grouped into one shared top row so both can scale together. -->
+               <div class="header-top">
+                    <h1>
+                         <a href="../../index.html" class="marquee" id="marquee-sparkleseeker">
+                              <span class="marquee-word">Sparkle</span> <span class="marquee-break">Seeker</span>
+                         </a>
+                    </h1>
 
                     <div class="dropdown-low">
                          <button
@@ -44,6 +38,13 @@
                          </nav>
                     </div>
                </div>
+
+               <!-- Tagline can stay on its own row below the marquee/menu row. -->
+               <div class="hero-blurb">
+                    <p class="tagline">
+                         Dodge. Collect. Survive.
+                    </p>
+               </div>
           </header>
 
           <main class="main-squeeze">
@@ -52,7 +53,7 @@
                </div>
           </main>
      </div>
-     <script src="../../script.js"></script> <!-- NOTE: LOAD ROOT JS FIRST (menu, marquee, background) -->
-     <script type="module" src="./ui.js"></script> <!-- NOTE: THEN LOAD GAME -->
+     <script src="../../script.js"></script> <!-- LOAD ROOT JS FIRST (menu, marquee, background) -->
+     <script type="module" src="./ui.js"></script> <!-- THEN LOAD GAME -->
 </body>
 </html>

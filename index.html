@@ -11,17 +11,13 @@
      <canvas id="siteBgCanvas" class="site-bg-canvas" aria-hidden="true"></canvas>
      <div class="body-ody">
           <header>
-               <h1>
-                    <a href="index.html" class="marquee" id="marquee-main">
-                         <span class="marquee-word">Chris</span> <span class="marquee-break">Goss is Boss</span>
-                    </a>
-               </h1>
-
-               <!-- NOTE: TAGLINE + MENU can be grouped into one shared header row. -->
-               <div class="header-row">
-                    <div class="hero-blurb">
-                         <p class="tagline">Seattle developer...<span class="tagline-break"></span></p>
-                    </div>
+               <!-- NOTE: MARQUEE + MENU can be grouped into one shared top row so both can scale together. -->
+               <div class="header-top">
+                    <h1>
+                         <a href="index.html" class="marquee" id="marquee-main">
+                              <span class="marquee-word">Chris</span> <span class="marquee-break">Goss</span>
+                         </a>
+                    </h1>
 
                     <div class="dropdown-low">
                          <button class="nav-button" type="button" aria-label="Open navigation menu." aria-expanded="false" aria-controls="navMenu">
@@ -36,6 +32,11 @@
                               </ul>
                          </nav>
                     </div>
+               </div>
+
+               <!-- NOTE: Tagline can stay on its own row below marquee/menu row. -->
+               <div class="hero-blurb">
+                    <p class="tagline">Seattle developer...<span class="tagline-break"></span></p>
                </div>
           </header>
 
