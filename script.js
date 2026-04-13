@@ -392,6 +392,65 @@ const marqueeItems = marqueeElements.map(function (element) {
 let headerColorCycleTimer = null;
 let marqueeColorEngine = null;
 
+/* NOTE: MARQUEE FIT */
+/* The marquee size can be gently reduced until the full one-line title fits inside its available width. */
+/* This can help longer page titles behave more like shorter ones during resize. */
+
+function getMarqueeFitSettings() {
+     const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+
+     return {
+          maxFontSize: 4 * rootFontSize,
+          minFontSize: 0.5 * rootFontSize,
+          step: 1
+     };
+}
+
+function resetMarqueeFitSize(marqueeElement) {
+     if (!marqueeElement) {
+          return;
+     }
+
+     // This lets CSS take over again before a fresh measurement is made.
+     marqueeElement.style.removeProperty("--marquee-fit-size");
+}
+
+function fitMarqueeToContainer(marqueeElement) {
+     if (!marqueeElement) {
+          return;
+     }
+
+     const fitSettings = getMarqueeFitSettings();
+     const computedStyle = window.getComputedStyle(marqueeElement);
+     const lineHeight = computedStyle.lineHeight;
+
+     resetMarqueeFitSize(marqueeElement);
+
+     marqueeElement.style.setProperty("--marquee-fit-size", `${fitSettings.maxFontSize}px`);
+
+     let currentSize = fitSettings.maxFontSize;
+
+     while (currentSize > fitSettings.minFontSize && marqueeElement.scrollWidth > marqueeElement.clientWidth) {
+          currentSize -= fitSettings.step;
+          marqueeElement.style.setProperty("--marquee-fit-size", `${currentSize}px`);
+     }
+
+     // This helps the clickable area and header height stay in sync with the fitted text size.
+     if (lineHeight && lineHeight !== "normal") {
+          marqueeElement.style.lineHeight = lineHeight;
+     }
+}
+
+function fitAllMarquees() {
+     if (!marqueeItems.length) {
+          return;
+     }
+
+     for (let i = 0; i < marqueeItems.length; i += 1) {
+          fitMarqueeToContainer(marqueeItems[i].element);
+     }
+}
+
 function buildMarqueeSpans(marqueeItem) {
      if (!marqueeItem || !marqueeItem.element) {
           return;
@@ -465,6 +524,7 @@ function startHeaderColorCycle() {
           buildMarqueeSpans(marqueeItems[i]);
      }
 
+     fitAllMarquees();
      cycleMarqueeColors();
 
      window.clearInterval(headerColorCycleTimer);
@@ -668,7 +728,9 @@ Object.assign(window.SiteTheme, {
      randomWholeNumber,
      randomItem,
      randomItemExcept,
-     shuffleArray
+     shuffleArray,
+     fitMarqueeToContainer,
+     fitAllMarquees
 });
 
 /* NOTE: STARTUP */
@@ -679,6 +741,7 @@ function handleResize() {
      resizeTimer = window.setTimeout(function () {
           setupSparkleRain();
           syncNavButtonGlow();
+          fitAllMarquees();
           cycleMarqueeColors();
      }, 150);
 }

@@ -746,11 +746,11 @@ export function drawTouchButtons() {
 
      // LEFT BUTTON LABEL
      miniGameCtx.font = `${leftFontSize}px ${fonts.symbol}`;
-     miniGameCtx.fillText(leftButton.label, leftCenter.x, leftCenter.y + 1.5);
+     miniGameCtx.fillText(leftButton.label, leftCenter.x, leftCenter.y + 1.25);
 
      // RIGHT BUTTON LABEL
      miniGameCtx.font = `${rightFontSize}px ${fonts.symbol}`;
-     miniGameCtx.fillText(rightButton.label, rightCenter.x, rightCenter.y + 1);
+     miniGameCtx.fillText(rightButton.label, rightCenter.x, rightCenter.y + 1.15);
 
      miniGameCtx.restore();
 }

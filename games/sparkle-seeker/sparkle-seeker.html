@@ -5,47 +5,44 @@
      <meta charset="UTF-8">
      <meta name="viewport" content="width=device-width, initial-scale=1.0">
      <title>✨Sparkle Seeker✨</title>
-
-     <!-- NOTE: SHARED ROOT CSS -->
-     <link rel="stylesheet" href="../../style.css">
+     <link rel="stylesheet" href="../../style.css"> <!-- NOTE: SHARED ROOT CSS -->
 </head>
-
 <body>
-     <!-- NOTE: BACKGROUND SPARKLE CANVAS (shared with homepage) -->
-     <canvas id="siteBgCanvas" class="site-bg-canvas" aria-hidden="true"></canvas>
-
+     <canvas id="siteBgCanvas" class="site-bg-canvas" aria-hidden="true"></canvas><!-- NOTE: BACKGROUND SPARKLE CANVAS (shared with homepage) -->
      <div class="body-ody">
-
           <header>
-               <div class="dropdown-low">
-                    <button
-                         class="nav-button"
-                         type="button"
-                         aria-label="Open navigation menu."
-                         aria-expanded="false"
-                         aria-controls="navMenu">
-                         +
-                    </button>
-
-                    <nav id="navMenu" class="nav-menu" aria-label="Main navigation">
-                         <ul>
-                              <li><a href="/games/sparkle-seeker/sparkle-seeker.html">Free Trash</a></li>
-                              <li><a href="https://github.com/cgoss-dev" target="_blank" rel="noopener noreferrer">Tiny Crimes</a></li>
-                              <li><a href="https://www.linkedin.com/chrisgoss206" target="_blank" rel="noopener noreferrer">Stalk Me</a></li>
-                         </ul>
-                    </nav>
-               </div>
-
                <h1>
                     <a href="../../index.html" class="marquee" id="marquee-sparkleseeker">
                          <span class="marquee-word">Sparkle</span> <span class="marquee-break">Seeker</span>
                     </a>
                </h1>
 
-               <div class="hero-blurb">
-                    <p class="tagline">
-                         Dodge. Collect. Survive.
-                    </p>
+               <!-- NOTE: TAGLINE + MENU can be grouped into one shared header row. -->
+               <div class="header-row">
+                    <div class="hero-blurb">
+                         <p class="tagline">
+                              Dodge. Collect. Survive.
+                         </p>
+                    </div>
+
+                    <div class="dropdown-low">
+                         <button
+                              class="nav-button"
+                              type="button"
+                              aria-label="Open navigation menu."
+                              aria-expanded="false"
+                              aria-controls="navMenu">
+                              +
+                         </button>
+
+                         <nav id="navMenu" class="nav-menu" aria-label="Main navigation">
+                              <ul>
+                                   <li><a href="/games/sparkle-seeker/sparkle-seeker.html">Free Trash</a></li>
+                                   <li><a href="https://github.com/cgoss-dev" target="_blank" rel="noopener noreferrer">Tiny Crimes</a></li>
+                                   <li><a href="https://www.linkedin.com/chrisgoss206" target="_blank" rel="noopener noreferrer">Stalk Me</a></li>
+                              </ul>
+                         </nav>
+                    </div>
                </div>
           </header>
 
@@ -54,13 +51,8 @@
                     <canvas id="miniGameCanvas" width="480" height="480"></canvas>
                </div>
           </main>
-
      </div>
-
-     <!-- NOTE: LOAD ROOT JS FIRST (menu, marquee, background) -->
-     <script src="../../script.js"></script>
-
-     <!-- NOTE: THEN LOAD GAME -->
-     <script type="module" src="./ui.js"></script>
+     <script src="../../script.js"></script> <!-- NOTE: LOAD ROOT JS FIRST (menu, marquee, background) -->
+     <script type="module" src="./ui.js"></script> <!-- NOTE: THEN LOAD GAME -->
 </body>
 </html>
