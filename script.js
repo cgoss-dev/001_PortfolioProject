@@ -382,7 +382,7 @@ const marqueeElements = Array.from(document.querySelectorAll(".marquee"));
 const marqueeItems = marqueeElements.map(function (element) {
      return {
           element: element,
-          originalText: element.textContent,
+          originalText: element.textContent.trimStart().trimEnd(),
           spans: [],
           visibleSpans: [],
           previousColors: []
