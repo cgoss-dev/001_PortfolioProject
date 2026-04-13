@@ -377,46 +377,43 @@ document.addEventListener("keydown", function (event) {
 
 /* NOTE: TEXT */
 
-const marquee = document.getElementById("marquee");
-const marqueeOriginalText = marquee ? marquee.textContent : "";
-let marqueeSpans = [];
-let visibleMarqueeSpans = [];
-// Cache visible letters once so we do not rebuild the same filtered list every color cycle.
+const marqueeElements = Array.from(document.querySelectorAll(".marquee"));
+
+const marqueeItems = marqueeElements.map(function (element) {
+     return {
+          element: element,
+          originalText: element.textContent,
+          spans: [],
+          visibleSpans: [],
+          previousColors: []
+     };
+});
 
 let headerColorCycleTimer = null;
-let previousMarqueeColors = [];
-// Stores the last color used for each visible letter position.
-
 let marqueeColorEngine = null;
-// Moved engine creation later so CSS has time to load before the palette gets read.
 
-function buildMarqueeSpans() {
-     if (!marquee) {
+function buildMarqueeSpans(marqueeItem) {
+     if (!marqueeItem || !marqueeItem.element) {
           return;
      }
 
-     marquee.innerHTML = "";
-     marqueeSpans = [];
-     visibleMarqueeSpans = [];
-     // Reset both the full span list and the visible-letter list whenever the marquee gets rebuilt.
+     marqueeItem.element.innerHTML = "";
+     marqueeItem.spans = [];
+     marqueeItem.visibleSpans = [];
+     marqueeItem.previousColors = [];
 
-     previousMarqueeColors = [];
-     // Reset old span/color memory whenever we rebuild the marquee.
-
-     for (let i = 0; i < marqueeOriginalText.length; i += 1) {
-          const char = marqueeOriginalText[i];
+     for (let i = 0; i < marqueeItem.originalText.length; i += 1) {
+          const char = marqueeItem.originalText[i];
           const span = document.createElement("span");
 
           span.textContent = char === " " ? "\u00A0" : char;
-          // Convert normal spaces between words into non-breaking spaces so spacing stays visible in spans.
 
-          marquee.appendChild(span);
-          marqueeSpans.push(span);
+          marqueeItem.element.appendChild(span);
+          marqueeItem.spans.push(span);
 
           if (span.textContent !== "\u00A0") {
-               visibleMarqueeSpans.push(span);
+               marqueeItem.visibleSpans.push(span);
           }
-          // Store real letters once here, so later color cycles can reuse this list instead of filtering every time.
      }
 }
 
@@ -430,37 +427,44 @@ function applyGlowToElement(element, color) {
 }
 
 function cycleMarqueeColors() {
-     if (!marqueeSpans.length || !visibleMarqueeSpans.length || !marqueeColorEngine) {
+     if (!marqueeItems.length || !marqueeColorEngine) {
           return;
      }
 
-     const nextMarqueeColors = marqueeColorEngine.nextCycle(
-          visibleMarqueeSpans.length,
-          previousMarqueeColors
-     );
-     // Shared engine builds one full marquee cycle, keeps each visible letter from immediately repeating last color.
+     for (let i = 0; i < marqueeItems.length; i += 1) {
+          const marqueeItem = marqueeItems[i];
 
-     for (let i = 0; i < visibleMarqueeSpans.length; i += 1) {
-          const span = visibleMarqueeSpans[i];
-          const nextColor = nextMarqueeColors[i];
+          if (!marqueeItem.spans.length || !marqueeItem.visibleSpans.length) {
+               continue;
+          }
 
-          applyGlowToElement(span, nextColor);
-          // Apply each generated color directly to the matching visible letter.
+          const nextColors = marqueeColorEngine.nextCycle(
+               marqueeItem.visibleSpans.length,
+               marqueeItem.previousColors
+          );
+
+          for (let j = 0; j < marqueeItem.visibleSpans.length; j += 1) {
+               const span = marqueeItem.visibleSpans[j];
+               const nextColor = nextColors[j];
+
+               applyGlowToElement(span, nextColor);
+          }
+
+          marqueeItem.previousColors = nextColors;
      }
-
-     previousMarqueeColors = nextMarqueeColors;
-     // Replace old memory with new cycle's colors.
 }
 
 function startHeaderColorCycle() {
-     if (!marquee) {
+     if (!marqueeItems.length) {
           return;
      }
 
      marqueeColorEngine = createColorEngine(getRainbowPalette);
-     // Moved engine creation into startup so the browser has already loaded the page/CSS before colors get read.
 
-     buildMarqueeSpans();
+     for (let i = 0; i < marqueeItems.length; i += 1) {
+          buildMarqueeSpans(marqueeItems[i]);
+     }
+
      cycleMarqueeColors();
 
      window.clearInterval(headerColorCycleTimer);
