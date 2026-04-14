@@ -13,6 +13,7 @@
      --bg-color: #000000;
      --text-color: #ffffff;
      --accent-color: var(--rainbow-pink);
+     --content-width: min(100%, 40rem);
 
      /* SHARED RAINBOW COLOR ENGINE PALETTE */
      /* Core JS + background JS can both pull from these if needed. */
@@ -38,10 +39,8 @@
      --page-section-gap: var(--page-padding-y);
 
      --menu-button-color: var(--text-color);
-     --menu-canvasboard-width-min: 12rem;
-     --menu-item-padding: 0.75rem;
-     --menu-edge-gap-y: 1rem;
-     --menu-stack-gap: calc(var(--menu-edge-gap-y) / 2);
+     --menu-canvasboard-width-min: 10em;
+     --menu-item-padding: 0.5em;
 
      /* TEXT */
 
@@ -50,7 +49,7 @@
 
      --header-text-align: left;
 
-     --text-size-marquee: clamp(1.5rem, 6vw, 3rem);
+     --text-size-marquee: clamp(1.5rem, 5vw, 2rem);
      --text-size-medium: clamp(1rem, 3vw, 2.5rem);
      --text-size-small: clamp(0.8rem, 1.2vw, 1rem);
 
@@ -157,9 +156,8 @@ body {
 
 .body-ody {
      width: 100%;
-     max-width: var(--page-width-wide);
      min-height: 100dvh;
-     margin: 0;
+     margin: 0 auto;
      padding: var(--page-padding-y) var(--page-padding-x);
      position: relative;
      z-index: var(--ui-layer-z);
@@ -174,16 +172,18 @@ body {
 header {
      /* border: red, solid, 5px; */
 
-     margin: 0;
+     width: var(--content-width);
+     margin: 0 auto;
      padding: 0;
      text-align: left;
      position: relative;
      line-height: 1.5;
 
-     width: 100%;
      display: flex;
      flex-direction: column;
-     gap: 0.25rem;
+
+     /* Header spacing can be tied to the current text size here so it shrinks more gracefully on smaller screens. */
+     gap: 0.12em;
 }
 
 h1 {
@@ -200,9 +200,6 @@ h1 {
      min-width: 0;
 }
 
-/* NOTE: MARQUEE + NAV ROW */
-/* Both elements can live on one line so they scale together and stay aligned. */
-
 .header-top {
      width: 100%;
      display: flex;
@@ -210,7 +207,9 @@ h1 {
      justify-content: space-between;
      gap: 1rem;
      min-width: 0;
-     padding-bottom: 0.25rem;
+
+     /* A smaller em-based bottom space can be used here so the row spacing follows the marquee size. */
+     padding-bottom: 0.08em;
 }
 
 .hero-blurb {
@@ -219,17 +218,24 @@ h1 {
      display: flex;
      align-items: center;
      min-width: 0;
-     margin-bottom: 0.75rem;
+
+     /* This bottom space can be kept modest and allowed to scale with the text. */
+     margin-bottom: 0.35em;
 }
 
 .tagline {
      margin: 0;
-     padding-bottom: 0.75rem;
+
+     /* Tagline bottom spacing can be made text-relative here instead of page-relative. */
+     padding-bottom: 0.5em;
+
      color: var(--text-color-small);
      font-size: var(--text-size-small);
      line-height: 1.5;
      text-align: left;
 }
+
+
 
 /* NOTE: MENU */
 /* Wrapper stays visible/positioned. JS toggles .menu-open on this wrapper. */
@@ -248,7 +254,7 @@ h1 {
      position: relative;
      display: inline-flex;
      align-items: center;
-     justify-content: center;
+     justify-content: right;
      min-width: 1em;
      min-height: 1em;
      padding: 0;
@@ -269,6 +275,7 @@ h1 {
      text-shadow: var(--glow-text);
      opacity: 1;
      transform: scale(1);
+     transform: translateY(0.25em);
      filter: none;
 
      transition:
@@ -277,6 +284,10 @@ h1 {
           opacity 0.2s ease-in-out,
           transform 0.2s ease-in-out,
           filter 0.2s ease-in-out;
+}
+.nav-button:hover,
+.nav-button:active {
+     scale: 1.1;
 }
 
 /* NOTE: PANEL */
@@ -288,7 +299,7 @@ h1 {
      right: 0;
      list-style: none;
      margin: 0.5rem 0 0 0;
-     padding: 0;
+     padding: 0.5em;
 
      min-width: var(--menu-canvasboard-width-min);
      border: var(--canvasboard-border);
@@ -298,7 +309,7 @@ h1 {
      box-shadow: var(--glow-canvasboard);
 
      opacity: 0;
-     transform: translateX(0) translateY(-0.75rem);
+     transform: translateX(-1em) translateY(-0.75rem);
      pointer-events: none;
 
      transition:
@@ -308,7 +319,7 @@ h1 {
 
 .dropdown-low.menu-open .nav-menu {
      opacity: 1;
-     transform: translateX(0) translateY(0);
+     transform: translateX(-2em) translateY(0);
      pointer-events: auto;
 }
 
@@ -322,6 +333,7 @@ h1 {
      margin: 0;
      padding: 0;
      font-size: var(--text-size-small);
+     text-align: center;
 }
 
 .nav-menu a {
@@ -334,12 +346,12 @@ h1 {
           background-color 0.2s ease-in-out,
           color 0.2s ease-in-out,
           text-shadow 0.2s ease-in-out;
+
 }
 
 .nav-menu a:hover,
-.nav-menu a:focus,
 .nav-menu a:active {
-     background: rgba(255, 255, 255, 0.08);
+     transform: scale(1.1);
      color: var(--text-color);
      text-shadow: var(--glow-text);
 }
@@ -356,7 +368,7 @@ h1 {
 
      /* A little extra vertical padding can help prevent tall letters from being clipped during resize. */
      padding-top: 0.15em;
-     padding-left: 0.25em;
+     padding-left: 0.05em;
      padding-bottom: 0.25em;
      /* "rem" is relative to base html font size (16px), this does not resize.
           "em" is relative to parent element's font size, this does resize.*/
@@ -402,8 +414,13 @@ h1 {
 
 /* NOTE: SPARKLE SEEKER PAGE */
 
+.main-squeeze {
+     width: var(--content-width);
+     margin: 0 auto;
+}
+
 .game-container {
-     width: min(100%, 40rem);
+     width: 100%;
      aspect-ratio: 1 / 1;
      margin: 0 auto;
      border: var(--canvasboard-border);

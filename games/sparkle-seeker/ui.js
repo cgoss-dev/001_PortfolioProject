@@ -172,9 +172,9 @@ function getUiTheme() {
                controlGlow: getCssColor("--accent-color", "#ea76cb"),
 
                overlayGlow: getCssColor("--accent-color", "#ea76cb"),
-               scoreGlow: getCssColor("--accent-color", "#ea76cb"),
+               scoreGlow: getCssColor("--accent-color", "#ffffff"),
 
-               joystickOuter: "rgba(255, 255, 255, 0.1)",
+               joystickOuter: "rgba(255, 255, 255, 0.25)",
                joystickInner: "rgba(255, 255, 255, 0.25)",
                joystickStroke: "rgba(255, 255, 255, 0.25)",
 
@@ -199,7 +199,7 @@ function getUiTheme() {
                menuButtonFont: getCssPixelSize("--text-size-small", 14),
                menuSmallFont: getCssPixelSize("--text-size-small", 14),
 
-               controlRadius: getCssNumber("--canvasboard-radius", 12)
+               controlRadius: getCssNumber("--canvasboard-radius", 120)
           },
 
           glow: {
@@ -260,7 +260,7 @@ function drawMenuButton(button, label, theme) {
      miniGameCtx.save();
      miniGameCtx.fillStyle = colors.buttonFill;
      miniGameCtx.strokeStyle = colors.outlineSoft;
-     miniGameCtx.lineWidth = 1.5;
+     miniGameCtx.lineWidth = 2;
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
 
@@ -282,6 +282,7 @@ function drawMenuButton(button, label, theme) {
      miniGameCtx.restore();
 }
 
+// NOTE: START/STOP BUTTON SHAPE
 function drawControlButton(button, isPressed, theme) {
      if (!miniGameCtx) {
           return;
@@ -296,12 +297,12 @@ function drawControlButton(button, isPressed, theme) {
      miniGameCtx.shadowBlur = isPressed ? glow.uiStrongGlow : glow.uiMediumGlow;
 
      miniGameCtx.beginPath();
-     miniGameCtx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+     miniGameCtx.arc(center.x, center.y, radius * 1.25, 0, Math.PI * 2);
 
      miniGameCtx.fillStyle = isPressed ? colors.controlFillPressed : colors.controlFill;
      miniGameCtx.fill();
 
-     miniGameCtx.lineWidth = 1.5;
+     miniGameCtx.lineWidth = 2;
      miniGameCtx.strokeStyle = colors.outlineStrong;
      miniGameCtx.stroke();
 
@@ -577,8 +578,8 @@ function drawScore() {
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "top";
      miniGameCtx.fillStyle = "#ffffff";
-     miniGameCtx.shadowColor = "rgba(255, 255, 255, 0.35)";
-     miniGameCtx.shadowBlur = 8;
+     miniGameCtx.shadowColor = "rgba(255, 255, 255, 0.5)";
+     miniGameCtx.shadowBlur = 10;
 
      miniGameCtx.fillText(formattedScore, 10, 12);
 
@@ -619,15 +620,15 @@ function drawHealth() {
           }
      }
 
-     miniGameCtx.font = '20px "Noto Sans Mono", monospace';
+     miniGameCtx.font = '24px "Noto Sans Mono", monospace';
      miniGameCtx.textAlign = "right";
      miniGameCtx.textBaseline = "top";
      miniGameCtx.fillStyle = "#ea76cb";
      miniGameCtx.shadowColor = "#ea76cb";
      miniGameCtx.shadowBlur = 8;
 
-     const healthX = miniGameWidth - 10;
-     const healthY = 10;
+     const healthX = miniGameWidth - 8;
+     const healthY = 6;
      const rowGap = 15;
 
      miniGameCtx.fillText(topRow, healthX, healthY);
@@ -650,22 +651,44 @@ export function drawTouchJoystick() {
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
 
      // JOYSTICK BASE
+     
+          // Joystick outer static circle.
+          miniGameCtx.beginPath();
+          miniGameCtx.arc(joystick.centerX, joystick.centerY, joystick.baseRadius * 0.75, 0, Math.PI * 2);
+          miniGameCtx.fillStyle = colors.joystickOuter;
+          miniGameCtx.fill();
+          miniGameCtx.lineWidth = 2;
+          miniGameCtx.strokeStyle = colors.outlineSoft; 
+          miniGameCtx.stroke();
 
-     miniGameCtx.beginPath();
-     miniGameCtx.arc(joystick.centerX, joystick.centerY, joystick.baseRadius, 0, Math.PI * 2);
-     miniGameCtx.fillStyle = colors.joystickOuter;
-     miniGameCtx.fill();
-     miniGameCtx.lineWidth = 1.5;
-     miniGameCtx.strokeStyle = colors.outlineSoft; // Joystick outer static circle.
-     miniGameCtx.stroke();
+          // Joystick center crosshairs.
+          const crosshairSize = joystick.baseRadius * 0.25;
+          const cx = joystick.centerX;
+          const cy = joystick.centerY;
 
-     miniGameCtx.beginPath();
-     miniGameCtx.arc(joystick.centerX, joystick.centerY, joystick.baseRadius * 0.52, 0, Math.PI * 2);
-     miniGameCtx.fillStyle = "rgba(255, 255, 255, 0.01)";
-     miniGameCtx.fill();
-     miniGameCtx.lineWidth = 1.5;
-     miniGameCtx.strokeStyle = colors.outlineSoft; // Joystick inner static circle.
-     miniGameCtx.stroke();
+          miniGameCtx.beginPath();
+          miniGameCtx.moveTo(cx - crosshairSize, cy);
+          miniGameCtx.lineTo(cx + crosshairSize, cy);
+          miniGameCtx.moveTo(cx, cy - crosshairSize);
+          miniGameCtx.lineTo(cx, cy + crosshairSize);
+          miniGameCtx.lineWidth = 2;
+          miniGameCtx.strokeStyle = colors.outlineSoft;
+          miniGameCtx.stroke();
+
+     // JOYSTICK KNOB
+
+          miniGameCtx.shadowColor = colors.controlGlow;
+          miniGameCtx.shadowBlur = glow.uiMediumGlow;
+
+          miniGameCtx.beginPath();
+          miniGameCtx.arc(joystick.centerX + joystick.knobX, joystick.centerY + joystick.knobY, joystick.thumbRadius * 2, 0, Math.PI * 32);
+          miniGameCtx.fillStyle = colors.joystickInner;
+          miniGameCtx.fill();
+          miniGameCtx.lineWidth = 2;
+          miniGameCtx.strokeStyle = colors.outlineStrong;
+          miniGameCtx.stroke();
+
+          miniGameCtx.restore();
 
      // WASD LABELS
      // Menu option font styling reused here. Small text size pulled from root CSS here.
@@ -681,8 +704,6 @@ export function drawTouchJoystick() {
      miniGameCtx.font = `400 ${sizes.menuSmallFont}px ${fonts.body}`;
 
      const offset = joystick.baseRadius * 0.75;
-     const cx = joystick.centerX;
-     const cy = joystick.centerY;
 
      miniGameCtx.fillText("W", cx, cy - offset);
      miniGameCtx.fillText("A", cx - offset, cy);
@@ -690,29 +711,9 @@ export function drawTouchJoystick() {
      miniGameCtx.fillText("D", cx + offset, cy);
 
      miniGameCtx.restore();
-
-     // JOYSTICK KNOB
-
-     miniGameCtx.shadowColor = colors.controlGlow;
-     miniGameCtx.shadowBlur = glow.uiMediumGlow;
-
-     miniGameCtx.beginPath();
-     miniGameCtx.arc(
-          joystick.centerX + joystick.knobX,
-          joystick.centerY + joystick.knobY,
-          joystick.thumbRadius,
-          0,
-          Math.PI * 2
-     );
-     miniGameCtx.fillStyle = colors.joystickInner;
-     miniGameCtx.fill();
-     miniGameCtx.lineWidth = 2;
-     miniGameCtx.strokeStyle = colors.outlineStrong;
-     miniGameCtx.stroke();
-
-     miniGameCtx.restore();
 }
 
+// NOTE: START/STOP BUTTON LABEL/LOCATION
 export function drawTouchButtons() {
      if (!miniGameCtx) {
           return;
@@ -739,18 +740,18 @@ export function drawTouchButtons() {
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
 
-     // TEXT SIZE
+     // LABEL SIZE
      // Scaled from button size here for consistent visual balance.
      const leftFontSize = leftButton.height * 0.5;
      const rightFontSize = rightButton.height * 0.5;
 
-     // LEFT BUTTON LABEL
-     miniGameCtx.font = `${leftFontSize}px ${fonts.symbol}`;
-     miniGameCtx.fillText(leftButton.label, leftCenter.x, leftCenter.y + 1.25);
+          // LEFT LABEL
+          miniGameCtx.font = `${leftFontSize}px ${fonts.symbol}`;
+          miniGameCtx.fillText(leftButton.label, leftCenter.x, leftCenter.y + 1.25); //FIXME: REVISIT LABELS
 
-     // RIGHT BUTTON LABEL
-     miniGameCtx.font = `${rightFontSize}px ${fonts.symbol}`;
-     miniGameCtx.fillText(rightButton.label, rightCenter.x, rightCenter.y + 1.15);
+          // RIGHT LABEL
+          miniGameCtx.font = `${rightFontSize}px ${fonts.symbol}`;
+          miniGameCtx.fillText(rightButton.label, rightCenter.x, rightCenter.y + 1.25);
 
      miniGameCtx.restore();
 }
