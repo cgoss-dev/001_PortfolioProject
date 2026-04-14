@@ -42,6 +42,23 @@ import {
      isPointInsideMenuPanel
 } from "./ui.js";
 
+// TOUCH CONTROL EDGE LAYOUT
+// Fixed edge spacing is defined here. Resize drift is prevented by anchoring from canvas edges here.
+const touchControlLayout = {
+     joystickEdgePaddingX: 5,
+     joystickEdgePaddingY: 5,
+
+     buttonEdgePaddingX: 5,
+     buttonEdgePaddingY: 5,
+
+     buttonGap: 16,
+
+     // VISUAL EDGE BUFFER
+     // Extra room is added here because drawn circles extend past raw rect size.
+     joystickVisualScale: 1.25,
+     buttonVisualScale: 1.25
+};
+
 // KEY HELPERS
 
 function normalizeKeyName(key) {
@@ -96,63 +113,57 @@ export function updateTouchControlBounds() {
      const leftButton = touchControls.leftButton;
      const rightButton = touchControls.rightButton;
 
-     // CONTROL SCALE
-     const controlScaleBase = Math.min(miniGameWidth, miniGameHeight);
+     if (!joystick || !leftButton || !rightButton) {
+          return;
+     }
 
-     // Static joystick.
-     const joystickBaseRadius = Math.max(36, Math.min(56, controlScaleBase * 0.10));
-     // Mobile joystick.
-     const joystickThumbRadius = Math.max(22, Math.min(38, joystickBaseRadius * 0.5)); 
+     const joystickEdgeRadius = joystick.baseRadius * touchControlLayout.joystickVisualScale;
+     const buttonLeftRadius = (leftButton.width / 2) * touchControlLayout.buttonVisualScale;
+     const buttonRightRadius = (rightButton.width / 2) * touchControlLayout.buttonVisualScale;
 
-     const buttonSize = Math.max(40, Math.min(56, controlScaleBase * 0.10));
+     // JOYSTICK EDGE ANCHOR
+     // Position is measured from left and bottom canvas edges here. Same spacing is preserved during resize here.
+     joystick.centerX = touchControlLayout.joystickEdgePaddingX + joystickEdgeRadius;
+     joystick.centerY = miniGameHeight - touchControlLayout.joystickEdgePaddingY - joystickEdgeRadius;
 
-     // Base edge spacing
-     const edgePadding = Math.max(20, Math.min(32, controlScaleBase * 0.05));
+     // RIGHT BUTTON EDGE ANCHOR
+     // Position is measured from right and bottom canvas edges here. Same spacing is preserved during resize here.
+     rightButton.x = miniGameWidth - touchControlLayout.buttonEdgePaddingX - (buttonRightRadius * 2);
+     rightButton.y = miniGameHeight - touchControlLayout.buttonEdgePaddingY - (buttonRightRadius * 2);
 
-     // Independent spacing controls used here
-     const joystickEdgePadding = edgePadding * 0.5;
-     const buttonEdgePadding = edgePadding * 0.5;
-
-     const buttonGap = Math.max(4, Math.min(10, controlScaleBase * 0.01));
-
-     // JOYSTICK SIZE + POSITION
-     joystick.baseRadius = joystickBaseRadius;
-     joystick.thumbRadius = joystickThumbRadius;
-
-     joystick.centerX = joystickEdgePadding + joystick.baseRadius;
-     joystick.centerY = miniGameHeight - joystickEdgePadding - joystick.baseRadius;
-
-     // BUTTON SIZE
-     leftButton.width = buttonSize;
-     leftButton.height = buttonSize;
-
-     rightButton.width = buttonSize;
-     rightButton.height = buttonSize;
-
-     // BUTTON POSITION
-     // Button group pulled closer to right canvas edge using reduced padding.
-     // Vertical alignment tied to joystick outer circle.
-
-     leftButton.x = miniGameWidth - buttonEdgePadding - (buttonSize * 2) - buttonGap;
-     leftButton.y = joystick.centerY + joystick.baseRadius - leftButton.height;
-
-     rightButton.x = miniGameWidth - buttonEdgePadding - buttonSize;
-     rightButton.y = joystick.centerY - joystick.baseRadius;
+     // LEFT BUTTON EDGE ANCHOR
+     // Gap is measured from right button here. Bottom alignment is matched here.
+     leftButton.x = rightButton.x - touchControlLayout.buttonGap - (buttonLeftRadius * 2);
+     leftButton.y = rightButton.y;
 }
 
 // TOUCH RESET
 
 export function resetTouchControls() {
-     setJoystickActive(false);
-     setJoystickPointerId(null);
-     setJoystickKnobOffset(0, 0);
-     setJoystickInput(0, 0);
+     const joystick = touchControls.joystick;
+     const leftButton = touchControls.leftButton;
+     const rightButton = touchControls.rightButton;
 
-     setLeftButtonPressed(false);
-     setLeftButtonPointerId(null);
+     if (joystick) {
+          joystick.knobX = 0;
+          joystick.knobY = 0;
+          joystick.pointerId = null;
+          joystick.isActive = false;
+     }
 
-     setRightButtonPressed(false);
-     setRightButtonPointerId(null);
+     if (leftButton) {
+          leftButton.isPressed = false;
+          leftButton.pointerId = null;
+     }
+
+     if (rightButton) {
+          rightButton.isPressed = false;
+          rightButton.pointerId = null;
+     }
+
+     // EDGE LAYOUT REFRESH
+     // Fresh edge anchors are applied here after reset.
+     updateTouchControlBounds();
 }
 
 // BUTTON LABEL SYNC

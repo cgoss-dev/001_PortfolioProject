@@ -249,7 +249,7 @@ function getRectCenter(rect) {
      };
 }
 
-// NOTE: WRAPPED TEXT DRAW
+// WRAPPED TEXT DRAW
 // Line breaks are measured from available width here.
 // Line count is returned so spacing can be advanced below.
 function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
@@ -311,7 +311,7 @@ function drawMenuButton(button, label, theme) {
      miniGameCtx.restore();
 }
 
-// NOTE: START/STOP BUTTON SHAPE
+// START/STOP BUTTON SHAPE
 function drawControlButton(button, isPressed, theme) {
      if (!miniGameCtx) {
           return;

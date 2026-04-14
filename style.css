@@ -370,8 +370,8 @@ h1 {
      padding-top: 0.15em;
      padding-left: 0.05em;
      padding-bottom: 0.25em;
-     /* "rem" is relative to base html font size (16px), this does not resize.
-          "em" is relative to parent element's font size, this does resize.*/
+     /* "rem" is relative to base html font size (16px), this does NOT resize.
+          "em" is relative to parent element's font size, this DOES resize.*/
 
      text-align: left;
 
