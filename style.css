@@ -389,6 +389,7 @@ h1 {
 
 .marquee > span {
      display: inline-block;
+     padding: 0.025em;
      text-shadow: var(--glow-text);
      transition:
           color var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style),
