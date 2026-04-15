@@ -147,39 +147,39 @@ function getUiTheme() {
                white: getCssColor("--text-color", "#ffffff"),
                softWhite: getCssColor("--text-color-medium", "rgba(255, 255, 255, 0.75)"),
 
-               accent: getCssColor("--accent-color", "#ea76cb"),
+               accent: getCssColor("--accent-color", "#ffffff"),
                panelFill: "rgba(0, 0, 0, 0.9)",
 
                // OUTLINE GROUP A
                // Menu popup outline + touch button outline + joystick knob outline.
-               outlineStrong: getCssColor("--accent-color", "#ea76cb"),
+               outlineStrong: getCssColor("--accent-color", "#ffffff"),
 
                // OUTLINE GROUP B
                // Menu option button outline + joystick static circle outlines.
                outlineSoft: "rgba(255, 255, 255, 0.25)",
 
-               panelStroke: getCssColor("--accent-color", "#ea76cb"),
+               panelStroke: getCssColor("--accent-color", "#ffffff"),
 
-               buttonFill: "rgba(255, 255, 255, 0.1)",
+               buttonFill: "rgba(255, 255, 255, 0.25)",
                buttonStroke: "rgba(255, 255, 255, 0.25)",
                buttonText: getCssColor("--text-color-medium", "#ffffff"),
 
                controlFill: "rgba(255, 255, 255, 0.1)",
                controlFillPressed: "rgba(255, 255, 255, 0.25)",
-               controlStroke: getCssColor("--accent-color", "#ea76cb"),
+               controlStroke: getCssColor("--accent-color", "#ffffff"),
                controlText: getCssColor("--text-color", "#ffffff"),
 
-               controlGlow: getCssColor("--accent-color", "#ea76cb"),
+               controlGlow: getCssColor("--accent-color", "#ffffff"),
 
-               overlayGlow: getCssColor("--accent-color", "#ea76cb"),
+               overlayGlow: getCssColor("--accent-color", "#ffffff"),
                scoreGlow: getCssColor("--accent-color", "#ffffff"),
 
-               joystickOuter: "rgba(255, 255, 255, 0.25)",
-               joystickInner: "rgba(255, 255, 255, 0.25)",
-               joystickStroke: "rgba(255, 255, 255, 0.25)",
+               joystickBase: "rgba(255, 255, 255, 0.05)",
+               joystickThumbprint: "rgba(255, 255, 255, 0.1)",
+               joystickStroke: "rgba(255, 255, 255, 0.05)",
 
-               heartFull: "#ea76cb",
-               heartGlow: "#ea76cb"
+               heartFull: "#ffffff",
+               heartGlow: "#ffffff"
           },
 
           sizes: {
@@ -210,7 +210,7 @@ function getUiTheme() {
      };
 }
 
-// SHARED DRAW HELPERS
+// NOTE: SHARED DRAW HELPERS
 
 function isPointInsideRect(x, y, rect) {
      return (
@@ -331,7 +331,7 @@ function drawControlButton(button, isPressed, theme) {
      miniGameCtx.fillStyle = isPressed ? colors.controlFillPressed : colors.controlFill;
      miniGameCtx.fill();
 
-     miniGameCtx.lineWidth = 2;
+     miniGameCtx.lineWidth = 3;
      miniGameCtx.strokeStyle = colors.outlineStrong;
      miniGameCtx.stroke();
 
@@ -583,7 +583,7 @@ export function drawGame() {
      drawTouchJoystick();
      drawTouchButtons();
 
-     // NOTE: LAYER GATE
+     // LAYER GATE
      // Only one top UI state is drawn here.
      // Stack order is kept clear by branching here.
      if (gameMenuOpen) {
@@ -606,7 +606,7 @@ function drawScore() {
           return;
      }
 
-     const { colors, sizes, fonts, glow } = getUiTheme();
+     const { colors, sizes, fonts } = getUiTheme();
 
      miniGameCtx.save();
 
@@ -616,8 +616,8 @@ function drawScore() {
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "top";
      miniGameCtx.fillStyle = colors.white;
-     miniGameCtx.shadowColor = colors.white;
-     miniGameCtx.shadowBlur = colors.white;
+     miniGameCtx.shadowColor = colors.white
+     miniGameCtx.shadowBlur = 10;
 
      miniGameCtx.fillText(formattedScore, sizes.scoreX, sizes.scoreY);
 
@@ -692,17 +692,23 @@ export function drawTouchJoystick() {
 
      // JOYSTICK BASE
      
-          // Joystick outer static circle.
+          // Joystick static circle.
           miniGameCtx.beginPath();
-          miniGameCtx.arc(joystick.centerX, joystick.centerY, joystick.baseRadius * 0.75, 0, Math.PI * 2);
-          miniGameCtx.fillStyle = colors.joystickOuter;
+          miniGameCtx.arc(
+               joystick.centerX,
+               joystick.centerY,
+               joystick.baseRadius * 0.25,
+               0,
+               Math.PI * 2
+          );
+          miniGameCtx.fillStyle = colors.joystickBase;
           miniGameCtx.fill();
-          miniGameCtx.lineWidth = 2;
+          miniGameCtx.lineWidth = 3;
           miniGameCtx.strokeStyle = colors.outlineSoft; 
           miniGameCtx.stroke();
 
           // Joystick center crosshairs.
-          const crosshairSize = joystick.baseRadius * 0.25;
+          const crosshairSize = joystick.baseRadius * 0.75;
           const cx = joystick.centerX;
           const cy = joystick.centerY;
 
@@ -711,7 +717,7 @@ export function drawTouchJoystick() {
           miniGameCtx.lineTo(cx + crosshairSize, cy);
           miniGameCtx.moveTo(cx, cy - crosshairSize);
           miniGameCtx.lineTo(cx, cy + crosshairSize);
-          miniGameCtx.lineWidth = 2;
+          miniGameCtx.lineWidth = 3;
           miniGameCtx.strokeStyle = colors.outlineSoft;
           miniGameCtx.stroke();
 
@@ -721,10 +727,16 @@ export function drawTouchJoystick() {
           miniGameCtx.shadowBlur = glow.uiMediumGlow;
 
           miniGameCtx.beginPath();
-          miniGameCtx.arc(joystick.centerX + joystick.knobX, joystick.centerY + joystick.knobY, joystick.thumbRadius * 2, 0, Math.PI * 32);
-          miniGameCtx.fillStyle = colors.joystickInner;
+          miniGameCtx.arc(
+               joystick.centerX + joystick.knobX,
+               joystick.centerY + joystick.knobY,
+               joystick.thumbRadius * 1.5,
+               0,
+               Math.PI * 2
+          );
+          miniGameCtx.fillStyle = colors.joystickThumbprint;
           miniGameCtx.fill();
-          miniGameCtx.lineWidth = 2;
+          miniGameCtx.lineWidth = 3;
           miniGameCtx.strokeStyle = colors.outlineStrong;
           miniGameCtx.stroke();
 
@@ -743,17 +755,17 @@ export function drawTouchJoystick() {
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.font = `400 ${sizes.menuSmallFont}px ${fonts.body}`;
 
-     const offset = joystick.baseRadius * 0.75;
+     // const offset = joystick.baseRadius * 0.5;
 
-     miniGameCtx.fillText("W", cx, cy - offset);
-     miniGameCtx.fillText("A", cx - offset, cy);
-     miniGameCtx.fillText("S", cx, cy + offset);
-     miniGameCtx.fillText("D", cx + offset, cy);
+     // miniGameCtx.fillText("W", cx, cy - offset);
+     // miniGameCtx.fillText("A", cx - offset, cy);
+     // miniGameCtx.fillText("S", cx, cy + offset);
+     // miniGameCtx.fillText("D", cx + offset, cy);
 
      miniGameCtx.restore();
 }
 
-// NOTE: START/STOP BUTTON LABEL/LOCATION
+// BUTTON LABELS
 export function drawTouchButtons() {
      if (!miniGameCtx) {
           return;
@@ -787,11 +799,11 @@ export function drawTouchButtons() {
 
           // LEFT LABEL
           miniGameCtx.font = `${leftFontSize}px ${fonts.symbol}`;
-          miniGameCtx.fillText(leftButton.label, leftCenter.x, leftCenter.y + 1.25); //FIXME: REVISIT LABELS
+          miniGameCtx.fillText(leftButton.label, leftCenter.x, leftCenter.y + 1); //FIXME: REVISIT LABELS
 
           // RIGHT LABEL
           miniGameCtx.font = `${rightFontSize}px ${fonts.symbol}`;
-          miniGameCtx.fillText(rightButton.label, rightCenter.x, rightCenter.y + 1.25);
+          miniGameCtx.fillText(rightButton.label, rightCenter.x, rightCenter.y + 1);
 
      miniGameCtx.restore();
 }
@@ -807,9 +819,9 @@ export function drawMenuOverlay() {
      miniGameCtx.save();
      miniGameCtx.globalAlpha = 1;
 
-     // MENU BACKDROP
+     // NOTE: DIMMED MENU BACKDROP
      // Lower playfield is dimmed here. Focus is pushed into menu state here.
-     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
+     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.75)";
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
      miniGameCtx.shadowColor = colors.controlGlow;
@@ -827,7 +839,7 @@ export function drawMenuOverlay() {
 
      miniGameCtx.shadowBlur = 0;
      miniGameCtx.strokeStyle = colors.outlineStrong;
-     miniGameCtx.lineWidth = 2;
+     miniGameCtx.lineWidth = 3;
      drawRoundedRect(
           gameMenuUi.panel.x,
           gameMenuUi.panel.y,
@@ -907,7 +919,7 @@ export function drawGameStatusOverlay() {
      // OVERLAY BACKDROP
      // Lower playfield is dimmed here.
      // Status state is separated more clearly here.
-     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
+     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.25)";
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
      // MEASURE TEXT
@@ -955,7 +967,7 @@ export function drawGameStatusOverlay() {
 
      miniGameCtx.shadowBlur = 0;
      miniGameCtx.strokeStyle = colors.outlineStrong;
-     miniGameCtx.lineWidth = 2;
+     miniGameCtx.lineWidth = 3;
 
      drawRoundedRect(
           panelX,
