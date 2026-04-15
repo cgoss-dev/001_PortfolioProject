@@ -39,7 +39,11 @@ import {
      startNewGameRound,
      cycleDifficulty,
      toggleAllSound,
-     isPointInsideMenuPanel
+     isPointInsideMenuPanel,
+     isGameWelcomeActive,
+     getGameWelcomeUi,
+     dismissGameWelcomeToStart,
+     dismissGameWelcomeToMenu
 } from "./ui.js";
 
 // NOTE: EDGE CONTROLS
@@ -156,6 +160,26 @@ function getMenuButtonAtPoint(x, y) {
      return null;
 }
 
+// NOTE: WELCOME BUTTON LOOKUP
+// Welcome action word bounds are read from ui state here.
+function getWelcomeButtonAtPoint(x, y) {
+     if (!isGameWelcomeActive()) {
+          return null;
+     }
+
+     const welcomeUi = getGameWelcomeUi();
+
+     if (isPointInsideRect(x, y, welcomeUi.startButton)) {
+          return "start";
+     }
+
+     if (isPointInsideRect(x, y, welcomeUi.menuButton)) {
+          return "menu";
+     }
+
+     return null;
+}
+
 // NOTE: CURSOR SYNC
 // Canvas cursor is swapped here when clickable areas are crossed.
 function updateCanvasCursor(x, y) {
@@ -165,7 +189,14 @@ function updateCanvasCursor(x, y) {
 
      let cursor = "default";
 
-     if (gameMenuOpen) {
+     // NOTE: WELCOME CURSOR
+     // Only action words are treated as clickable while welcome state is active.
+     if (isGameWelcomeActive()) {
+          if (getWelcomeButtonAtPoint(x, y)) {
+               cursor = "pointer";
+          }
+
+     } else if (gameMenuOpen) {
           if (!isPointInsideMenuPanel(x, y)) {
                cursor = "pointer";
           } else if (getMenuButtonAtPoint(x, y)) {
@@ -397,6 +428,18 @@ function onKeyDown(event) {
           event.preventDefault();
      }
 
+     // NOTE: WELCOME KEY DISMISS
+     // Enter starts game from welcome state here. Escape opens menu.
+     if (isGameWelcomeActive()) {
+          if (key === "space" || key === "enter") {
+               dismissGameWelcomeToStart();
+          } else if (key === "escape") {
+               dismissGameWelcomeToMenu();
+          }
+
+          return;
+     }
+
      if (key === "escape") {
           if (gameMenuOpen) {
                if (gameMenuView !== "main") {
@@ -541,6 +584,26 @@ function onPointerDown(event) {
 
      updateCanvasCursor(pos.x, pos.y);
 
+     // NOTE: WELCOME CLICK ACTIONS
+     // Welcome actions are routed only through measured word bounds here.
+     if (isGameWelcomeActive()) {
+          const welcomeTarget = getWelcomeButtonAtPoint(pos.x, pos.y);
+
+          if (welcomeTarget === "start") {
+               dismissGameWelcomeToStart();
+               event.preventDefault();
+               return;
+          }
+
+          if (welcomeTarget === "menu") {
+               dismissGameWelcomeToMenu();
+               event.preventDefault();
+               return;
+          }
+
+          return;
+     }
+
      if (handleMenuClick(pos.x, pos.y)) {
           event.preventDefault();
           return;
@@ -587,6 +650,12 @@ function onPointerMove(event) {
 
      updateCanvasCursor(pos.x, pos.y);
 
+     // NOTE: WELCOME MOVE GATE
+     // Control motion is ignored here until welcome state is dismissed.
+     if (isGameWelcomeActive()) {
+          return;
+     }
+
      // Only active pointer can move joystick.
      if (joystick.isActive && joystick.pointerId === event.pointerId) {
           updateJoystickFromPointer(event);
@@ -595,6 +664,16 @@ function onPointerMove(event) {
 }
 
 function onPointerUp(event) {
+     // NOTE: WELCOME RELEASE GATE
+     // Control resets are skipped here while welcome state is active.
+     if (isGameWelcomeActive()) {
+          if (miniGameCanvas) {
+               const pos = getCanvasPointerPosition(event);
+               updateCanvasCursor(pos.x, pos.y);
+          }
+          return;
+     }
+
      // Reset any control that belongs to this pointer.
      clearJoystick(event.pointerId);
      clearButtons(event.pointerId);

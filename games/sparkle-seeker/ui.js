@@ -1,15 +1,7 @@
 // NOTE: UI / MENU / OVERLAY / STARTUP
 // Game entry file loaded by page.
 //
-// Owned here:
-// - canvas size syncing
-// - round/startup flow
-// - menu layout + menu helpers
-// - overlay state helpers
-// - update orchestration
-// - draw orchestration
-// - game UI drawing
-//
+// Owned here: canvas size syncing, round/startup flow, game UI drawing.
 // Shared visual values pulled from root CSS through window.SiteTheme.
 
 import {
@@ -89,6 +81,67 @@ export const difficultyOptions = ["Easy", "Normal", "Hard"];
 export const startOverlayDuration = 120;
 export const overlayFadeFrames = 30;
 
+// NOTE: WELCOME STATE
+// Page-load welcome state is owned locally here.
+// First action is expected to be triggered from input handling.
+let gameWelcome = true;
+let gameWelcomeTimer = -1;
+let gameWelcomeDuration = -1;
+
+// NOTE: WELCOME ACTION TARGETS
+// Clickable word bounds are stored here for input handling.
+const gameWelcomeUi = {
+     startButton: { x: 0, y: 0, width: 0, height: 0 },
+     menuButton: { x: 0, y: 0, width: 0, height: 0 }
+};
+
+// NOTE: WELCOME TITLE COLOR ENGINE
+// Canvas title colors are cycled here using shared root theme helpers.
+const welcomeTitleLines = ["SPARKLE", "SEEKER"];
+let welcomeColorEngine = null;
+let welcomePreviousColors = [[], []];
+let welcomeCurrentColors = [[], []];
+let welcomeLastColorCycleTime = 0;
+
+export function isGameWelcomeActive() {
+     return gameWelcome;
+}
+
+export function getGameWelcomeUi() {
+     return gameWelcomeUi;
+}
+
+export function dismissGameWelcomeToStart() {
+     gameWelcome = false;
+     gameWelcomeTimer = 0;
+     gameWelcomeDuration = 0;
+     startNewGameRound();
+}
+
+export function dismissGameWelcomeToMenu() {
+     gameWelcome = false;
+     gameWelcomeTimer = 0;
+     gameWelcomeDuration = 0;
+
+     resetGameState();
+     resetTouchControls();
+     resetEntityColorCycle();
+
+     updateMiniGameCanvasSize();
+     resetPlayerPosition();
+     updateTouchControlBounds();
+     updateMenuUiBounds();
+
+     setGameStarted(false);
+     setGamePaused(false);
+     setGameMenuOpen(true);
+     setGameMenuView("main");
+     setGameOver(false);
+     setGameWon(false);
+
+     clearGameOverlay();
+}
+
 // CSS HELPERS
 
 const siteTheme = window.SiteTheme;
@@ -101,8 +154,7 @@ function getCssNumber(variableName, fallback = 0) {
      return siteTheme?.getCssNumber?.(variableName, fallback) ?? fallback;
 }
 
-// STRING VALUE HELPER
-// Font-family values pulled from root CSS here.
+// STRING VALUE HELPER: Font-family values pulled from root CSS here.
 function getCssString(variableName, fallback = "") {
      if (!document?.documentElement) {
           return fallback;
@@ -112,8 +164,7 @@ function getCssString(variableName, fallback = "") {
      return value || fallback;
 }
 
-// PIXEL SIZE HELPER
-// clamp()/rem values from root CSS resolved into px here for canvas text. Canvas needs a real number, not raw CSS text.
+// PIXEL SIZE HELPER: clamp()/rem values from root CSS resolved into px here for canvas text. Canvas needs a real number, not raw CSS text.
 function getCssPixelSize(variableName, fallback = 16) {
      if (!document?.body) {
           return fallback;
@@ -147,26 +198,19 @@ function getUiTheme() {
                white: getCssColor("--text-color", "#ffffff"),
                softWhite: getCssColor("--text-color-medium", "rgba(255, 255, 255, 0.75)"),
 
-               accent: getCssColor("--accent-color", "#ffffff"),
                panelFill: "rgba(0, 0, 0, 0.9)",
 
-               // OUTLINE GROUP A
-               // Menu popup outline + touch button outline + joystick knob outline.
+               // OUTLINE GROUP A: Menu popup outline + touch button outline + joystick knob outline.
                outlineStrong: getCssColor("--accent-color", "#ffffff"),
 
-               // OUTLINE GROUP B
-               // Menu option button outline + joystick static circle outlines.
+               // OUTLINE GROUP B: Menu option button outline + joystick static circle outlines.
                outlineSoft: "rgba(255, 255, 255, 0.25)",
 
-               panelStroke: getCssColor("--accent-color", "#ffffff"),
-
-               buttonFill: "rgba(255, 255, 255, 0.25)",
-               buttonStroke: "rgba(255, 255, 255, 0.25)",
+               buttonFill: "rgba(255, 255, 255, 0.15)", // MENU OPTIONS BUTTONS
                buttonText: getCssColor("--text-color-medium", "#ffffff"),
 
-               controlFill: "rgba(255, 255, 255, 0.1)",
+               controlFill: "rgba(255, 255, 255, 0.1)", // START/MENU BUTTONS
                controlFillPressed: "rgba(255, 255, 255, 0.25)",
-               controlStroke: getCssColor("--accent-color", "#ffffff"),
                controlText: getCssColor("--text-color", "#ffffff"),
 
                controlGlow: getCssColor("--accent-color", "#ffffff"),
@@ -176,7 +220,6 @@ function getUiTheme() {
 
                joystickBase: "rgba(255, 255, 255, 0.05)",
                joystickThumbprint: "rgba(255, 255, 255, 0.1)",
-               joystickStroke: "rgba(255, 255, 255, 0.05)",
 
                heartFull: "#ffffff",
                heartGlow: "#ffffff"
@@ -195,7 +238,10 @@ function getUiTheme() {
                overlayTitleFont: 36,
                overlaySubFont: getCssPixelSize("--text-size-medium", 18),
 
-               menuTitleFont: 0,
+               // NOTE: WELCOME TITLE SIZE
+               // Title is allowed to scale from canvas size here.
+               welcomeSubFont: getCssPixelSize("--text-size-small", 14),
+
                menuButtonFont: getCssPixelSize("--text-size-small", 14),
                menuSmallFont: getCssPixelSize("--text-size-small", 14),
 
@@ -241,17 +287,28 @@ function drawRoundedRect(x, y, width, height, radius) {
      miniGameCtx.closePath();
 }
 
-// Center point reused for label and circle alignment here.
-function getRectCenter(rect) {
-     return {
-          x: rect.x + (rect.width / 2),
-          y: rect.y + (rect.height / 2)
-     };
+// NOTE: PANEL BOX
+// Shared fill/stroke box is drawn here so repetition is reduced.
+function drawPanelBox(x, y, width, height, theme, lineWidth = 3) {
+     const { colors, glow, sizes } = theme;
+
+     miniGameCtx.shadowColor = colors.controlGlow;
+     miniGameCtx.shadowBlur = glow.uiStrongGlow;
+
+     drawRoundedRect(x, y, width, height, sizes.controlRadius);
+     miniGameCtx.fillStyle = colors.panelFill;
+     miniGameCtx.fill();
+
+     miniGameCtx.shadowBlur = 0;
+     miniGameCtx.strokeStyle = colors.outlineStrong;
+     miniGameCtx.lineWidth = lineWidth;
+
+     drawRoundedRect(x, y, width, height, sizes.controlRadius);
+     miniGameCtx.stroke();
 }
 
 // WRAPPED TEXT DRAW
-// Line breaks are measured from available width here.
-// Line count is returned so spacing can be advanced below.
+// Line breaks are measured from available width here. Line count is returned so spacing can be advanced below.
 function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
      const words = text.split(" ");
      let line = "";
@@ -278,16 +335,92 @@ function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
      return lines.length;
 }
 
+// NOTE: WELCOME COLOR SETUP
+// Shared root color engine is reused here for canvas title letters.
+function ensureWelcomeColorEngine() {
+     if (welcomeColorEngine || !siteTheme?.createColorEngine || !siteTheme?.getRainbowPalette) {
+          return;
+     }
+
+     welcomeColorEngine = siteTheme.createColorEngine(siteTheme.getRainbowPalette);
+}
+
+function updateWelcomeTitleColors() {
+     ensureWelcomeColorEngine();
+
+     const rainbowCycleSpeed = siteTheme?.getTextSettings?.().rainbowCycleSpeed ?? 900;
+     const now = performance.now();
+
+     if (welcomeCurrentColors[0].length && (now - welcomeLastColorCycleTime) < rainbowCycleSpeed) {
+          return;
+     }
+
+     if (!welcomeColorEngine?.nextCycle) {
+          const fallbackColor = getCssColor("--text-color", "#ffffff");
+          welcomeCurrentColors = welcomeTitleLines.map((line) => Array(line.length).fill(fallbackColor));
+          welcomePreviousColors = welcomeCurrentColors.map((colors) => [...colors]);
+          welcomeLastColorCycleTime = now;
+          return;
+     }
+
+     welcomeCurrentColors = welcomeTitleLines.map((line, lineIndex) =>
+          welcomeColorEngine.nextCycle(line.length, welcomePreviousColors[lineIndex] || [])
+     );
+
+     welcomePreviousColors = welcomeCurrentColors.map((colors) => [...colors]);
+     welcomeLastColorCycleTime = now;
+}
+
+// NOTE: WELCOME TITLE FIT
+// Font size is reduced until both title lines fit safely inside canvas.
+function getWelcomeTitleFontSize(theme) {
+     const { fonts } = theme;
+     const baseSize = Math.min(miniGameWidth * 0.18, miniGameHeight * 0.16);
+     const maxSize = Math.max(48, baseSize);
+     const minSize = 28;
+     const sidePadding = 32;
+     let fontSize = maxSize;
+
+     miniGameCtx.save();
+
+     while (fontSize > minSize) {
+          miniGameCtx.font = `${fontSize}px ${fonts.display}`;
+
+          const lineWidths = welcomeTitleLines.map((line) => {
+               let width = 0;
+
+               for (let i = 0; i < line.length; i += 1) {
+                    width += miniGameCtx.measureText(line[i]).width;
+               }
+
+               return width;
+          });
+
+          const widestLine = Math.max(...lineWidths);
+
+          if (widestLine <= (miniGameWidth - (sidePadding * 2))) {
+               break;
+          }
+
+          fontSize -= 2;
+     }
+
+     miniGameCtx.restore();
+
+     return fontSize;
+}
+
 function drawMenuButton(button, label, theme) {
      if (!miniGameCtx) {
           return;
      }
 
      const { colors, sizes, fonts, glow } = theme;
-     const center = getRectCenter(button);
+     const centerX = button.x + (button.width / 2);
+     const centerY = button.y + (button.height / 2);
 
      miniGameCtx.save();
-     miniGameCtx.fillStyle = colors.buttonFill;
+     miniGameCtx.fillStyle = colors.buttonFill; // FIXME: REVISIT MENU BUTTONS
      miniGameCtx.strokeStyle = colors.outlineSoft;
      miniGameCtx.lineWidth = 2;
      miniGameCtx.shadowColor = colors.controlGlow;
@@ -306,7 +439,7 @@ function drawMenuButton(button, label, theme) {
      // FONT STRING
      // Explicit normal weight used here so "Back" stays on body font consistently.
      miniGameCtx.font = `400 ${sizes.menuButtonFont}px ${fonts.body}`;
-     miniGameCtx.fillText(label, center.x, center.y + 1);
+     miniGameCtx.fillText(label, centerX, centerY + 1);
 
      miniGameCtx.restore();
 }
@@ -318,7 +451,8 @@ function drawControlButton(button, isPressed, theme) {
      }
 
      const { colors, glow } = theme;
-     const center = getRectCenter(button);
+     const centerX = button.x + (button.width / 2);
+     const centerY = button.y + (button.height / 2);
      const radius = button.width / 2;
 
      miniGameCtx.save();
@@ -326,7 +460,7 @@ function drawControlButton(button, isPressed, theme) {
      miniGameCtx.shadowBlur = isPressed ? glow.uiStrongGlow : glow.uiMediumGlow;
 
      miniGameCtx.beginPath();
-     miniGameCtx.arc(center.x, center.y, radius * 1.25, 0, Math.PI * 2);
+     miniGameCtx.arc(centerX, centerY, radius * 1.25, 0, Math.PI * 2);
 
      miniGameCtx.fillStyle = isPressed ? colors.controlFillPressed : colors.controlFill;
      miniGameCtx.fill();
@@ -416,8 +550,8 @@ export function toggleAllSound() {
 }
 
 export function updateMenuUiBounds() {
-     const panelWidth = Math.max(280, Math.min(miniGameWidth * 0.72, 400));
-     const panelHeight = Math.max(280, Math.min(miniGameHeight * 0.72, 380));
+     const panelWidth = Math.max(250, Math.min(miniGameWidth * 0.5, 500));
+     const panelHeight = Math.max(250, Math.min(miniGameHeight * 0.5, 500));
      const panelX = (miniGameWidth - panelWidth) / 2;
      const panelY = (miniGameHeight - panelHeight) / 2;
 
@@ -426,38 +560,31 @@ export function updateMenuUiBounds() {
      gameMenuUi.panel.width = panelWidth;
      gameMenuUi.panel.height = panelHeight;
 
+     // SHARED BUTTON LAYOUT
      const sidePadding = 20;
+     const buttonHeight = 35;
      const buttonX = panelX + sidePadding;
      const buttonWidth = panelWidth - (sidePadding * 2);
 
-     const buttonHeight = 38;
-     const buttonGap = 10;
-     const firstButtonY = panelY + 28;
+     // STACK ORDER
+     const stackedButtons = [
+          gameMenuUi.newGameButton,
+          gameMenuUi.instructionsButton,
+          gameMenuUi.difficultyButton,
+          gameMenuUi.soundButton,
+          gameMenuUi.backButton
+     ];
 
-     gameMenuUi.newGameButton.x = buttonX;
-     gameMenuUi.newGameButton.y = firstButtonY;
-     gameMenuUi.newGameButton.width = buttonWidth;
-     gameMenuUi.newGameButton.height = buttonHeight;
+     // EVEN DISTRIBUTION
+     const buttonCount = stackedButtons.length;
+     const gap = (panelHeight - (buttonCount * buttonHeight)) / (buttonCount + 1);
 
-     gameMenuUi.instructionsButton.x = buttonX;
-     gameMenuUi.instructionsButton.y = firstButtonY + (buttonHeight + buttonGap);
-     gameMenuUi.instructionsButton.width = buttonWidth;
-     gameMenuUi.instructionsButton.height = buttonHeight;
-
-     gameMenuUi.difficultyButton.x = buttonX;
-     gameMenuUi.difficultyButton.y = firstButtonY + ((buttonHeight + buttonGap) * 2);
-     gameMenuUi.difficultyButton.width = buttonWidth;
-     gameMenuUi.difficultyButton.height = buttonHeight;
-
-     gameMenuUi.soundButton.x = buttonX;
-     gameMenuUi.soundButton.y = firstButtonY + ((buttonHeight + buttonGap) * 3);
-     gameMenuUi.soundButton.width = buttonWidth;
-     gameMenuUi.soundButton.height = buttonHeight;
-
-     gameMenuUi.backButton.x = buttonX;
-     gameMenuUi.backButton.y = panelY + panelHeight - 50;
-     gameMenuUi.backButton.width = buttonWidth;
-     gameMenuUi.backButton.height = 34;
+     stackedButtons.forEach((button, index) => {
+          button.x = buttonX;
+          button.y = panelY + gap + (index * (buttonHeight + gap));
+          button.width = buttonWidth;
+          button.height = buttonHeight;
+     });
 }
 
 export function isPointInsideMenuPanel(x, y) {
@@ -509,6 +636,24 @@ export function getGameOverlayAlpha() {
      return Math.max(0, Math.min(1, Math.min(fadeIn, fadeOut)));
 }
 
+// NOTE: WELCOME ALPHA
+// Same fade math is reused here for page-load welcome state.
+function getGameWelcomeAlpha() {
+     if (!gameWelcome) {
+          return 0;
+     }
+
+     if (gameWelcomeTimer < 0 || gameWelcomeDuration < 0) {
+          return 1;
+     }
+
+     const elapsed = gameWelcomeDuration - gameWelcomeTimer;
+     const fadeIn = Math.min(1, elapsed / overlayFadeFrames);
+     const fadeOut = Math.min(1, gameWelcomeTimer / overlayFadeFrames);
+
+     return Math.max(0, Math.min(1, Math.min(fadeIn, fadeOut)));
+}
+
 // PAUSE SYNC
 
 export function syncPauseOverlay() {
@@ -530,6 +675,13 @@ export function updateGame() {
      updatePauseButtonState();
      updateGameOverlayTimer();
      syncPauseOverlay();
+
+     // NOTE: WELCOME GATE
+     // Gameplay updates are held here until welcome state is dismissed.
+     if (gameWelcome) {
+          updateWelcomeTitleColors();
+          return;
+     }
 
      if (!gameStarted || gamePaused || gameMenuOpen || gameOver || gameWon) {
           return;
@@ -571,25 +723,33 @@ export function updateGame() {
 }
 
 export function drawGame() {
+     const theme = getUiTheme();
+
      drawMiniGameBackground();
+
+     // NOTE: WELCOME DRAW GATE
+     // Canvas HUD and controls are hidden here while welcome state is active.
+     if (gameWelcome) {
+          drawGameWelcomeOverlay(theme);
+          return;
+     }
 
      drawSparkles();
      drawObstacles();
      drawCollisionBursts();
      drawPlayer();
 
-     drawScore();
-     drawHealth();
-     drawTouchJoystick();
-     drawTouchButtons();
+     drawScore(theme);
+     drawHealth(theme);
+     drawTouchJoystick(theme);
+     drawTouchButtons(theme);
 
      // LAYER GATE
-     // Only one top UI state is drawn here.
-     // Stack order is kept clear by branching here.
+     // Only one top UI state is drawn here. Stack order is kept clear by branching here.
      if (gameMenuOpen) {
-          drawMenuOverlay();
+          drawMenuOverlay(theme);
      } else {
-          drawGameStatusOverlay();
+          drawGameStatusOverlay(theme);
      }
 }
 
@@ -601,38 +761,31 @@ function gameLoop() {
 
 // UI DRAW FUNCTIONS
 
-function drawScore() {
+function drawScore(theme) {
      if (!miniGameCtx) {
           return;
      }
 
-     const { colors, sizes, fonts } = getUiTheme();
-
-     miniGameCtx.save();
-
+     const { colors, sizes, fonts } = theme;
      const formattedScore = String(sparkleScore).padStart(3, "0");
 
+     miniGameCtx.save();
      miniGameCtx.font = `${sizes.scoreFont}px ${fonts.display}`;
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "top";
      miniGameCtx.fillStyle = colors.white;
-     miniGameCtx.shadowColor = colors.white
+     miniGameCtx.shadowColor = colors.white;
      miniGameCtx.shadowBlur = 10;
-
      miniGameCtx.fillText(formattedScore, sizes.scoreX, sizes.scoreY);
-
      miniGameCtx.restore();
 }
 
-function drawHealth() {
+function drawHealth(theme) {
      if (!miniGameCtx) {
           return;
      }
 
-     const { colors, sizes, fonts, glow } = getUiTheme();
-
-     miniGameCtx.save();
-
+     const { colors, sizes, fonts, glow } = theme;
      const filledHeart = "♥";
      const emptyHeart = "♡";
      const heartsPerRow = 5;
@@ -640,138 +793,88 @@ function drawHealth() {
      let topRow = "";
      let bottomRow = "";
 
-     // TOP ROW
-     // Hearts 10 → 6.
+     // TOP ROW: Hearts 10 → 6.
      for (let i = maxPlayerHealth - 1; i >= heartsPerRow; i -= 1) {
-          if (i < playerHealth) {
-               topRow += filledHeart;
-          } else {
-               topRow += emptyHeart;
-          }
+          topRow += (i < playerHealth) ? filledHeart : emptyHeart;
      }
 
-     // BOTTOM ROW
-     // Hearts 5 → 1.
+     // BOTTOM ROW: Hearts 5 → 1.
      for (let i = heartsPerRow - 1; i >= 0; i -= 1) {
-          if (i < playerHealth) {
-               bottomRow += filledHeart;
-          } else {
-               bottomRow += emptyHeart;
-          }
+          bottomRow += (i < playerHealth) ? filledHeart : emptyHeart;
      }
 
+     miniGameCtx.save();
      miniGameCtx.font = `${sizes.heartFont}px ${fonts.body}`;
      miniGameCtx.textAlign = "right";
      miniGameCtx.textBaseline = "top";
      miniGameCtx.fillStyle = colors.heartFull;
      miniGameCtx.shadowColor = colors.heartGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
-
-     const healthX = miniGameWidth - sizes.heartXPadding;
-     const healthY = sizes.heartY;
-     const rowGap = sizes.heartGap;
-
-     miniGameCtx.fillText(topRow, healthX, healthY);
-     miniGameCtx.fillText(bottomRow, healthX, healthY + rowGap);
-
+     miniGameCtx.fillText(topRow, miniGameWidth - sizes.heartXPadding, sizes.heartY);
+     miniGameCtx.fillText(bottomRow, miniGameWidth - sizes.heartXPadding, sizes.heartY + sizes.heartGap);
      miniGameCtx.restore();
 }
 
-export function drawTouchJoystick() {
+export function drawTouchJoystick(theme) {
      if (!miniGameCtx) {
           return;
      }
 
-     const theme = getUiTheme();
-     const { colors, glow, fonts, sizes } = theme;
+     const { colors, glow } = theme;
      const joystick = touchControls.joystick;
+     const cx = joystick.centerX;
+     const cy = joystick.centerY;
+     const crosshairSize = joystick.baseRadius * 0.75;
 
      miniGameCtx.save();
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
 
-     // JOYSTICK BASE
-     
-          // Joystick static circle.
-          miniGameCtx.beginPath();
-          miniGameCtx.arc(
-               joystick.centerX,
-               joystick.centerY,
-               joystick.baseRadius * 0.25,
-               0,
-               Math.PI * 2
-          );
-          miniGameCtx.fillStyle = colors.joystickBase;
-          miniGameCtx.fill();
-          miniGameCtx.lineWidth = 3;
-          miniGameCtx.strokeStyle = colors.outlineSoft; 
-          miniGameCtx.stroke();
+     // JOYSTICK BASE CIRCLE
+     miniGameCtx.beginPath();
+     miniGameCtx.arc(cx, cy, joystick.baseRadius * 0.25, 0, Math.PI * 2);
+     miniGameCtx.fillStyle = colors.joystickBase;
+     miniGameCtx.fill();
+     miniGameCtx.lineWidth = 3;
+     miniGameCtx.strokeStyle = colors.outlineSoft;
+     miniGameCtx.stroke();
 
-          // Joystick center crosshairs.
-          const crosshairSize = joystick.baseRadius * 0.75;
-          const cx = joystick.centerX;
-          const cy = joystick.centerY;
-
-          miniGameCtx.beginPath();
-          miniGameCtx.moveTo(cx - crosshairSize, cy);
-          miniGameCtx.lineTo(cx + crosshairSize, cy);
-          miniGameCtx.moveTo(cx, cy - crosshairSize);
-          miniGameCtx.lineTo(cx, cy + crosshairSize);
-          miniGameCtx.lineWidth = 3;
-          miniGameCtx.strokeStyle = colors.outlineSoft;
-          miniGameCtx.stroke();
+     // JOYSTICK BASE CROSSHAIRS
+     miniGameCtx.beginPath();
+     miniGameCtx.moveTo(cx - crosshairSize, cy);
+     miniGameCtx.lineTo(cx + crosshairSize, cy);
+     miniGameCtx.moveTo(cx, cy - crosshairSize);
+     miniGameCtx.lineTo(cx, cy + crosshairSize);
+     miniGameCtx.lineWidth = 3;
+     miniGameCtx.strokeStyle = colors.outlineSoft;
+     miniGameCtx.stroke();
 
      // JOYSTICK KNOB
-
-          miniGameCtx.shadowColor = colors.controlGlow;
-          miniGameCtx.shadowBlur = glow.uiMediumGlow;
-
-          miniGameCtx.beginPath();
-          miniGameCtx.arc(
-               joystick.centerX + joystick.knobX,
-               joystick.centerY + joystick.knobY,
-               joystick.thumbRadius * 1.5,
-               0,
-               Math.PI * 2
-          );
-          miniGameCtx.fillStyle = colors.joystickThumbprint;
-          miniGameCtx.fill();
-          miniGameCtx.lineWidth = 3;
-          miniGameCtx.strokeStyle = colors.outlineStrong;
-          miniGameCtx.stroke();
-
-          miniGameCtx.restore();
-
-     // WASD LABELS
-     // Menu option font styling reused here. Small text size pulled from root CSS here.
-
-     miniGameCtx.save();
-
-     miniGameCtx.fillStyle = colors.controlText;
      miniGameCtx.shadowColor = colors.controlGlow;
-     miniGameCtx.shadowBlur = 6;
-
-     miniGameCtx.textAlign = "center";
-     miniGameCtx.textBaseline = "middle";
-     miniGameCtx.font = `400 ${sizes.menuSmallFont}px ${fonts.body}`;
-
-     // const offset = joystick.baseRadius * 0.5;
-
-     // miniGameCtx.fillText("W", cx, cy - offset);
-     // miniGameCtx.fillText("A", cx - offset, cy);
-     // miniGameCtx.fillText("S", cx, cy + offset);
-     // miniGameCtx.fillText("D", cx + offset, cy);
+     miniGameCtx.shadowBlur = glow.uiMediumGlow;
+     miniGameCtx.beginPath();
+     miniGameCtx.arc(
+          cx + joystick.knobX,
+          cy + joystick.knobY,
+          joystick.thumbRadius * 1.5,
+          0,
+          Math.PI * 2
+     );
+     miniGameCtx.fillStyle = colors.joystickThumbprint;
+     miniGameCtx.fill();
+     miniGameCtx.lineWidth = 3;
+     miniGameCtx.strokeStyle = colors.outlineStrong;
+     miniGameCtx.stroke();
 
      miniGameCtx.restore();
 }
 
 // BUTTON LABELS
-export function drawTouchButtons() {
+export function drawTouchButtons(theme) {
      if (!miniGameCtx) {
           return;
      }
 
-     const theme = getUiTheme();
      const { colors, fonts, glow } = theme;
      const leftButton = touchControls.leftButton;
      const rightButton = touchControls.rightButton;
@@ -781,11 +884,7 @@ export function drawTouchButtons() {
      drawControlButton(leftButton, leftButton.isPressed, theme);
      drawControlButton(rightButton, rightButton.isPressed, theme);
 
-     const leftCenter = getRectCenter(leftButton);
-     const rightCenter = getRectCenter(rightButton);
-
      miniGameCtx.save();
-
      miniGameCtx.fillStyle = colors.controlText;
      miniGameCtx.textAlign = "center";
      miniGameCtx.textBaseline = "middle";
@@ -794,27 +893,29 @@ export function drawTouchButtons() {
 
      // LABEL SIZE
      // Scaled from button size here for consistent visual balance.
-     const leftFontSize = leftButton.height * 0.5;
-     const rightFontSize = rightButton.height * 0.5;
+     miniGameCtx.font = `${leftButton.height * 0.5}px ${fonts.symbol}`;
+     miniGameCtx.fillText(
+          leftButton.label,
+          leftButton.x + (leftButton.width / 2),
+          leftButton.y + (leftButton.height / 2) + 1
+     ); //FIXME: REVISIT LABELS
 
-          // LEFT LABEL
-          miniGameCtx.font = `${leftFontSize}px ${fonts.symbol}`;
-          miniGameCtx.fillText(leftButton.label, leftCenter.x, leftCenter.y + 1); //FIXME: REVISIT LABELS
-
-          // RIGHT LABEL
-          miniGameCtx.font = `${rightFontSize}px ${fonts.symbol}`;
-          miniGameCtx.fillText(rightButton.label, rightCenter.x, rightCenter.y + 1);
+     miniGameCtx.font = `${rightButton.height * 0.5}px ${fonts.symbol}`;
+     miniGameCtx.fillText(
+          rightButton.label,
+          rightButton.x + (rightButton.width / 2),
+          rightButton.y + (rightButton.height / 2) + 1
+     );
 
      miniGameCtx.restore();
 }
 
-export function drawMenuOverlay() {
+export function drawMenuOverlay(theme) {
      if (!miniGameCtx || !gameMenuOpen) {
           return;
      }
 
-     const theme = getUiTheme();
-     const { colors, fonts, glow, sizes } = theme;
+     const { colors, fonts, sizes } = theme;
 
      miniGameCtx.save();
      miniGameCtx.globalAlpha = 1;
@@ -824,30 +925,13 @@ export function drawMenuOverlay() {
      miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.75)";
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
-     miniGameCtx.shadowColor = colors.controlGlow;
-     miniGameCtx.shadowBlur = glow.uiStrongGlow;
-
-     drawRoundedRect(
+     drawPanelBox(
           gameMenuUi.panel.x,
           gameMenuUi.panel.y,
           gameMenuUi.panel.width,
           gameMenuUi.panel.height,
-          theme.sizes.controlRadius
+          theme
      );
-     miniGameCtx.fillStyle = colors.panelFill;
-     miniGameCtx.fill();
-
-     miniGameCtx.shadowBlur = 0;
-     miniGameCtx.strokeStyle = colors.outlineStrong;
-     miniGameCtx.lineWidth = 3;
-     drawRoundedRect(
-          gameMenuUi.panel.x,
-          gameMenuUi.panel.y,
-          gameMenuUi.panel.width,
-          gameMenuUi.panel.height,
-          theme.sizes.controlRadius
-     );
-     miniGameCtx.stroke();
 
      if (gameMenuView === "main") {
           drawMenuButton(gameMenuUi.newGameButton, "New Game", theme);
@@ -863,17 +947,12 @@ export function drawMenuOverlay() {
 
           const textX = gameMenuUi.panel.x + 24;
           let textY = gameMenuUi.panel.y + 34;
-
-          // INSTRUCTION TEXT SCALE
-          // Font size is reduced when panel narrows. Floor is kept so small windows still stay readable.
-          const baseFontSize = sizes.menuSmallFont;
-          const scaleFactor = Math.min(1, gameMenuUi.panel.width / 320);
-          const responsiveFontSize = Math.max(12, baseFontSize * scaleFactor);
-          const lineHeight = responsiveFontSize * 1.4;
+          const fontSize = Math.max(12, sizes.menuSmallFont * Math.min(1, gameMenuUi.panel.width / 320));
+          const lineHeight = fontSize * 1.4;
           const sectionGap = lineHeight * 0.5;
           const maxTextWidth = gameMenuUi.panel.width - 48;
 
-          miniGameCtx.font = `400 ${responsiveFontSize}px ${fonts.body}`;
+          miniGameCtx.font = `400 ${fontSize}px ${fonts.body}`;
 
           // WRAP TARGET
           // Max width is limited so text stays inside panel edges.
@@ -884,16 +963,16 @@ export function drawMenuOverlay() {
           ];
 
           instructionLines.forEach((instructionLine) => {
-               const wrappedLineCount = drawWrappedText(
-                    miniGameCtx,
-                    instructionLine,
-                    textX,
-                    textY,
-                    maxTextWidth,
-                    lineHeight
-               );
-
-               textY += (wrappedLineCount * lineHeight) + sectionGap;
+               textY += (
+                    drawWrappedText(
+                         miniGameCtx,
+                         instructionLine,
+                         textX,
+                         textY,
+                         maxTextWidth,
+                         lineHeight
+                    ) * lineHeight
+               ) + sectionGap;
           });
      }
 
@@ -901,14 +980,103 @@ export function drawMenuOverlay() {
      miniGameCtx.restore();
 }
 
-export function drawGameStatusOverlay() {
+function drawGameWelcomeOverlay(theme) {
+     if (!miniGameCtx || !gameWelcome) {
+          return;
+     }
+
+     const { colors, fonts, glow, sizes } = theme;
+     const alpha = getGameWelcomeAlpha();
+     const titleFontSize = getWelcomeTitleFontSize(theme);
+     const lineGap = Math.max(12, titleFontSize * 0.12);
+     const firstLineY = (miniGameHeight / 2) - ((titleFontSize * 0.8) + (lineGap * 0.5));
+     const secondLineY = firstLineY + titleFontSize + lineGap;
+     const actionY = secondLineY + Math.max(28, titleFontSize * 0.95);
+     const actionGap = Math.max(28, titleFontSize * 0.45);
+
+     updateWelcomeTitleColors();
+
+     miniGameCtx.save();
+     miniGameCtx.globalAlpha = alpha;
+
+     // NOTE: WELCOME BACKDROP
+     // Subtle dimming is applied here so marquee title reads cleanly.
+     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.25)";
+     miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
+
+     // NOTE: WELCOME TITLE LETTERS
+     // Each letter is measured and placed individually here so colors can vary per character.
+     miniGameCtx.textAlign = "left";
+     miniGameCtx.textBaseline = "middle";
+     miniGameCtx.font = `${titleFontSize}px ${fonts.display}`;
+
+     welcomeTitleLines.forEach((line, lineIndex) => {
+          const y = lineIndex === 0 ? firstLineY : secondLineY;
+          const colorsForLine = welcomeCurrentColors[lineIndex] || [];
+          const letterWidths = [];
+
+          for (let i = 0; i < line.length; i += 1) {
+               letterWidths.push(miniGameCtx.measureText(line[i]).width);
+          }
+
+          const totalWidth = letterWidths.reduce((sum, width) => sum + width, 0);
+          let x = (miniGameWidth - totalWidth) / 2;
+
+          for (let i = 0; i < line.length; i += 1) {
+               const letter = line[i];
+               const letterWidth = letterWidths[i];
+               const letterColor = colorsForLine[i] || colors.white;
+
+               miniGameCtx.fillStyle = letterColor;
+               miniGameCtx.shadowColor = letterColor;
+               miniGameCtx.shadowBlur = glow.uiStrongGlow;
+               miniGameCtx.fillText(letter, x, y);
+
+               x += letterWidth;
+          }
+     });
+
+     // NOTE: WELCOME ACTION WORDS
+     // Click targets are measured and stored here for input handling.
+     miniGameCtx.textAlign = "left";
+     miniGameCtx.textBaseline = "middle";
+     miniGameCtx.shadowColor = colors.overlayGlow;
+     miniGameCtx.shadowBlur = glow.uiSoftGlow;
+     miniGameCtx.font = `400 ${Math.max(18, sizes.welcomeSubFont * 1.35)}px ${fonts.body}`;
+
+     const startText = "START";
+     const menuText = "MENU";
+     const startWidth = miniGameCtx.measureText(startText).width;
+     const menuWidth = miniGameCtx.measureText(menuText).width;
+     const totalActionWidth = startWidth + actionGap + menuWidth;
+     const startX = (miniGameWidth - totalActionWidth) / 2;
+     const menuX = startX + startWidth + actionGap;
+     const actionHeight = Math.max(28, sizes.welcomeSubFont * 1.8);
+
+     gameWelcomeUi.startButton.x = startX - 8;
+     gameWelcomeUi.startButton.y = actionY - (actionHeight / 2);
+     gameWelcomeUi.startButton.width = startWidth + 16;
+     gameWelcomeUi.startButton.height = actionHeight;
+
+     gameWelcomeUi.menuButton.x = menuX - 8;
+     gameWelcomeUi.menuButton.y = actionY - (actionHeight / 2);
+     gameWelcomeUi.menuButton.width = menuWidth + 16;
+     gameWelcomeUi.menuButton.height = actionHeight;
+
+     miniGameCtx.fillStyle = colors.white;
+     miniGameCtx.fillText(startText, startX, actionY);
+     miniGameCtx.fillText(menuText, menuX, actionY);
+
+     miniGameCtx.restore();
+}
+
+export function drawGameStatusOverlay(theme) {
      if (!miniGameCtx || !gameOverlayText || gameMenuOpen) {
           return;
      }
 
-     const { colors, sizes, fonts, glow } = getUiTheme();
+     const { colors, sizes, fonts, glow } = theme;
      const alpha = getGameOverlayAlpha();
-
      const titleY = miniGameHeight / 2;
      const subtextOffset = 30;
      const hasSubtext = Boolean(gameOverlaySubtext);
@@ -917,12 +1085,10 @@ export function drawGameStatusOverlay() {
      miniGameCtx.globalAlpha = alpha;
 
      // OVERLAY BACKDROP
-     // Lower playfield is dimmed here.
-     // Status state is separated more clearly here.
+     // Lower playfield is dimmed here. Status state is separated more clearly here.
      miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.25)";
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
-     // MEASURE TEXT
      miniGameCtx.textAlign = "center";
      miniGameCtx.textBaseline = "middle";
 
@@ -935,7 +1101,6 @@ export function drawGameStatusOverlay() {
           subWidth = miniGameCtx.measureText(gameOverlaySubtext).width;
      }
 
-     // PANEL SIZE
      const horizontalPadding = 20;
      const topPadding = 20;
      const bottomPadding = hasSubtext ? 22 : 20;
@@ -947,36 +1112,10 @@ export function drawGameStatusOverlay() {
           (hasSubtext ? sizes.overlaySubFont + gapBetweenLines : 0) +
           topPadding +
           bottomPadding;
-
      const panelX = (miniGameWidth - panelWidth) / 2;
      const panelY = titleY - topPadding - (sizes.overlayTitleFont / 2);
 
-     // PANEL
-     miniGameCtx.shadowColor = colors.controlGlow;
-     miniGameCtx.shadowBlur = glow.uiStrongGlow;
-
-     drawRoundedRect(
-          panelX,
-          panelY,
-          panelWidth,
-          panelHeight,
-          sizes.controlRadius
-     );
-     miniGameCtx.fillStyle = colors.panelFill;
-     miniGameCtx.fill();
-
-     miniGameCtx.shadowBlur = 0;
-     miniGameCtx.strokeStyle = colors.outlineStrong;
-     miniGameCtx.lineWidth = 3;
-
-     drawRoundedRect(
-          panelX,
-          panelY,
-          panelWidth,
-          panelHeight,
-          sizes.controlRadius
-     );
-     miniGameCtx.stroke();
+     drawPanelBox(panelX, panelY, panelWidth, panelHeight, theme);
 
      // TEXT
      miniGameCtx.fillStyle = colors.white;
@@ -984,7 +1123,6 @@ export function drawGameStatusOverlay() {
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.shadowColor = colors.overlayGlow;
      miniGameCtx.shadowBlur = glow.uiStrongGlow;
-
      miniGameCtx.font = `${sizes.overlayTitleFont}px ${fonts.display}`;
      miniGameCtx.fillText(gameOverlayText, miniGameWidth / 2, titleY);
 
@@ -1008,6 +1146,26 @@ export function startSparkleSeeker() {
      resetPlayerPosition();
      updateTouchControlBounds();
      updateMenuUiBounds();
+
+     // NOTE: WELCOME RESET
+     // Welcome state is restored here on page load.
+     gameWelcome = true;
+     gameWelcomeTimer = -1;
+     gameWelcomeDuration = -1;
+     welcomeColorEngine = null;
+     welcomePreviousColors = [[], []];
+     welcomeCurrentColors = [[], []];
+     welcomeLastColorCycleTime = 0;
+
+     gameWelcomeUi.startButton.x = 0;
+     gameWelcomeUi.startButton.y = 0;
+     gameWelcomeUi.startButton.width = 0;
+     gameWelcomeUi.startButton.height = 0;
+
+     gameWelcomeUi.menuButton.x = 0;
+     gameWelcomeUi.menuButton.y = 0;
+     gameWelcomeUi.menuButton.width = 0;
+     gameWelcomeUi.menuButton.height = 0;
 
      bindKeyboardInput();
      bindPointerInput();
