@@ -82,7 +82,7 @@ function getRainbowPalette() {
 
 function getSparklePalette() {
      return ["#ffffff"];
-     // Background sparkles stay white, and game sparkles can still use the rainbow palette separately.
+     // Background sparkles stay white, and game sparkles can still use rainbow palette separately.
 }
 
 /* NOTE: UTILITIES */
@@ -132,20 +132,18 @@ function createColorEngine(colorsOrFactory) {
      // Shared color engine for marquee + sparkles, uses either an array of colors OR a function that returns an array of colors.
 
      let previousColor = null;
-     // This remembers the most recent single color used by .next().
+     // This remembers most recent single color used by .next().
 
      function resolvePalette() {
           const rawPalette = typeof colorsOrFactory === "function"
                ? colorsOrFactory()
                : colorsOrFactory;
-          // This lets the engine work with live CSS-driven palettes OR fixed arrays.
 
           if (!Array.isArray(rawPalette)) {
                return [];
           }
 
           return rawPalette.filter(Boolean);
-          // Removes empty/invalid color entries just in case.
      }
 
      function avoidImmediateRepeatInBatch(colorBatch, previousColorForSlot, startIndex = 0) {
@@ -158,7 +156,6 @@ function createColorEngine(colorsOrFactory) {
           }
 
           let swapIndex = -1;
-          // If the first available color would repeat, find a later color to swap in.
 
           for (let i = startIndex + 1; i < colorBatch.length; i += 1) {
                if (colorBatch[i] !== previousColorForSlot) {
@@ -188,7 +185,6 @@ function createColorEngine(colorsOrFactory) {
                }
 
                const nextColor = randomItemExcept(palette, previousColor);
-               // Same simple rule for sparkles, do not repeat the last color immediately.
 
                previousColor = nextColor;
                return nextColor;
@@ -207,8 +203,6 @@ function createColorEngine(colorsOrFactory) {
 
                const nextColors = [];
                let availableColors = shuffleArray(palette);
-               // Start each cycle with a shuffled copy of the palette.
-
                let colorIndex = 0;
 
                for (let i = 0; i < count; i += 1) {
@@ -216,12 +210,10 @@ function createColorEngine(colorsOrFactory) {
                          availableColors = shuffleArray(palette);
                          colorIndex = 0;
                     }
-                    // If there are more letters than colors, start a fresh shuffled batch.
 
                     const previousColorForSlot = previousCycleColors[i] || null;
 
                     avoidImmediateRepeatInBatch(availableColors, previousColorForSlot, colorIndex);
-                    // This keeps the same letter position from getting the same color twice in a row.
 
                     const nextColor = availableColors[colorIndex];
                     colorIndex += 1;
@@ -233,13 +225,12 @@ function createColorEngine(colorsOrFactory) {
 
           reset() {
                previousColor = null;
-               // If ever need to clear the engine's memory.
           }
      };
 }
 
 /* NOTE: GLOW */
-/* Marquee and menu glyph share the universal text-shadow glow style. */
+/* Marquee and menu glyph share universal text-shadow glow style. */
 
 function buildUniversalTextGlow(color) {
      const textSettings = getTextSettings();
@@ -266,7 +257,8 @@ function buildBungeeGlyphGlow(color) {
 const navButton = document.querySelector(".nav-button");
 const dropdownLow = document.querySelector(".dropdown-low");
 const navMenu = document.getElementById("navMenu");
-let navGlyphSwapTimer = null;
+const navButtonOpen = navButton ? navButton.querySelector(".nav-button-open") : null;
+const navButtonClose = navButton ? navButton.querySelector(".nav-button-close") : null;
 
 function syncNavButtonGlow() {
      if (!navButton) {
@@ -278,27 +270,14 @@ function syncNavButtonGlow() {
      navButton.style.color = currentColor;
      navButton.style.webkitTextFillColor = "currentColor";
      navButton.style.textShadow = buildUniversalTextGlow(currentColor);
-}
 
-function swapNavGlyph(nextGlyph) {
-     if (!navButton) {
-          return;
+     if (navButtonOpen) {
+          navButtonOpen.style.textShadow = buildUniversalTextGlow(currentColor);
      }
 
-     if (navButton.textContent === nextGlyph) {
-          syncNavButtonGlow();
-          return;
+     if (navButtonClose) {
+          navButtonClose.style.textShadow = buildUniversalTextGlow(currentColor);
      }
-
-     window.clearTimeout(navGlyphSwapTimer);
-
-     navButton.style.opacity = "0";
-
-     navGlyphSwapTimer = window.setTimeout(function () {
-          navButton.textContent = nextGlyph;
-          syncNavButtonGlow();
-          navButton.style.opacity = "1";
-     }, 100);
 }
 
 function openMenu() {
@@ -307,7 +286,6 @@ function openMenu() {
      }
 
      dropdownLow.classList.add("menu-open");
-     swapNavGlyph("×");
      navButton.setAttribute("aria-expanded", "true");
      syncNavButtonGlow();
 }
@@ -318,7 +296,6 @@ function closeMenu() {
      }
 
      dropdownLow.classList.remove("menu-open");
-     swapNavGlyph("+");
      navButton.setAttribute("aria-expanded", "false");
      syncNavButtonGlow();
 }
@@ -336,7 +313,8 @@ function toggleMenu() {
 }
 
 if (navButton && dropdownLow) {
-     navButton.addEventListener("click", function () {
+     navButton.addEventListener("click", function (event) {
+          event.stopPropagation();
           toggleMenu();
      });
 
@@ -380,10 +358,12 @@ document.addEventListener("keydown", function (event) {
 const marqueeElements = Array.from(document.querySelectorAll(".marquee"));
 
 const marqueeItems = marqueeElements.map(function (element) {
+     const lineNodes = Array.from(element.querySelectorAll(".marquee-word, .marquee-break"));
+
      return {
           element: element,
-          originalText: element.textContent.trimStart().trimEnd(),
-          spans: [],
+          lineNodes: lineNodes,
+          lineLetterSpans: [],
           visibleSpans: [],
           previousColors: []
      };
@@ -393,9 +373,8 @@ let headerColorCycleTimer = null;
 let marqueeColorEngine = null;
 
 /* NOTE: MARQUEE FIT */
-/* The marquee size can be gently reduced until the full one-line title fits inside its available width. */
-/* The menu button size can then be matched to the marquee's final fitted size. */
-/* The shared top row can also be checked here so the button does not push into the title on smaller screens. */
+/* Marquee size gets reduced until longest line fits available width. */
+/* Existing line structure is preserved here, so first name and last name stay stacked. */
 
 function getMarqueeFitSettings() {
      const rootFontSize = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
@@ -412,49 +391,7 @@ function resetMarqueeFitSize(marqueeElement) {
           return;
      }
 
-     // This lets CSS take over again before a fresh measurement is made.
      marqueeElement.style.removeProperty("--marquee-fit-size");
-}
-
-function resetNavButtonFitSize(marqueeElement) {
-     if (!marqueeElement) {
-          return;
-     }
-
-     const headerTopElement = marqueeElement.closest(".header-top");
-
-     if (!headerTopElement) {
-          return;
-     }
-
-     const navButtonElement = headerTopElement.querySelector(".nav-button");
-
-     if (!navButtonElement) {
-          return;
-     }
-
-     navButtonElement.style.removeProperty("--nav-button-fit-size");
-}
-
-function syncNavButtonToSize(marqueeElement, fittedSize) {
-     if (!marqueeElement || !fittedSize) {
-          return;
-     }
-
-     const headerTopElement = marqueeElement.closest(".header-top");
-
-     if (!headerTopElement) {
-          return;
-     }
-
-     const navButtonElement = headerTopElement.querySelector(".nav-button");
-
-     if (!navButtonElement) {
-          return;
-     }
-
-     // The button can be given the same fitted size as the marquee text here.
-     navButtonElement.style.setProperty("--nav-button-fit-size", fittedSize);
 }
 
 function fitMarqueeToContainer(marqueeElement) {
@@ -463,37 +400,21 @@ function fitMarqueeToContainer(marqueeElement) {
      }
 
      const fitSettings = getMarqueeFitSettings();
-     const headerTopElement = marqueeElement.closest(".header-top");
-     const computedStyle = window.getComputedStyle(marqueeElement);
-     const lineHeight = computedStyle.lineHeight;
 
      resetMarqueeFitSize(marqueeElement);
-     resetNavButtonFitSize(marqueeElement);
-
      marqueeElement.style.setProperty("--marquee-fit-size", `${fitSettings.maxFontSize}px`);
-     syncNavButtonToSize(marqueeElement, `${fitSettings.maxFontSize}px`);
 
      let currentSize = fitSettings.maxFontSize;
 
      while (currentSize > fitSettings.minFontSize) {
           const marqueeTooWide = marqueeElement.scrollWidth > marqueeElement.clientWidth;
-          const headerRowTooWide = headerTopElement
-               ? headerTopElement.scrollWidth > headerTopElement.clientWidth
-               : false;
 
-          if (!marqueeTooWide && !headerRowTooWide) {
+          if (!marqueeTooWide) {
                break;
           }
 
           currentSize -= fitSettings.step;
-
           marqueeElement.style.setProperty("--marquee-fit-size", `${currentSize}px`);
-          syncNavButtonToSize(marqueeElement, `${currentSize}px`);
-     }
-
-     // This helps the clickable area and header height stay in sync with the fitted text size.
-     if (lineHeight && lineHeight !== "normal") {
-          marqueeElement.style.lineHeight = lineHeight;
      }
 }
 
@@ -508,27 +429,38 @@ function fitAllMarquees() {
 }
 
 function buildMarqueeSpans(marqueeItem) {
-     if (!marqueeItem || !marqueeItem.element) {
+     if (!marqueeItem || !marqueeItem.element || !marqueeItem.lineNodes.length) {
           return;
      }
 
-     marqueeItem.element.innerHTML = "";
-     marqueeItem.spans = [];
+     marqueeItem.lineLetterSpans = [];
      marqueeItem.visibleSpans = [];
      marqueeItem.previousColors = [];
 
-     for (let i = 0; i < marqueeItem.originalText.length; i += 1) {
-          const char = marqueeItem.originalText[i];
-          const span = document.createElement("span");
+     for (let i = 0; i < marqueeItem.lineNodes.length; i += 1) {
+          const lineNode = marqueeItem.lineNodes[i];
+          const originalText = lineNode.textContent.trim();
 
-          span.textContent = char === " " ? "\u00A0" : char;
+          lineNode.innerHTML = "";
 
-          marqueeItem.element.appendChild(span);
-          marqueeItem.spans.push(span);
+          const letterSpans = [];
 
-          if (span.textContent !== "\u00A0") {
-               marqueeItem.visibleSpans.push(span);
+          for (let j = 0; j < originalText.length; j += 1) {
+               const char = originalText[j];
+               const span = document.createElement("span");
+
+               span.textContent = char === " " ? "\u00A0" : char;
+               span.style.display = "inline-block";
+
+               lineNode.appendChild(span);
+               letterSpans.push(span);
+
+               if (span.textContent !== "\u00A0") {
+                    marqueeItem.visibleSpans.push(span);
+               }
           }
+
+          marqueeItem.lineLetterSpans.push(letterSpans);
      }
 }
 
@@ -549,7 +481,7 @@ function cycleMarqueeColors() {
      for (let i = 0; i < marqueeItems.length; i += 1) {
           const marqueeItem = marqueeItems[i];
 
-          if (!marqueeItem.spans.length || !marqueeItem.visibleSpans.length) {
+          if (!marqueeItem.visibleSpans.length) {
                continue;
           }
 
@@ -602,7 +534,6 @@ let bgParticleCount = 0;
 let resizeTimer = null;
 
 let sparkleColorEngine = null;
-// Moved engine creation into setup so the sparkle palette is read later, after CSS is ready.
 
 function resizeBgCanvasFromCss(canvas) {
      if (!canvas) {
@@ -642,7 +573,6 @@ function createBgParticle(startAboveScreen = false) {
      if (!sparkleColorEngine) {
           sparkleColorEngine = createColorEngine(getSparklePalette);
      }
-     // Safety check: if this runs before setup for any reason, build the engine here instead of crashing.
 
      return {
           x: x,
@@ -652,7 +582,6 @@ function createBgParticle(startAboveScreen = false) {
                : Math.random() * bgHeight,
           char: Math.random() < 0.5 ? "✦" : "✧",
           color: sparkleColorEngine.next() || getCssColor("--text-color", "#ffffff"),
-          // Pull next sparkle color from shared engine, avoid repeats.
           size: randomNumber(sparkleSettings.sizeMin, sparkleSettings.sizeMax),
           speed: randomNumber(sparkleSettings.speedMin, sparkleSettings.speedMax),
           wobbleOffset: randomNumber(0, Math.PI * 2),
@@ -676,7 +605,6 @@ function setupSparkleRain() {
      }
 
      sparkleColorEngine = createColorEngine(getSparklePalette);
-     // Rebuild the engine during setup so it reads the latest sparkle palette after the page styles are in place.
 
      resizeBgCanvasFromCss(siteBgCanvas);
      setBgParticleCount();
@@ -703,7 +631,6 @@ function drawBackground() {
      if (!siteBgCtx) {
           return;
      }
-     // Defensive guard: if the canvas context is missing, stop here instead of trying to draw on "nothing".
 
      siteBgCtx.clearRect(0, 0, bgWidth, bgHeight);
 }
@@ -712,7 +639,6 @@ function drawBgParticles() {
      if (!siteBgCtx) {
           return;
      }
-     // Same idea here: bail out safely if the drawing context does not exist.
 
      const glowSettings = getGlowSettings();
 
@@ -765,7 +691,7 @@ function setRandomTaglineBreak() {
 }
 
 /* NOTE: SHARED HELPERS FOR GAME PAGES */
-/* Expose reusable site-wide helpers so module files can reuse the same CSS/theme/math logic instead of redefining it in every game file. */
+/* Expose reusable site-wide helpers so module files can reuse same CSS/theme/math logic instead of redefining it in every game file. */
 
 if (!window.SiteTheme) {
      window.SiteTheme = {};
@@ -793,7 +719,7 @@ Object.assign(window.SiteTheme, {
 
 function handleResize() {
      window.clearTimeout(resizeTimer);
-     
+
      resizeTimer = window.setTimeout(function () {
           setupSparkleRain();
           syncNavButtonGlow();

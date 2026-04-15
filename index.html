@@ -10,39 +10,72 @@
 <body>
      <canvas id="siteBgCanvas" class="site-bg-canvas" aria-hidden="true"></canvas>
      <div class="body-ody">
-          <header>
-               <!-- MARQUEE + MENU can be grouped into one shared top row so both can scale together. -->
-               <div class="header-top">
-                    <h1>
-                         <a href="index.html" class="marquee" id="marquee-main">
-                              <span class="marquee-word">Chris </span> <span class="marquee-break">Goss</span>
-                         </a>
-                    </h1>
 
+          <header class="site-header">
+               <div class="header-top">
                     <div class="dropdown-low">
                          <button class="nav-button" type="button" aria-label="Open navigation menu." aria-expanded="false" aria-controls="navMenu">
-                              +
+                              <span class="nav-button-open" aria-hidden="true">+</span>
+                              <span class="nav-button-close" aria-hidden="true">×</span>
                          </button>
 
                          <nav id="navMenu" class="nav-menu" aria-label="Main navigation">
-                              <ul>
-                                   <li><a href="games/sparkle-seeker/sparkle-seeker.html">Free Trash</a></li>
-                                   <li><a href="https://github.com/cgoss-dev" target="_blank" rel="noopener noreferrer">Tiny Crimes</a></li>
-                                   <li><a href="https://www.linkedin.com/chrisgoss206" target="_blank" rel="noopener noreferrer">Stalk Me</a></li>
+                              <ul class="nav-list">
+                                   <li>
+                                        <a href="index.html" class="nav-link">
+                                             <span class="nav-icon" aria-hidden="true">🏠</span>
+                                             <span class="nav-label">Spawn Point</span>
+                                             <span class="nav-desc">Origin story.</span>
+                                        </a>
+                                   </li>
+
+                                   <li>
+                                        <a href="games/sparkle-seeker/sparkle-seeker.html" class="nav-link">
+                                             <span class="nav-icon" aria-hidden="true">🎮</span>
+                                             <span class="nav-label">Free Trash</span>
+                                             <span class="nav-desc">Playable nonsense.</span>
+                                        </a>
+                                   </li>
+
+                                   <li>
+                                        <a href="https://github.com/cgoss-dev" class="nav-link" target="_blank" rel="noopener noreferrer">
+                                             <span class="nav-icon" aria-hidden="true">🗂️</span>
+                                             <span class="nav-label">Tiny Crimes</span>
+                                             <span class="nav-desc">Code experiments.</span>
+                                        </a>
+                                   </li>
+
+                                   <li>
+                                        <a href="https://www.linkedin.com/chrisgoss206" class="nav-link" target="_blank" rel="noopener noreferrer">
+                                             <span class="nav-icon" aria-hidden="true">💬</span>
+                                             <span class="nav-label">Stalk Me</span>
+                                             <span class="nav-desc">Digital footprints.</span>
+                                        </a>
+                                   </li>
                               </ul>
                          </nav>
                     </div>
                </div>
 
-               <!-- Tagline can stay on its own row below marquee/menu row. -->
                <div class="hero-blurb">
-                    <p class="tagline">Seattle developer...<span class="tagline-break"></span></p>
+                    <p class="tagline">
+                         Seattle developer...
+                         <span class="tagline-break"></span>
+                    </p>
                </div>
           </header>
 
           <main class="main-squeeze">
-               <!-- Canvas game removed for now so the homepage can be restyled on its own. -->
+               <section class="hero-stack" aria-label="Intro section">
+                    <h1>
+                         <a href="index.html" class="marquee" id="marquee-main">
+                              <span class="marquee-word">Chris</span>
+                              <span class="marquee-break">Goss</span>
+                         </a>
+                    </h1>
+               </section>
           </main>
+
      </div>
      <script src="script.js"></script>
 </body>

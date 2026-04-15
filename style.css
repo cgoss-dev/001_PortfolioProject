@@ -45,9 +45,9 @@
 
      --header-text-align: left;
 
-     --text-size-marquee: clamp(1.5rem, 5vw, 2rem);
-     --text-size-medium: clamp(1rem, 3vw, 2.5rem);
-     --text-size-small: clamp(0.8rem, 1.2vw, 1rem);
+     --text-size-marquee: clamp(5rem, 20vw, 10rem);
+     --text-size-medium: clamp(3rem, 10vw, 3rem);
+     --text-size-small: clamp(1rem, 5vw, 2.5rem);
 
      --text-color-marquee: var(--text-color);
      --text-color-medium: var(--text-color);
@@ -124,6 +124,27 @@
 
      --sparkle-respawn-offset-top: -20;
      --sparkle-respawn-offset-bottom: 24;
+
+     /* NOTE: BREAKPOINTS */
+
+     --breakpoint-sm-max: 40rem;
+     --breakpoint-md-max: 64rem;
+     --breakpoint-lg-max: 90rem;
+
+     /* NOTE: SHARED SPACING */
+
+     --nav-height: clamp(3.25rem, 8vh, 4.5rem);
+     --hero-gap: clamp(1rem, 4vh, 2.25rem);
+
+     /* NOTE: NAV SIZE CONTROL */
+
+     --nav-panel-width: min(100%, 52rem);
+     --nav-pill-gap: clamp(0.4rem, 1vw, 0.85rem);
+     --nav-pill-padding-y: 0.7rem;
+     --nav-pill-padding-x: 0.9rem;
+     --nav-icon-size: clamp(1.1rem, 1.5vw, 1.4rem);
+     --nav-label-size: clamp(0.78rem, 0.95vw, 0.95rem);
+     --nav-desc-size: clamp(0.68rem, 0.8vw, 0.82rem);
 }
 
 /* NON-ROOT CORE */
@@ -158,8 +179,8 @@ body {
      position: relative;
      z-index: var(--ui-layer-z);
 
-     display: flex;
-     flex-direction: column;
+     display: grid;
+     grid-template-rows: auto 1fr;
      overflow: hidden;
 }
 
@@ -170,18 +191,23 @@ body {
 header {
      /* border: red, solid, 5px; */
 
-     width: var(--content-width);
+     width: min(100%, var(--page-width-wide));
      margin: 0 auto;
      padding: 0;
-     text-align: left;
+     text-align: center;
      position: relative;
      line-height: 1.5;
 
      display: flex;
      flex-direction: column;
+     justify-content: center;
 
      /* Header spacing can be tied to current text size here so it shrinks more gracefully on smaller screens. */
-     gap: 0.25em;
+     gap: 0;
+}
+
+.site-header {
+     z-index: var(--menu-layer-z);
 }
 
 h1 {
@@ -189,48 +215,66 @@ h1 {
 
      margin: 0;
      padding: 0;
-     text-align: left;
-     line-height: 1.5;
+     text-align: center;
+     line-height: 1.1;
 
      /* Title area can be allowed to shrink inside shared top row. */
-     width: auto;
-     flex: 1 1 auto;
+     width: 100%;
+     flex: 0 0 auto;
      min-width: 0;
 }
 
 .header-top {
      width: 100%;
+     min-height: var(--nav-height);
      display: flex;
      align-items: center;
-     justify-content: space-between;
+     justify-content: center;
      gap: 1rem;
      min-width: 0;
 
      /* A smaller em-based bottom space can be used here so row spacing follows marquee size. */
-     padding-bottom: 0.25em;
+     padding-bottom: 0;
 }
 
 .hero-blurb {
-     width: 100%;
-     flex: 1 1 auto;
+     width: min(100%, 44rem);
+     flex: 0 0 auto;
      display: flex;
      align-items: center;
+     justify-content: center;
      min-width: 0;
-
-     /* This bottom space can be kept modest and allowed to scale with text. */
-     margin-bottom: 0.5em;
+     margin: 0 auto;
 }
 
 .tagline {
-     margin: 0;
-
-     /* Tagline bottom spacing can be made text-relative here instead of page-relative. */
-     padding-bottom: 0.5em;
-
+     margin: 0 auto;
+     padding-top: clamp(0.2rem, 0.8vh, 0.45rem);
      color: var(--text-color-small);
-     font-size: var(--text-size-small);
+     font-size: clamp(0.95rem, 1.6vw, 1.1rem);
      line-height: 1.5;
-     text-align: left;
+     text-align: center;
+     max-width: 100%;
+     white-space: nowrap;
+}
+
+/* NOTE: TAGLINE BREAK */
+/* A line break is only forced on smaller widths. */
+
+.tagline-break {
+     display: inline;
+     min-height: 0;
+}
+
+@media (max-width: 40rem) {
+     .tagline-break {
+          display: block;
+          min-height: 1.5em;
+     }
+
+     .tagline {
+          white-space: normal;
+     }
 }
 
 
@@ -240,39 +284,50 @@ h1 {
 .marquee {
      /* border: blue, solid, 5px; */
 
-     display: block;
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     justify-content: center;
      width: 100%;
      max-width: 100%;
-     margin: 0;
+     margin: 0 auto;
 
      /* A little extra vertical padding can help prevent tall letters from being clipped during resize. */
      padding-top: 0.15em;
-     padding-left: 0.05em;
+     padding-left: 0;
      padding-bottom: 0.25em;
      /* "rem" is relative to base html font size (16px), this does NOT resize.
           "em" is relative to parent element's font size, this DOES resize.*/
 
-     text-align: left;
+     text-align: center;
 
      color: var(--text-color-marquee);
      text-decoration: none;
      font-family: var(--font-fancy);
-     font-size: var(--marquee-fit-size, var(--text-size-marquee));
+     font-size: var(--text-size-marquee);
 
      /* A slightly roomier line-height can help protect top and bottom of glyphs. */
-     line-height: 1.25;
+     line-height: 1.02;
 
-     white-space: nowrap;
-     overflow: hidden;
+     white-space: normal;
+     overflow: visible;
 }
 
 .marquee > span {
-     display: inline-block;
+     display: block;
+     width: auto;
+     max-width: 100%;
      padding: 0.025em;
      text-shadow: var(--glow-text);
      transition:
           color var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style),
           text-shadow var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style);
+     white-space: nowrap;
+}
+
+.marquee-word,
+.marquee-break {
+     text-align: center;
 }
 
 
@@ -285,37 +340,37 @@ h1 {
      z-index: var(--menu-layer-z);
      display: flex;
      flex-direction: column;
-     align-items: flex-end;
+     align-items: center;
      justify-content: center;
      flex: 0 0 auto;
+     width: 100%;
 }
 
 .nav-button {
      position: relative;
-     display: inline-flex;
+     display: none;
      align-items: center;
-     justify-content: right;
-     min-width: 1em;
-     min-height: 1em;
+     justify-content: center;
+     width: 3rem;
+     height: 3rem;
      padding: 0;
      margin: 0;
-     background: none;
-     border: none;
+     background: rgba(0, 0, 0, 0.72);
+     border: var(--canvasboard-border);
+     border-radius: 999px;
      outline: none;
      cursor: pointer;
 
      font-family: var(--font-fancy);
-
-     /* Button size can be matched to marquee's fitted size from JS. */
-     font-size: var(--nav-button-fit-size, var(--text-size-marquee));
-
+     font-size: 1.6rem;
      line-height: 1;
      color: var(--menu-button-color);
      -webkit-text-fill-color: currentColor;
      text-shadow: var(--glow-text);
      opacity: 1;
-     transform: translateY(0.25em);
+     transform: none;
      filter: none;
+     box-shadow: var(--glow-canvasboard);
 
      /* NOTE: SIMPLE HOVER RESPONSE
      Color and glow are eased here. Scale motion is intentionally omitted here. */
@@ -323,7 +378,35 @@ h1 {
           color 0.2s ease-in-out,
           text-shadow 0.2s ease-in-out,
           opacity 0.2s ease-in-out,
-          filter 0.2s ease-in-out;
+          filter 0.2s ease-in-out,
+          background-color 0.2s ease-in-out;
+}
+
+.nav-button-open,
+.nav-button-close {
+     position: absolute;
+     inset: 0;
+     display: inline-flex;
+     align-items: center;
+     justify-content: center;
+     transition:
+          opacity 0.2s ease-in-out,
+          transform 0.2s ease-in-out;
+}
+
+.nav-button-close {
+     opacity: 0;
+     transform: scale(0.7);
+}
+
+.dropdown-low.menu-open .nav-button-open {
+     opacity: 0;
+     transform: scale(0.7);
+}
+
+.dropdown-low.menu-open .nav-button-close {
+     opacity: 1;
+     transform: scale(1);
 }
 
 
@@ -332,23 +415,25 @@ h1 {
 /* Hidden by default. Opens when parent wrapper gets .menu-open from JS. */
 
 .nav-menu {
-     position: absolute;
-     top: 100%;
-     right: 0;
+     position: relative;
+     top: auto;
+     right: auto;
+     width: var(--nav-panel-width);
+     max-width: 100%;
      list-style: none;
-     margin: 0.5rem 0 0 0;
-     padding: 0.5em;
+     margin: 0 auto;
+     padding: 0.5rem;
 
-     min-width: var(--menu-canvasboard-width-min);
-     border: var(--canvasboard-border);
-     border-radius: var(--canvasboard-radius);
+     min-width: 0;
+     /* border: var(--canvasboard-border); */
+     /* border-radius: 999px; */
      overflow: hidden;
-     background: rgba(0, 0, 0, 0.9);
-     box-shadow: var(--glow-canvasboard);
+     /* background: rgba(0, 0, 0, 0.72); */
+     /* box-shadow: var(--glow-canvasboard); */
 
-     opacity: 0;
-     transform: translateX(-1em) translateY(-0.75rem);
-     pointer-events: none;
+     opacity: 1;
+     transform: none;
+     pointer-events: auto;
 
      transition:
           opacity 0.25s ease-in-out,
@@ -357,8 +442,19 @@ h1 {
 
 .dropdown-low.menu-open .nav-menu {
      opacity: 1;
-     transform: translateX(-2em) translateY(0);
+     transform: none;
      pointer-events: auto;
+}
+
+.nav-list {
+     list-style: none;
+     margin: 0 auto;
+     padding: 0;
+     display: grid;
+     grid-template-columns: repeat(4, auto);
+     justify-content: center;
+     gap: var(--nav-pill-gap);
+     align-items: stretch;
 }
 
 .nav-menu ul {
@@ -372,29 +468,74 @@ h1 {
      padding: 0;
      font-size: var(--text-size-small);
      text-align: center;
+     min-width: 0;
 }
 
 .nav-menu a {
-     display: block;
-     padding: var(--menu-item-padding);
      text-decoration: none;
+}
+
+.nav-link {
+     display: inline-flex;
+     align-items: center;
+     justify-content: center;
+     gap: 0.7rem;
+     min-height: 100%;
+     padding: var(--nav-pill-padding-y) var(--nav-pill-padding-x);
      color: var(--text-color-medium);
      background: transparent;
+     border-radius: 999px;
      cursor: pointer;
+     text-align: center;
 
      /* NOTE: SIMPLE LINK HOVER RESPONSE
-        Color and glow are eased here.
-        Scale motion is intentionally omitted here. */
+     Color and glow are eased here. Scale motion is intentionally omitted here. */
      transition:
           background-color 0.2s ease-in-out,
           color 0.2s ease-in-out,
-          text-shadow 0.2s ease-in-out;
+          text-shadow 0.2s ease-in-out,
+          opacity 0.2s ease-in-out;
 }
 
-.nav-menu a:hover,
-.nav-menu a:active {
+.nav-link:hover,
+.nav-link:active,
+.nav-link:focus-visible {
      color: var(--text-color);
      text-shadow: var(--glow-text);
+     background: rgba(255, 255, 255, 0.08);
+}
+
+/* NOTE: EMOJI ICON CONTROL */
+/* Emoji stays clean here, without extra panel or border treatment. */
+
+.nav-icon {
+     font-size: var(--text-size-medium);
+     line-height: 1;
+     display: inline-flex;
+     align-items: center;
+     justify-content: center;
+     background: transparent;
+     border: none;
+     box-shadow: none;
+     outline: none;
+}
+
+.nav-label,
+.nav-desc {
+     display: inline-block;
+     min-width: 0;
+}
+
+.nav-label {
+     font-size: var(--nav-label-size);
+     white-space: nowrap;
+}
+
+.nav-desc {
+     display: none;
+     font-size: var(--nav-desc-size);
+     opacity: 0.78;
+     white-space: nowrap;
 }
 
 /* BACKGROUND SPARKLE CANVAS */
@@ -412,14 +553,186 @@ h1 {
 
 
 
+/* NOTE: HERO LAYOUT */
+/* Marquee stays centered inside remaining page space. */
+
+.main-squeeze {
+     width: min(100%, var(--page-width-wide));
+     margin: 0 auto;
+     min-height: 0;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+}
+
+.hero-stack {
+     width: min(100%, 52rem);
+     min-height: 100%;
+     margin: 0 auto;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+}
+
+.hero-stack h1 {
+     margin: 0;
+}
+
+
+
+/* NOTE: RESPONSIVE NAV MODES */
+/* SM = button only */
+/* MD = icons only */
+/* LG = icons + text */
+/* XL = icons + text + description */
+
+@media (min-width: 90.0001rem) {
+     .nav-link {
+          flex-direction: column;
+          gap: 0.35rem;
+          padding-top: 0.8rem;
+          padding-bottom: 0.8rem;
+     }
+
+     .nav-label {
+          display: inline-block;
+     }
+
+     .nav-desc {
+          display: inline-block;
+     }
+}
+
+@media (min-width: 64.0001rem) and (max-width: 90rem) {
+     .nav-link {
+          flex-direction: row;
+          gap: 0.6rem;
+     }
+
+     .nav-label {
+          display: inline-block;
+     }
+
+     .nav-desc {
+          display: none;
+     }
+}
+
+@media (min-width: 40.0001rem) and (max-width: 64rem) {
+     .nav-link {
+          flex-direction: row;
+          gap: 0;
+          padding-inline: 0.75rem;
+     }
+
+     .nav-label,
+     .nav-desc {
+          display: none;
+     }
+}
+
+@media (max-width: 40rem) {
+     .body-ody {
+          grid-template-rows: auto 1fr;
+     }
+
+     header {
+          width: 100%;
+          max-width: var(--content-width);
+     }
+
+     .header-top {
+          justify-content: flex-end;
+     }
+
+     .dropdown-low {
+          align-items: flex-end;
+     }
+
+     .nav-button {
+          display: inline-flex;
+     }
+
+     .nav-menu {
+          position: absolute;
+          top: calc(100% + 0.75rem);
+          right: 0;
+          width: min(18rem, calc(100vw - (var(--page-padding-x) * 2)));
+          padding: 0.5rem;
+          /* border-radius: var(--canvasboard-radius); */
+          opacity: 0;
+          transform: translateY(-0.5rem);
+          pointer-events: none;
+          margin: 0;
+     }
+
+     .dropdown-low.menu-open .nav-menu {
+          opacity: 1;
+          transform: translateY(0);
+     }
+
+     .nav-list {
+          grid-template-columns: 1fr;
+          justify-content: stretch;
+          gap: 0.25rem;
+     }
+
+     .nav-link {
+          width: 100%;
+          justify-content: flex-start;
+          gap: 0.75rem;
+          padding: 0.85rem 1rem;
+          border-radius: 0.9rem;
+     }
+
+     .nav-label {
+          display: inline-block;
+     }
+
+     .nav-desc {
+          display: none;
+     }
+
+     .main-squeeze {
+          width: 100%;
+          max-width: var(--content-width);
+     }
+
+     .hero-stack {
+          width: 100%;
+     }
+}
+
+/* NOTE: EXTRA SHORT HEIGHT SAFETY */
+/* Tight heights get slightly smaller spacing so scroll stays gone. */
+
+@media (max-height: 40rem) {
+     :root {
+          --nav-height: 3rem;
+          --hero-gap: clamp(0.5rem, 2vh, 1rem);
+          --text-size-marquee: clamp(2rem, 8vw, 4.75rem);
+     }
+
+     .tagline {
+          font-size: 0.92rem;
+          line-height: 1.35;
+     }
+
+     .nav-menu {
+          padding: 0.35rem;
+     }
+
+     .nav-link {
+          padding-top: 0.6rem;
+          padding-bottom: 0.6rem;
+     }
+}
+
+
+
 /* NOTE: GAME-SPECIFIC */
 
 /* SPARKLE SEEKER */
-
-.main-squeeze {
-     width: var(--content-width);
-     margin: 0 auto;
-}
 
 .game-container {
      width: 100%;
