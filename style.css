@@ -683,7 +683,7 @@ A break is only introduced at chosen split point later. */
 /* NOTE: MD — ICON + LABEL (45–60) */
 /* ========================= */
 
-@media (min-width: 40.0001rem) and (max-width: 59.9999rem) {
+@media (min-width: 25.0001rem) and (max-width: 59.9999rem) {
 
      .nav-link {
           flex-direction: row;
@@ -713,7 +713,7 @@ A break is only introduced at chosen split point later. */
 /* NOTE: SM — ICON ONLY (<= 20rem) */
 /* ========================= */
 
-@media (max-width: 40rem) {
+@media (max-width: 25rem) {
 
      /* NAV: icons only, but spacing preserved */
 
