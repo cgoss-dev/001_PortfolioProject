@@ -677,7 +677,7 @@ A break is only introduced at chosen split point later. */
 /* NOTE: MD — ICON + LABEL (45–60) */
 /* ========================= */
 
-@media (min-width: 25.0001rem) and (max-width: 59.9999rem) {
+@media (min-width: 30.0001rem) and (max-width: 59.9999rem) {
 
      .nav-link {
           flex-direction: row;
@@ -702,12 +702,53 @@ A break is only introduced at chosen split point later. */
      }
 }
 
+/* ========================= */
+/* NOTE: SM — ICON ONLY (<= 25rem) */
+/* ========================= */
+
+@media (min-width: 20.0001rem) and (max-width: 30.9999rem) {
+
+     /* NAV: icons only, but spacing preserved */
+
+     .nav-label,
+     .nav-desc {
+          display: none;
+     }
+
+     .nav-link {
+          gap: 0;
+          padding-inline: 0.2rem;
+     }
+
+     .nav-list {
+          justify-content: space-between;
+     }
+
+     /* TAGLINE: break ONLY at chosen split point */
+
+     .tagline {
+          white-space: normal;
+          font-size: var(--text-size-tagline-small);
+          line-height: 1.4;
+     }
+
+     .tagline-break {
+          display: block;
+     }
+
+     /* MARQUEE: allow continued shrink */
+
+     .marquee {
+          width: 100%;
+     }
+}
+
 
 /* ========================= */
-/* NOTE: SM — ICON ONLY (<= 20rem) */
+/* NOTE: XS — ICON ONLY (<= 20rem) */
 /* ========================= */
 
-@media (max-width: 25rem) {
+@media (max-width: 20rem) {
 
      /* NAV: icons only, but spacing preserved */
 
