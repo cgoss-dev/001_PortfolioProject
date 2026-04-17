@@ -60,7 +60,7 @@
      Tagline sizing was separated from nav sizing.
      That way, nav-label changes do not force tagline shrink too early. */
      --text-size-tagline: 1rem;
-     --text-size-tagline-small: clamp(0.8rem, 2.7vw, 1rem);
+     --text-size-tagline-small: clamp(1rem, 2.7vw, 1rem);
 
      /* JS TEXT COLOR CYCLE CONTROL */
      /* Core JS reads this exact variable name. */
