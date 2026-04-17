@@ -45,7 +45,7 @@
 
      --header-text-align: left;
 
-     --text-size-marquee: clamp(5rem, 20vw, 10rem);
+     --text-size-marquee: clamp(5rem, 20vw, 15rem);
      --text-size-medium: clamp(3rem, 10vw, 3rem);
      --text-size-small: clamp(1rem, 5vw, 2.5rem);
 
@@ -137,14 +137,19 @@
      --hero-gap: clamp(1rem, 4vh, 2.25rem);
 
      /* NOTE: NAV SIZE CONTROL */
+     /* Tighter clamp values are used here so a single row is kept longer. */
 
      --nav-panel-width: min(100%, 52rem);
-     --nav-pill-gap: clamp(0.4rem, 1vw, 0.85rem);
-     --nav-pill-padding-y: 0.7rem;
-     --nav-pill-padding-x: 0.9rem;
-     --nav-icon-size: clamp(1.1rem, 1.5vw, 1.4rem);
-     --nav-label-size: clamp(0.78rem, 0.95vw, 0.95rem);
-     --nav-desc-size: clamp(0.68rem, 0.8vw, 0.82rem);
+     --nav-pill-gap: clamp(0.3rem, 0.9vw, 1rem);
+     --nav-pill-padding-y: 0.2em;
+     --nav-pill-padding-x: 0.2em;
+
+     /* NOTE: Icon size was reduced by 25% here. */
+     --nav-icon-size: clamp(2.25rem, 5.625vw, 3.375rem);
+
+     /* NOTE: Label size is allowed to shrink harder here so a single row is preserved. */
+     --nav-label-size: clamp(0.85rem, 1.35vw, 1.1rem);
+     --nav-desc-size: clamp(0.75rem, 1.5vw, 2rem);
 }
 
 /* NON-ROOT CORE */
@@ -222,6 +227,11 @@ h1 {
      width: 100%;
      flex: 0 0 auto;
      min-width: 0;
+
+     /* NOTE: Centering is reinforced here so resize stays clean. */
+     display: flex;
+     align-items: center;
+     justify-content: center;
 }
 
 .header-top {
@@ -251,11 +261,21 @@ h1 {
      margin: 0 auto;
      padding-top: clamp(0.2rem, 0.8vh, 0.45rem);
      color: var(--text-color-small);
-     font-size: clamp(0.95rem, 1.6vw, 1.1rem);
+
+     /* NOTE: Tagline size is allowed to shrink harder here so one row is kept. */
+     font-size: var(--nav-label-size);
+
      line-height: 1.5;
      text-align: center;
      max-width: 100%;
      white-space: nowrap;
+}
+
+ /* NOTE: Tagline box is kept to content width so centering stays clean. */
+.tagline,
+.hero-blurb {
+     width: fit-content;
+     max-width: 100%;
 }
 
 /* NOTE: TAGLINE BREAK */
@@ -268,12 +288,12 @@ h1 {
 
 @media (max-width: 40rem) {
      .tagline-break {
-          display: block;
-          min-height: 1.5em;
+          display: inline;
+          min-height: 0;
      }
 
      .tagline {
-          white-space: normal;
+          white-space: nowrap;
      }
 }
 
@@ -284,18 +304,18 @@ h1 {
 .marquee {
      /* border: blue, solid, 5px; */
 
-     display: flex;
+     display: inline-flex;
      flex-direction: column;
      align-items: center;
      justify-content: center;
-     width: 100%;
+     width: fit-content;
      max-width: 100%;
      margin: 0 auto;
 
-     /* A little extra vertical padding can help prevent tall letters from being clipped during resize. */
-     padding-top: 0.15em;
+     /* A cleaner vertical box is used here so centering stays stable during resize. */
+     padding-top: 0;
      padding-left: 0;
-     padding-bottom: 0.25em;
+     padding-bottom: 0;
      /* "rem" is relative to base html font size (16px), this does NOT resize.
           "em" is relative to parent element's font size, this DOES resize.*/
 
@@ -306,18 +326,23 @@ h1 {
      font-family: var(--font-fancy);
      font-size: var(--text-size-marquee);
 
-     /* A slightly roomier line-height can help protect top and bottom of glyphs. */
-     line-height: 1.02;
+     /* A slightly tighter line-height is used so both rows feel evenly stacked. */
+     line-height: 0.95;
 
      white-space: normal;
      overflow: visible;
+
+     /* NOTE: Marquee was raised vertically by 10% here. */
+     transform: translateY(-10%);
 }
 
 .marquee > span {
      display: block;
-     width: auto;
+     width: 100%;
      max-width: 100%;
-     padding: 0.025em;
+     margin: 0;
+     padding: 0;
+     text-align: center;
      text-shadow: var(--glow-text);
      transition:
           color var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style),
@@ -355,15 +380,15 @@ h1 {
      height: 3rem;
      padding: 0;
      margin: 0;
-     background: rgba(0, 0, 0, 0.72);
+     background: rgba(0, 0, 0, 0.75);
      border: var(--canvasboard-border);
      border-radius: 999px;
      outline: none;
      cursor: pointer;
 
      font-family: var(--font-fancy);
-     font-size: 1.6rem;
-     line-height: 1;
+     font-size: 1rem;
+     line-height: 1.25;
      color: var(--menu-button-color);
      -webkit-text-fill-color: currentColor;
      text-shadow: var(--glow-text);
@@ -418,11 +443,11 @@ h1 {
      position: relative;
      top: auto;
      right: auto;
-     width: var(--nav-panel-width);
+     width: 100%;
      max-width: 100%;
      list-style: none;
      margin: 0 auto;
-     padding: 0.5rem;
+     padding: 0.5rem 0 0 0;
 
      min-width: 0;
      /* border: var(--canvasboard-border); */
@@ -450,11 +475,15 @@ h1 {
      list-style: none;
      margin: 0 auto;
      padding: 0;
-     display: grid;
-     grid-template-columns: repeat(4, auto);
+     display: flex;
+
+     /* NOTE: Wrapping is blocked here so a single row is kept. */
+     flex-wrap: nowrap;
+
      justify-content: center;
+     align-items: center;
      gap: var(--nav-pill-gap);
-     align-items: stretch;
+     width: 100%;
 }
 
 .nav-menu ul {
@@ -469,6 +498,10 @@ h1 {
      font-size: var(--text-size-small);
      text-align: center;
      min-width: 0;
+
+     /* NOTE: Flex shrinking is allowed here so row splitting is avoided. */
+     width: auto;
+     flex: 0 1 auto;
 }
 
 .nav-menu a {
@@ -479,14 +512,20 @@ h1 {
      display: inline-flex;
      align-items: center;
      justify-content: center;
-     gap: 0.7rem;
+
+     /* NOTE: Gap is allowed to shrink here so a single row is kept. */
+     gap: clamp(0rem, 0.5vw, 0.7rem);
+
      min-height: 100%;
+     width: max-content;
+     max-width: 100%;
      padding: var(--nav-pill-padding-y) var(--nav-pill-padding-x);
      color: var(--text-color-medium);
      background: transparent;
      border-radius: 999px;
      cursor: pointer;
      text-align: center;
+     white-space: nowrap;
 
      /* NOTE: SIMPLE LINK HOVER RESPONSE
      Color and glow are eased here. Scale motion is intentionally omitted here. */
@@ -509,15 +548,32 @@ h1 {
 /* Emoji stays clean here, without extra panel or border treatment. */
 
 .nav-icon {
-     font-size: var(--text-size-medium);
+     width: var(--nav-icon-size);
+     height: var(--nav-icon-size);
      line-height: 1;
-     display: inline-flex;
-     align-items: center;
-     justify-content: center;
+     display: inline-block;
+     flex: 0 0 auto;
+     vertical-align: middle;
+     object-fit: contain;
      background: transparent;
      border: none;
      box-shadow: none;
      outline: none;
+
+     /* NOTE: Hover glow is matched to label glow here. */
+     transition:
+          filter 0.2s ease-in-out,
+          opacity 0.2s ease-in-out,
+          transform 0.2s ease-in-out;
+}
+
+.nav-link:hover .nav-icon,
+.nav-link:active .nav-icon,
+.nav-link:focus-visible .nav-icon {
+     filter:
+          drop-shadow(var(--glow-core) currentColor)
+          drop-shadow(var(--glow-soft) currentColor)
+          drop-shadow(var(--glow-wide) currentColor);
 }
 
 .nav-label,
@@ -528,6 +584,7 @@ h1 {
 
 .nav-label {
      font-size: var(--nav-label-size);
+     line-height: 1.25;
      white-space: nowrap;
 }
 
@@ -536,6 +593,13 @@ h1 {
      font-size: var(--nav-desc-size);
      opacity: 0.78;
      white-space: nowrap;
+}
+
+/* NOTE: Dropdown trigger was removed here. */
+.nav-button,
+.nav-button-open,
+.nav-button-close {
+     display: none !important;
 }
 
 /* BACKGROUND SPARKLE CANVAS */
@@ -559,26 +623,63 @@ h1 {
 .main-squeeze {
      width: min(100%, var(--page-width-wide));
      margin: 0 auto;
+
+     /* full height below header */
+     flex: 1;
      min-height: 0;
+
      display: flex;
-     align-items: center;
-     justify-content: center;
+     flex-direction: column;
 }
 
 .hero-stack {
-     width: min(100%, 52rem);
-     min-height: 100%;
+     width: 100%;
+     max-width: 100%;
      margin: 0 auto;
+
+     flex: 1;
+     min-height: 0;
+     position: relative;
+
      display: flex;
-     align-items: center;
+     flex-direction: column;
+
+     /* vertical + horizontal centering */
      justify-content: center;
+     align-items: center;
+
+     /* NOTE: Extra bottom room is reserved here so tagline can sit near lower edge without overlap. */
+     padding-bottom: calc(1.5rem + var(--page-padding-y));
+     gap: 0;
 }
 
 .hero-stack h1 {
      margin: 0;
+     width: 100%;
+     display: flex;
+     justify-content: center;
 }
 
+.hero-blurb {
+     margin-top: 0;
+     display: flex;
+     justify-content: center;
+     position: absolute;
+     left: 50%;
+     bottom: var(--page-padding-y);
+     transform: translateX(-50%);
+     width: min(100%, 44rem);
+}
 
+/* NOTE: Large-screen marquee centering */
+/* Full-row width is used here so wide screens do not make title look offset. */
+
+@media (min-width: 64.0001rem) {
+     .marquee {
+          margin-left: auto;
+          margin-right: auto;
+     }
+}
 
 /* NOTE: RESPONSIVE NAV MODES */
 /* SM = button only */
@@ -589,7 +690,7 @@ h1 {
 @media (min-width: 90.0001rem) {
      .nav-link {
           flex-direction: column;
-          gap: 0.35rem;
+          gap: clamp(0rem, 0.35vw, 0.35rem);
           padding-top: 0.8rem;
           padding-bottom: 0.8rem;
      }
@@ -606,7 +707,7 @@ h1 {
 @media (min-width: 64.0001rem) and (max-width: 90rem) {
      .nav-link {
           flex-direction: row;
-          gap: 0.6rem;
+          gap: clamp(0rem, 0.5vw, 0.6rem);
      }
 
      .nav-label {
@@ -621,11 +722,15 @@ h1 {
 @media (min-width: 40.0001rem) and (max-width: 64rem) {
      .nav-link {
           flex-direction: row;
-          gap: 0;
-          padding-inline: 0.75rem;
+          gap: clamp(0rem, 0.45vw, 0.5rem);
+          padding-inline: 0.3rem;
      }
 
-     .nav-label,
+     
+     .nav-label {
+          display: inline-block;
+     }
+
      .nav-desc {
           display: none;
      }
@@ -642,51 +747,52 @@ h1 {
      }
 
      .header-top {
-          justify-content: flex-end;
+          justify-content: center;
      }
 
      .dropdown-low {
-          align-items: flex-end;
+          align-items: center;
      }
 
      .nav-button {
-          display: inline-flex;
+          display: none !important;
      }
 
      .nav-menu {
-          position: absolute;
-          top: calc(100% + 0.75rem);
-          right: 0;
-          width: min(18rem, calc(100vw - (var(--page-padding-x) * 2)));
-          padding: 0.5rem;
-          /* border-radius: var(--canvasboard-radius); */
-          opacity: 0;
-          transform: translateY(-0.5rem);
-          pointer-events: none;
-          margin: 0;
+          position: relative;
+          top: auto;
+          right: auto;
+          width: 100%;
+          max-width: 100%;
+          padding: 0.5rem 0 0 0;
+          opacity: 1;
+          transform: none;
+          pointer-events: auto;
+          margin: 0 auto;
+          overflow: hidden;
      }
 
      .dropdown-low.menu-open .nav-menu {
           opacity: 1;
-          transform: translateY(0);
+          transform: none;
      }
 
      .nav-list {
-          grid-template-columns: 1fr;
-          justify-content: stretch;
-          gap: 0.25rem;
+          justify-content: center;
+          gap: 0.5rem;
      }
 
      .nav-link {
-          width: 100%;
-          justify-content: flex-start;
-          gap: 0.75rem;
-          padding: 0.85rem 1rem;
+          width: max-content;
+          justify-content: center;
+          gap: 0;
+          padding: 0.35rem 0.35rem;
           border-radius: 0.9rem;
      }
 
+     /* NOTE: Nav text is hidden on small screens here. */
      .nav-label {
-          display: inline-block;
+          display: none;
      }
 
      .nav-desc {
@@ -700,6 +806,27 @@ h1 {
 
      .hero-stack {
           width: 100%;
+          padding-bottom: calc(2rem + var(--page-padding-y));
+     }
+
+     .hero-blurb {
+          width: min(100%, 44rem);
+          max-width: 44rem;
+     }
+
+     .marquee {
+          max-width: 100%;
+     }
+
+     .marquee > span {
+          max-width: 100%;
+     }
+}
+
+ /* NOTE: Extra-small widths keep tagline on one row by scaling text slightly. */
+@media (max-width: 24rem) {
+     .tagline {
+          font-size: 0.58rem;
      }
 }
 
@@ -714,17 +841,17 @@ h1 {
      }
 
      .tagline {
-          font-size: 0.92rem;
+          font-size: clamp(0.62rem, 1.1vw, 0.92rem);
           line-height: 1.35;
      }
 
      .nav-menu {
-          padding: 0.35rem;
+          padding-top: 0.25rem;
      }
 
      .nav-link {
-          padding-top: 0.6rem;
-          padding-bottom: 0.6rem;
+          padding-top: 0.35rem;
+          padding-bottom: 0.35rem;
      }
 }
 
