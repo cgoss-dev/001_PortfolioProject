@@ -45,6 +45,9 @@
 
      --header-text-align: left;
 
+     /* NOTE:
+     Lower minimum value was added here so marquee can keep shrinking
+     instead of freezing and clipping on smaller screens. */
      --text-size-marquee: clamp(7rem, 15vw, 15rem);
      --text-size-medium: clamp(3rem, 10vw, 3rem);
      --text-size-small: clamp(1rem, 5vw, 2.5rem);
@@ -52,6 +55,12 @@
      --text-color-marquee: var(--text-color);
      --text-color-medium: var(--text-color);
      --text-color-small: var(--text-color);
+
+     /* NOTE:
+     Tagline sizing was separated from nav sizing.
+     That way, nav-label changes do not force tagline shrink too early. */
+     --text-size-tagline: 1rem;
+     --text-size-tagline-small: clamp(0.8rem, 2.7vw, 1rem);
 
      /* JS TEXT COLOR CYCLE CONTROL */
      /* Core JS reads this exact variable name. */
@@ -139,12 +148,12 @@
      /* NAV SIZE CONTROL */
      /* Tighter clamp values are used here so a single row is kept longer. */
 
-     --nav-panel-width: min(100%, 52rem);
-     --nav-pill-gap: clamp(0.3rem, 0.9vw, 1rem);
-     --nav-pill-padding-y: 0.2em;
-     --nav-pill-padding-x: 0.2em;
+     --nav-panel-width: 100%;
+     --nav-pill-gap: clamp(0.5rem, 1vw, 1rem);
+     --nav-pill-padding-y: 0.5rem;
+     --nav-pill-padding-x: 0.5rem;
 
-     --nav-icon-size: clamp(2.25rem, 5.625vw, 3.375rem);
+     --nav-icon-size: clamp(2.5rem, 5vw, 3rem);
 
      /* Label size is allowed to shrink harder here so a single row is preserved. */
      --nav-label-size: clamp(0.85rem, 1.35vw, 1.1rem);
@@ -206,7 +215,8 @@ body {
 header {
      /* border: red, solid, 5px; */
 
-     width: min(100%, var(--content-width));
+     width: 100%;
+     max-width: 100%;
      margin: 0 auto;
      padding: 0;
      text-align: center;
@@ -221,6 +231,8 @@ header {
 }
 
 .site-header {
+     width: 100%;
+     max-width: 100%;
      z-index: var(--menu-layer-z);
 }
 
@@ -267,6 +279,7 @@ h1 {
      justify-content: center;
      flex: 0 0 auto;
      width: 100%;
+     max-width: 100%;
 }
 
 .nav-button {
@@ -338,8 +351,8 @@ h1 {
      position: relative;
      top: auto;
      right: auto;
-     width: min(100%, var(--content-width));
-     max-width: var(--content-width);
+     width: 100%;
+     max-width: 100%;
      list-style: none;
      margin: 0 auto;
      padding: 0.5rem 0 0 0;
@@ -365,7 +378,8 @@ h1 {
      pointer-events: auto;
 }
 
-.nav-menu ul, .nav-list {
+.nav-menu ul,
+.nav-list {
      list-style: none;
      margin: 0;
      padding: 0;
@@ -373,8 +387,8 @@ h1 {
 
 .nav-list {
      display: flex;
-     justify-content: center;
-     align-items: center;
+     justify-content: space-between;
+     align-items: stretch;
      gap: var(--nav-pill-gap);
      width: 100%;
 
@@ -385,13 +399,13 @@ h1 {
 .nav-menu li {
      margin: 0;
      padding: 0;
-     width: auto;
      min-width: 0;
-     flex: 0 1 auto;
+     flex: 1 1 0;
      font-size: var(--text-size-small);
      text-align: center;
 
-     /* Flex shrinking is allowed here so row splitting is avoided. */
+     /* Equal-width slots are used here so icon-only mode
+     keeps same overall spread instead of bunching up. */
 }
 
 .nav-menu a {
@@ -403,7 +417,7 @@ h1 {
      align-items: center;
      justify-content: center;
      min-height: 100%;
-     width: max-content;
+     width: 100%;
      max-width: 100%;
      padding: var(--nav-pill-padding-y) var(--nav-pill-padding-x);
      color: var(--text-color-medium);
@@ -495,7 +509,8 @@ h1 {
 /* Marquee stays centered inside remaining page space. */
 
 .main-squeeze {
-     width: min(100%, var(--page-width-wide));
+     width: 100%;
+     max-width: 100%;
      margin: 0 auto;
      flex: 1;
      min-height: 0;
@@ -517,7 +532,10 @@ h1 {
      justify-content: center;
      align-items: center;
      gap: 0;
+     padding-inline: 0;
      padding-bottom: calc(1.5rem + var(--page-padding-y));
+     padding-left: 0;
+     padding-right: 0;
 
      /* vertical + horizontal centering */
      /* Extra bottom room is reserved here so tagline can sit near lower edge without overlap. */
@@ -531,8 +549,8 @@ h1 {
 }
 
 .hero-blurb {
-     width: min(100%, var(--content-width));
-     max-width: var(--content-width);
+     width: 100%;
+     max-width: 100%;
      flex: 0 0 auto;
      margin: 0 auto;
      display: flex;
@@ -554,11 +572,12 @@ h1 {
      flex-direction: column;
      align-items: center;
      justify-content: center;
-     width: fit-content;
+     width: 100%;
      max-width: 100%;
      margin: 0 auto;
      padding-top: 0;
      padding-left: 0;
+     padding-right: 0;
      padding-bottom: 0;
      text-align: center;
      color: var(--text-color-marquee);
@@ -570,7 +589,8 @@ h1 {
      overflow: visible;
      transform: translateY(-10%);
 
-     /* A cleaner vertical box is used here so centering stays stable during resize. */
+     /* Full available width is used here so resize can keep happening.
+     fit-content was causing an early stop point before. */
      /* "rem" is relative to base html font size (16px), this does NOT resize.
           "em" is relative to parent element's font size, this DOES resize.*/
      /* A slightly tighter line-height is used so both rows feel evenly stacked. */
@@ -596,18 +616,21 @@ h1 {
 }
 
 /* NOTE: TAGLINE */
-/* Wrapping is allowed by default so overflow is reduced. */
+/* One row is kept as long as room still exists.
+A break is only introduced at chosen split point later. */
 
 .tagline {
      width: 100%;
      max-width: 100%;
      margin: 0 auto;
      padding-top: clamp(0.2rem, 0.8vh, 0.45rem);
+     padding-left: 0;
+     padding-right: 0;
      color: var(--text-color-small);
-     font-size: var(--nav-label-size);
+     font-size: var(--text-size-tagline);
      line-height: 1.5;
      text-align: center;
-     white-space: normal;
+     white-space: nowrap;
      overflow-wrap: normal;
 }
 
@@ -620,19 +643,16 @@ h1 {
 }
 
 /* NOTE: RESPONSIVE NAV MODES */
-/* SM = button only */
-/* MD = icons only */
-/* LG = icons + text */
-/* XL = icons + text + description */
+/* LG = icons + text + description (min-width: 60rem)*/
+/* MD = icons + text (min-width: 45.0001rem)*/
+/* SM = icons only (max-width: 30rem */
 
-@media (min-width: 64.0001rem) {
-     .marquee {
-          margin-left: auto;
-          margin-right: auto;
-     }
-}
+/* ========================= */
+/* NOTE: LG — FULL NAV (>= 60rem)  */
+/* ========================= */
 
-@media (min-width: 90.0001rem) {
+@media (min-width: 60rem) {
+
      .nav-link {
           flex-direction: column;
           gap: clamp(0rem, 0.35vw, 0.35rem);
@@ -647,9 +667,24 @@ h1 {
      .nav-desc {
           display: inline-block;
      }
+
+     .tagline {
+          white-space: nowrap;
+          font-size: var(--text-size-tagline);
+     }
+
+     .tagline-break {
+          display: inline;
+     }
 }
 
-@media (min-width: 64.0001rem) and (max-width: 90rem) {
+
+/* ========================= */
+/* NOTE: MD — ICON + LABEL (45–60) */
+/* ========================= */
+
+@media (min-width: 40.0001rem) and (max-width: 59.9999rem) {
+
      .nav-link {
           flex-direction: row;
           gap: clamp(0rem, 0.5vw, 0.6rem);
@@ -662,143 +697,56 @@ h1 {
      .nav-desc {
           display: none;
      }
-}
 
-@media (min-width: 40.0001rem) and (max-width: 64rem) {
-     .nav-link {
-          flex-direction: row;
-          gap: clamp(0rem, 0.45vw, 0.5rem);
-          padding-inline: 0.3rem;
+     .tagline {
+          white-space: nowrap;
+          font-size: var(--text-size-tagline);
      }
 
-     .nav-label {
-          display: inline-block;
-     }
-
-     .nav-desc {
-          display: none;
+     .tagline-break {
+          display: inline;
      }
 }
 
-@media (max-width: 20rem) {
-     .body-ody {
-          grid-template-rows: auto 1fr;
-     }
 
-     header {
-          width: 100%;
-          max-width: var(--content-width);
-     }
+/* ========================= */
+/* NOTE: SM — ICON ONLY (<= 20rem) */
+/* ========================= */
 
-     .header-top {
-          justify-content: center;
-     }
+@media (max-width: 40rem) {
 
-     .dropdown-low {
-          align-items: center;
-     }
+     /* NAV: icons only, but spacing preserved */
 
-     .nav-button {
-          display: none !important;
-     }
-
-     .nav-menu {
-          position: relative;
-          top: auto;
-          right: auto;
-          width: 100%;
-          max-width: 100%;
-          margin: 0 auto;
-          padding: 0.5rem 0 0 0;
-          opacity: 1;
-          transform: none;
-          pointer-events: auto;
-          overflow: hidden;
-     }
-
-     .dropdown-low.menu-open .nav-menu {
-          opacity: 1;
-          transform: none;
-     }
-
-     .nav-list {
-          justify-content: center;
-          gap: 0.5rem;
-     }
-
-     .nav-link {
-          width: max-content;
-          justify-content: center;
-          gap: 0;
-          padding: 0.35rem 0.35rem;
-          border-radius: 0.9rem;
-     }
-
-     /* Nav text is hidden on small screens here. */
      .nav-label,
      .nav-desc {
           display: none;
      }
 
-     .main-squeeze {
-          width: 100%;
-          max-width: var(--content-width);
+     .nav-link {
+          gap: 0;
+          padding-inline: 0.2rem;
      }
 
-     .hero-stack {
-          width: 100%;
-          padding-bottom: calc(2rem + var(--page-padding-y));
+     .nav-list {
+          justify-content: space-between;
      }
 
-     .hero-blurb {
-          width: min(100%, 44rem);
-          max-width: 44rem;
-     }
+     /* TAGLINE: break ONLY at chosen split point */
 
-     .marquee,
-     .marquee > span {
-          max-width: 100%;
+     .tagline {
+          white-space: normal;
+          font-size: var(--text-size-tagline-small);
+          line-height: 1.4;
      }
 
      .tagline-break {
           display: block;
-          min-height: 0;
      }
 
-     .tagline {
-          white-space: normal;
-     }
-}
+     /* MARQUEE: allow continued shrink */
 
-/* Extra-small widths keep tagline on one row by scaling text slightly. */
-@media (max-width: 24rem) {
-     .tagline {
-          font-size: 0.58rem;
-     }
-}
-
-/* EXTRA SHORT HEIGHT SAFETY */
-/* Tight heights get slightly smaller spacing so scroll stays gone. */
-
-@media (max-height: 40rem) {
-     :root {
-          --nav-height: 3rem;
-          --hero-gap: clamp(0.5rem, 2vh, 1rem);
-          --text-size-marquee: clamp(5rem, 12vw, 7rem);
-     }
-
-     .tagline {
-          font-size: clamp(0.62rem, 1.1vw, 0.92rem);
-          line-height: 1.35;
-     }
-
-     .nav-menu {
-          padding-top: 0.25rem;
-     }
-
-     .nav-link {
-          padding-top: 0.35rem;
-          padding-bottom: 0.35rem;
+     .marquee {
+          width: 100%;
      }
 }
 
