@@ -50,17 +50,11 @@
      instead of freezing and clipping on smaller screens. */
      --text-size-marquee: clamp(7rem, 15vw, 15rem);
      --text-size-medium: clamp(3rem, 10vw, 3rem);
-     --text-size-small: clamp(1rem, 5vw, 2.5rem);
+     --text-size-small: clamp(0.8rem, 5vw, 1.5rem);
 
      --text-color-marquee: var(--text-color);
      --text-color-medium: var(--text-color);
      --text-color-small: var(--text-color);
-
-     /* NOTE:
-     Tagline sizing was separated from nav sizing.
-     That way, nav-label changes do not force tagline shrink too early. */
-     --text-size-tagline: 1rem;
-     --text-size-tagline-small: clamp(1rem, 2.7vw, 1rem);
 
      /* JS TEXT COLOR CYCLE CONTROL */
      /* Core JS reads this exact variable name. */
