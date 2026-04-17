@@ -45,7 +45,7 @@
 
      --header-text-align: left;
 
-     --text-size-marquee: clamp(5rem, 20vw, 15rem);
+     --text-size-marquee: clamp(7rem, 15vw, 15rem);
      --text-size-medium: clamp(3rem, 10vw, 3rem);
      --text-size-small: clamp(1rem, 5vw, 2.5rem);
 
@@ -125,18 +125,18 @@
      --sparkle-respawn-offset-top: -20;
      --sparkle-respawn-offset-bottom: 24;
 
-     /* NOTE: BREAKPOINTS */
+     /* BREAKPOINTS */
 
      --breakpoint-sm-max: 40rem;
      --breakpoint-md-max: 64rem;
      --breakpoint-lg-max: 90rem;
 
-     /* NOTE: SHARED SPACING */
+     /* SHARED SPACING */
 
      --nav-height: clamp(3.25rem, 8vh, 4.5rem);
      --hero-gap: clamp(1rem, 4vh, 2.25rem);
 
-     /* NOTE: NAV SIZE CONTROL */
+     /* NAV SIZE CONTROL */
      /* Tighter clamp values are used here so a single row is kept longer. */
 
      --nav-panel-width: min(100%, 52rem);
@@ -144,10 +144,9 @@
      --nav-pill-padding-y: 0.2em;
      --nav-pill-padding-x: 0.2em;
 
-     /* NOTE: Icon size was reduced by 25% here. */
      --nav-icon-size: clamp(2.25rem, 5.625vw, 3.375rem);
 
-     /* NOTE: Label size is allowed to shrink harder here so a single row is preserved. */
+     /* Label size is allowed to shrink harder here so a single row is preserved. */
      --nav-label-size: clamp(0.85rem, 1.35vw, 1.1rem);
      --nav-desc-size: clamp(0.75rem, 1.5vw, 2rem);
 }
@@ -228,7 +227,7 @@ h1 {
      flex: 0 0 auto;
      min-width: 0;
 
-     /* NOTE: Centering is reinforced here so resize stays clean. */
+     /* Centering is reinforced here so resize stays clean. */
      display: flex;
      align-items: center;
      justify-content: center;
@@ -261,20 +260,22 @@ h1 {
      margin: 0 auto;
      padding-top: clamp(0.2rem, 0.8vh, 0.45rem);
      color: var(--text-color-small);
-
-     /* NOTE: Tagline size is allowed to shrink harder here so one row is kept. */
      font-size: var(--nav-label-size);
-
      line-height: 1.5;
      text-align: center;
      max-width: 100%;
-     white-space: nowrap;
+     white-space: normal;
+     overflow-wrap: break-word;
+     text-wrap: balance;
 }
 
- /* NOTE: Tagline box is kept to content width so centering stays clean. */
-.tagline,
 .hero-blurb {
      width: fit-content;
+     max-width: 100%;
+}
+
+.tagline {
+     width: 100%;
      max-width: 100%;
 }
 
@@ -288,12 +289,12 @@ h1 {
 
 @media (max-width: 40rem) {
      .tagline-break {
-          display: inline;
+          display: block;
           min-height: 0;
      }
 
      .tagline {
-          white-space: nowrap;
+          white-space: normal;
      }
 }
 
@@ -332,7 +333,6 @@ h1 {
      white-space: normal;
      overflow: visible;
 
-     /* NOTE: Marquee was raised vertically by 10% here. */
      transform: translateY(-10%);
 }
 
@@ -477,7 +477,7 @@ h1 {
      padding: 0;
      display: flex;
 
-     /* NOTE: Wrapping is blocked here so a single row is kept. */
+     /* Wrapping is blocked here so a single row is kept. */
      flex-wrap: nowrap;
 
      justify-content: center;
@@ -499,7 +499,7 @@ h1 {
      text-align: center;
      min-width: 0;
 
-     /* NOTE: Flex shrinking is allowed here so row splitting is avoided. */
+     /* Flex shrinking is allowed here so row splitting is avoided. */
      width: auto;
      flex: 0 1 auto;
 }
@@ -513,7 +513,7 @@ h1 {
      align-items: center;
      justify-content: center;
 
-     /* NOTE: Gap is allowed to shrink here so a single row is kept. */
+     /* Gap is allowed to shrink here so a single row is kept. */
      gap: clamp(0rem, 0.5vw, 0.7rem);
 
      min-height: 100%;
@@ -560,7 +560,7 @@ h1 {
      box-shadow: none;
      outline: none;
 
-     /* NOTE: Hover glow is matched to label glow here. */
+     /* Hover glow is matched to label glow here. */
      transition:
           filter 0.2s ease-in-out,
           opacity 0.2s ease-in-out,
@@ -595,7 +595,7 @@ h1 {
      white-space: nowrap;
 }
 
-/* NOTE: Dropdown trigger was removed here. */
+/* Dropdown trigger was removed here. */
 .nav-button,
 .nav-button-open,
 .nav-button-close {
@@ -648,7 +648,7 @@ h1 {
      justify-content: center;
      align-items: center;
 
-     /* NOTE: Extra bottom room is reserved here so tagline can sit near lower edge without overlap. */
+     /* Extra bottom room is reserved here so tagline can sit near lower edge without overlap. */
      padding-bottom: calc(1.5rem + var(--page-padding-y));
      gap: 0;
 }
@@ -671,8 +671,11 @@ h1 {
      width: min(100%, 44rem);
 }
 
-/* NOTE: Large-screen marquee centering */
-/* Full-row width is used here so wide screens do not make title look offset. */
+/* NOTE: RESPONSIVE NAV MODES */
+/* SM = button only */
+/* MD = icons only */
+/* LG = icons + text */
+/* XL = icons + text + description */
 
 @media (min-width: 64.0001rem) {
      .marquee {
@@ -680,12 +683,6 @@ h1 {
           margin-right: auto;
      }
 }
-
-/* NOTE: RESPONSIVE NAV MODES */
-/* SM = button only */
-/* MD = icons only */
-/* LG = icons + text */
-/* XL = icons + text + description */
 
 @media (min-width: 90.0001rem) {
      .nav-link {
@@ -790,7 +787,7 @@ h1 {
           border-radius: 0.9rem;
      }
 
-     /* NOTE: Nav text is hidden on small screens here. */
+     /* Nav text is hidden on small screens here. */
      .nav-label {
           display: none;
      }
@@ -823,21 +820,21 @@ h1 {
      }
 }
 
- /* NOTE: Extra-small widths keep tagline on one row by scaling text slightly. */
+ /* Extra-small widths keep tagline on one row by scaling text slightly. */
 @media (max-width: 24rem) {
      .tagline {
           font-size: 0.58rem;
      }
 }
 
-/* NOTE: EXTRA SHORT HEIGHT SAFETY */
+/* EXTRA SHORT HEIGHT SAFETY */
 /* Tight heights get slightly smaller spacing so scroll stays gone. */
 
 @media (max-height: 40rem) {
      :root {
           --nav-height: 3rem;
           --hero-gap: clamp(0.5rem, 2vh, 1rem);
-          --text-size-marquee: clamp(2rem, 8vw, 4.75rem);
+          --text-size-marquee: clamp(5rem, 12vw, 7rem);
      }
 
      .tagline {
