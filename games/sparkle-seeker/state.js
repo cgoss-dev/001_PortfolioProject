@@ -52,7 +52,7 @@ export let sparkleScore = 0;
 export let sparkleHealProgress = 0;
 
 export let playerHealth = 3;
-export const maxPlayerHealth = 10;
+export const maxPlayerHealth = 5;
 
 // ==================================================
 // GAME FLOW FLAGS
@@ -191,7 +191,7 @@ export function setObstacleSpawnTimer(value) {
 export function setSparkleScore(value) {
      sparkleScore = Math.max(0, value);
 }
-
+// REVIEW: SET SPARKLE SCORE MAX TO 100 FOR TESTING.
 export function addSparkleScore(value) {
      sparkleScore = Math.max(0, sparkleScore + value);
 }

@@ -335,7 +335,7 @@ function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
      return lines.length;
 }
 
-// NOTE: WELCOME COLOR SETUP
+// WELCOME COLOR SETUP
 // Shared root color engine is reused here for canvas title letters.
 function ensureWelcomeColorEngine() {
      if (welcomeColorEngine || !siteTheme?.createColorEngine || !siteTheme?.getRainbowPalette) {
@@ -371,7 +371,7 @@ function updateWelcomeTitleColors() {
      welcomeLastColorCycleTime = now;
 }
 
-// NOTE: WELCOME TITLE FIT
+// WELCOME TITLE FIT
 // Font size is reduced until both title lines fit safely inside canvas.
 function getWelcomeTitleFontSize(theme) {
      const { fonts } = theme;
@@ -636,7 +636,7 @@ export function getGameOverlayAlpha() {
      return Math.max(0, Math.min(1, Math.min(fadeIn, fadeOut)));
 }
 
-// NOTE: WELCOME ALPHA
+// WELCOME ALPHA
 // Same fade math is reused here for page-load welcome state.
 function getGameWelcomeAlpha() {
      if (!gameWelcome) {
@@ -676,7 +676,7 @@ export function updateGame() {
      updateGameOverlayTimer();
      syncPauseOverlay();
 
-     // NOTE: WELCOME GATE
+     // WELCOME GATE
      // Gameplay updates are held here until welcome state is dismissed.
      if (gameWelcome) {
           updateWelcomeTitleColors();
@@ -711,7 +711,8 @@ export function updateGame() {
           return;
      }
 
-     if (playerHealth >= maxPlayerHealth) {
+     // REVIEW: MAKE WIN STATE CONDITIONAL UPON 100 POINS, NOT MAX HEALTH.
+     if (sparkleScore >= 100) {
           setGameWon(true);
           setGameOver(false);
           setGamePaused(true);
@@ -795,12 +796,12 @@ function drawHealth(theme) {
 
      // TOP ROW: Hearts 10 → 6.
      for (let i = maxPlayerHealth - 1; i >= heartsPerRow; i -= 1) {
-          topRow += (i < playerHealth) ? filledHeart : emptyHeart;
+          bottomRowRow += (i < playerHealth) ? filledHeart : emptyHeart;
      }
-
+     //NOTE: SWAPPED TOP/BOTTOM ROWS FOR TESTING
      // BOTTOM ROW: Hearts 5 → 1.
      for (let i = heartsPerRow - 1; i >= 0; i -= 1) {
-          bottomRow += (i < playerHealth) ? filledHeart : emptyHeart;
+          topRow += (i < playerHealth) ? filledHeart : emptyHeart;
      }
 
      miniGameCtx.save();
@@ -960,7 +961,7 @@ export function drawMenuOverlay(theme) {
           const instructionLines = [
                "Move with arrows, WASD, or joystick.",
                "Collect sparkles, avoid obstacles.",
-               "Max hearts to win."
+               "100 points to win."
           ];
 
           instructionLines.forEach((instructionLine) => {
@@ -1000,12 +1001,12 @@ function drawGameWelcomeOverlay(theme) {
      miniGameCtx.save();
      miniGameCtx.globalAlpha = alpha;
 
-     // NOTE: WELCOME BACKDROP
+     // WELCOME BACKDROP
      // Subtle dimming is applied here so marquee title reads cleanly.
      miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.25)";
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
-     // NOTE: WELCOME TITLE LETTERS
+     // WELCOME TITLE LETTERS
      // Each letter is measured and placed individually here so colors can vary per character.
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "middle";
