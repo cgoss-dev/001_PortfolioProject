@@ -51,7 +51,7 @@ export const sparkleSpawnDelay = 40;
 export const sparkleSpawnCap = 10;
 
 export const obstacleSpawnDelay = 90;
-export const obstacleSpawnCap = 6;
+export const obstacleSpawnCap = 3; // Increase cap on lvlup.
 
 export const collisionBurstParticleCount = 10;
 
