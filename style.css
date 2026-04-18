@@ -45,15 +45,13 @@
 
      --header-text-align: left;
 
-     /* NOTE:
-     A larger visual size is kept here.
+     /* A larger visual size is kept here.
      Full-width reclaim farther below helps cutoff stay avoided. */
      --text-size-marquee: clamp(4rem, 15vw, 15rem);
      --text-size-medium: clamp(3rem, 10vw, 3rem);
      --text-size-small: clamp(0.8rem, 5vw, 1.5rem);
 
-     /* NOTE:
-     Tagline size controls were added here.
+     /* Tagline size controls were added here.
      SM can keep size; XS can shrink a little if needed. */
      --text-size-tagline: clamp(0.8rem, 3vw, 1rem);
      --text-size-tagline-xs: clamp(0.75rem, 3vw, 1rem);
@@ -115,22 +113,16 @@
      --sparkle-opacity: 1;
      --sparkle-count-max: 180;
      --sparkle-density: 0.00015;
-
      --sparkle-size-min: 20;
      --sparkle-size-max: 25;
-
      --sparkle-speed-min: 0.2;
      --sparkle-speed-max: 0.7;
-
      --sparkle-wobble-speed-min: 0.005;
      --sparkle-wobble-speed-max: 0.02;
-
      --sparkle-wobble-amount-min: 5;
      --sparkle-wobble-amount-max: 15;
-
      --sparkle-opacity-min: 0.2;
      --sparkle-opacity-max: 1;
-
      --sparkle-respawn-offset-top: -20;
      --sparkle-respawn-offset-bottom: 24;
 
@@ -142,15 +134,15 @@
 
      /* SHARED SPACING */
 
-     --nav-height: clamp(3.25rem, 8vh, 4.5rem);
-     --hero-gap: clamp(1rem, 4vh, 2.25rem);
+     --nav-height: clamp(3rem, 8vh, 4rem);
+     --hero-gap: clamp(1rem, 4vh, 2rem);
 
      /* NAV SIZE CONTROL */
      /* Tighter clamp values are used here so a single row is kept longer. */
 
      --nav-panel-width: 100%;
      --nav-pill-gap: clamp(0.5rem, 1vw, 1rem);
-     --nav-pill-padding-y: 0.5rem;
+     --nav-pill-padding-y: 0.25rem;
      --nav-pill-padding-x: 0.5rem;
 
      --nav-icon-size: clamp(2.5rem, 5vw, 3rem);
@@ -221,7 +213,7 @@ header {
      padding: 0;
      text-align: center;
      position: relative;
-     line-height: 1.5;
+     line-height: 1;
      display: flex;
      flex-direction: column;
      justify-content: center;
@@ -232,7 +224,7 @@ header {
 
 .site-header {
      width: 100%;
-     max-width: 100%;
+     max-width: 1000px;
      z-index: var(--menu-layer-z);
 }
 
@@ -246,7 +238,7 @@ header {
      min-width: 0;
 
      /* A smaller em-based bottom space can be used here so row spacing follows marquee size. */
-     padding-bottom: 1em;
+     padding-bottom: 0.25em;
 }
 
 h1 {
@@ -255,7 +247,7 @@ h1 {
      margin: 0;
      padding: 0;
      text-align: center;
-     line-height: 1.1;
+     line-height: 1;
      width: 100%;
      flex: 0 0 auto;
      min-width: 0;
@@ -317,8 +309,7 @@ h1 {
           background-color 0.2s ease-in-out;
 }
 
-.nav-button-open,
-.nav-button-close {
+.nav-button-open, .nav-button-close {
      position: absolute;
      inset: 0;
      display: inline-flex;
@@ -512,9 +503,10 @@ h1 {
      max-width: 100%;
      margin: 0 auto;
      flex: 1;
-     min-height: 0;
+     /* min-height: 20rem; */
      display: flex;
      flex-direction: column;
+     /* background-color: #04a5e5; */
 
      /* full height below header */
 }
@@ -532,14 +524,13 @@ h1 {
      align-items: center;
      gap: 0;
      padding-inline: 0;
-     padding-bottom: calc(1.5rem + var(--page-padding-y));
+     padding-bottom: calc(1rem + var(--page-padding-y));
      padding-left: 0;
      padding-right: 0;
 
      /* vertical + horizontal centering */
      /* Extra bottom room is reserved here so tagline can sit near lower edge without overlap. */
-     /* NOTE:
-     Full viewport room is reclaimed here.
+     /* Full viewport room is reclaimed here.
      Earlier page padding was causing early shrink. */
 }
 
@@ -563,9 +554,6 @@ h1 {
      left: 50%;
      bottom: var(--page-padding-y);
      transform: translateX(-50%);
-
-     /* NOTE:
-     Slight edge breathing room is kept here so clipping can be avoided. */
 }
 
  /* NOTE: MARQUEE */
@@ -580,10 +568,7 @@ h1 {
      width: calc(100% - (var(--page-padding-x) * 2));
      max-width: calc(100vw - (var(--page-padding-x) * 2));
      margin: 0 auto;
-     padding-top: 0;
-     padding-left: 0;
-     padding-right: 0;
-     padding-bottom: 0;
+     padding: 0;
      text-align: center;
      color: var(--text-color-marquee);
      text-decoration: none;
@@ -599,8 +584,7 @@ h1 {
      /* "rem" is relative to base html font size (16px), this does NOT resize.
           "em" is relative to parent element's font size, this DOES resize.*/
      /* A slightly tighter line-height is used so both rows feel evenly stacked. */
-     /* NOTE:
-     A full viewport lane is used here, minus tiny edge room.
+     /* A full viewport lane is used here, minus tiny edge room.
      Big visual feel can now be kept longer without cutoff. */
 }
 
@@ -640,10 +624,6 @@ A break is only introduced at chosen split point later. */
      text-align: center;
      white-space: nowrap;
      overflow-wrap: normal;
-
-     /* NOTE:
-     Steady readable size is kept here.
-     Break control is handled by media rules below. */
 }
 
 /* NOTE: TAGLINE BREAK */
@@ -657,7 +637,7 @@ A break is only introduced at chosen split point later. */
 /* NOTE: RESPONSIVE NAV MODES */
 
 /* ========================= */
-/* NOTE: LG — FULL NAV (>= 60rem)  */
+/* LG — FULL NAV (>= 60rem)  */
 /* ========================= */
 
 @media (min-width: 60rem) {
@@ -688,7 +668,7 @@ A break is only introduced at chosen split point later. */
 }
 
 /* ========================= */
-/* NOTE: MD — ICON + LABEL (40–60) */
+/* MD — ICON + LABEL (40–60) */
 /* ========================= */
 
 @media (min-width: 40.0001rem) and (max-width: 59.9999rem) {
@@ -717,7 +697,7 @@ A break is only introduced at chosen split point later. */
 }
 
 /* ========================= */
-/* NOTE: SM — ICON ONLY (<= 40rem) */
+/* SM — ICON ONLY (<= 40rem) */
 /* ========================= */
 
 @media (min-width: 20.0001rem) and (max-width: 40rem) {
@@ -759,7 +739,7 @@ A break is only introduced at chosen split point later. */
 }
 
 /* ========================= */
-/* NOTE: XS — ICON ONLY (<= 20rem) */
+/* XS — ICON ONLY (<= 20rem) */
 /* ========================= */
 
 @media (max-width: 20rem) {
@@ -807,7 +787,8 @@ A break is only introduced at chosen split point later. */
 /* SPARKLE SEEKER */
 
 .game-container {
-     width: 75%;
+     /* width: 90%;
+     height: 90%; */
      aspect-ratio: 1 / 1;
      margin: 0 auto;
      border: var(--canvasboard-border);
