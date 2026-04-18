@@ -53,7 +53,7 @@ export const sparkleSpawnCap = 10;
 export const obstacleSpawnDelay = 90;
 export const obstacleSpawnCap = 3; // Increase cap on lvlup.
 
-export const collisionBurstParticleCount = 10;
+export const collisionBurstParticleCount = 15;
 
 // ==================================================
 // PLAYER
@@ -406,7 +406,7 @@ export function createObstacle() {
           baseX: x,
           y: -20,
           speed: 0.5 + Math.random() * 0.7,
-          size: randomNumber(getGameParticleSizeMin(), getGameParticleSizeMax()),
+          size: randomNumber(getGameParticleSizeMin() * 1.5, getGameParticleSizeMax() * 1.25),
           char: type.char,
           type,
           color: getNextSparkleColor(),
@@ -478,7 +478,7 @@ export function drawObstacles() {
           const obstacle = obstacles[i];
 
           miniGameCtx.save();
-          miniGameCtx.font = `${Math.max(18, obstacle.size)}px Arial, Helvetica, sans-serif`;
+          miniGameCtx.font = `${Math.max(20, obstacle.size)}px Arial, Helvetica, sans-serif`;
           miniGameCtx.fillStyle = obstacle.color;
           miniGameCtx.shadowColor = obstacle.color;
           miniGameCtx.shadowBlur = glowBlur;
@@ -512,9 +512,9 @@ export function createCollisionBurst(x, y, color, burstType) {
                y,
                dx: Math.cos(angle) * speed,
                dy: Math.sin(angle) * speed,
-               life: randomNumber(18, 34),
-               maxLife: 34,
-               size: randomNumber(10, 18),
+               life: randomNumber(25, 50),
+               maxLife: 50,
+               size: randomNumber(20, 30),
                char: randomItem(burstChars),
                color,
                glowBoost: burstType === "obstacle" ? 1.25 : 1

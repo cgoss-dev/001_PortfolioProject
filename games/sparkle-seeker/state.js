@@ -191,9 +191,13 @@ export function setObstacleSpawnTimer(value) {
 export function setSparkleScore(value) {
      sparkleScore = Math.max(0, value);
 }
-// REVIEW: SET SPARKLE SCORE MAX TO 100 FOR TESTING.
+
+// NOTE: SCORE MULTIPLIER
+// When player is at max health, all score gains are doubled.
 export function addSparkleScore(value) {
-     sparkleScore = Math.max(0, sparkleScore + value);
+     const multiplier = (playerHealth >= maxPlayerHealth) ? 2 : 1;
+
+     sparkleScore = Math.max(0, sparkleScore + (value * multiplier));
 }
 
 export function setSparkleHealProgress(value) {

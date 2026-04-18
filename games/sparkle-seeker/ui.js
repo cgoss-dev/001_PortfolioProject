@@ -81,26 +81,34 @@ export const difficultyOptions = ["Easy", "Normal", "Hard"];
 export const startOverlayDuration = 120;
 export const overlayFadeFrames = 30;
 
-// NOTE: WELCOME STATE
+// WELCOME STATE
 // Page-load welcome state is owned locally here.
 // First action is expected to be triggered from input handling.
 let gameWelcome = true;
 let gameWelcomeTimer = -1;
 let gameWelcomeDuration = -1;
 
-// NOTE: WELCOME ACTION TARGETS
+// NOTE: WELCOME MODE
+// This started as only the page-load welcome screen,
+// but now it also powers full-screen instructions / win / lose states.
+// Keeping one shared screen renderer is simpler for a beginner than
+// maintaining several different full-screen UI systems.
+let gameWelcomeMode = "welcome";
+
+// WELCOME ACTION TARGETS
 // Clickable word bounds are stored here for input handling.
 const gameWelcomeUi = {
      startButton: { x: 0, y: 0, width: 0, height: 0 },
+     instructionsButton: { x: 0, y: 0, width: 0, height: 0 },
      menuButton: { x: 0, y: 0, width: 0, height: 0 }
 };
 
-// NOTE: WELCOME TITLE COLOR ENGINE
+// WELCOME TITLE COLOR ENGINE
 // Canvas title colors are cycled here using shared root theme helpers.
 const welcomeTitleLines = ["SPARKLE", "SEEKER"];
 let welcomeColorEngine = null;
-let welcomePreviousColors = [[], []];
-let welcomeCurrentColors = [[], []];
+let welcomePreviousColors = [];
+let welcomeCurrentColors = [];
 let welcomeLastColorCycleTime = 0;
 
 export function isGameWelcomeActive() {
@@ -111,15 +119,51 @@ export function getGameWelcomeUi() {
      return gameWelcomeUi;
 }
 
+// WELCOME MODE GETTER
+// Input code can read this to decide what each action word should do.
+export function getGameWelcomeMode() {
+     return gameWelcomeMode;
+}
+
 export function dismissGameWelcomeToStart() {
      gameWelcome = false;
+     gameWelcomeMode = "welcome";
      gameWelcomeTimer = 0;
      gameWelcomeDuration = 0;
      startNewGameRound();
 }
 
+// NOTE: WELCOME -> INSTRUCTIONS MENU
+// This uses the existing menu instructions submenu,
+// instead of a separate full-screen instructions page.
+export function dismissGameWelcomeToInstructionsMenu() {
+     gameWelcome = false;
+     gameWelcomeMode = "welcome";
+     gameWelcomeTimer = 0;
+     gameWelcomeDuration = 0;
+
+     resetGameState();
+     resetTouchControls();
+     resetEntityColorCycle();
+
+     updateMiniGameCanvasSize();
+     resetPlayerPosition();
+     updateTouchControlBounds();
+     updateMenuUiBounds();
+
+     setGameStarted(false);
+     setGamePaused(false);
+     setGameMenuOpen(true);
+     setGameMenuView("instructions");
+     setGameOver(false);
+     setGameWon(false);
+
+     clearGameOverlay();
+}
+
 export function dismissGameWelcomeToMenu() {
      gameWelcome = false;
+     gameWelcomeMode = "welcome";
      gameWelcomeTimer = 0;
      gameWelcomeDuration = 0;
 
@@ -140,6 +184,23 @@ export function dismissGameWelcomeToMenu() {
      setGameWon(false);
 
      clearGameOverlay();
+}
+
+// FULL-SCREEN WELCOME SCREEN HELPERS
+// These functions let other files switch the big full-screen state
+// without needing to know the low-level timer details.
+export function showGameWelcomeScreen(mode = "welcome") {
+     gameWelcome = true;
+     gameWelcomeMode = mode;
+     gameWelcomeTimer = -1;
+     gameWelcomeDuration = -1;
+}
+
+export function dismissGameWelcomeBackToMain() {
+     gameWelcome = true;
+     gameWelcomeMode = "welcome";
+     gameWelcomeTimer = -1;
+     gameWelcomeDuration = -1;
 }
 
 // CSS HELPERS
@@ -236,14 +297,14 @@ function getUiTheme() {
                heartXPadding: 8,
 
                overlayTitleFont: 36,
-               overlaySubFont: getCssPixelSize("--text-size-medium", 18),
+               overlaySubFont: getCssPixelSize("--text-size-medium", 14),
 
-               // NOTE: WELCOME TITLE SIZE
+               // WELCOME TITLE SIZE
                // Title is allowed to scale from canvas size here.
-               welcomeSubFont: getCssPixelSize("--text-size-small", 14),
+               welcomeSubFont: getCssPixelSize(10),
 
-               menuButtonFont: getCssPixelSize("--text-size-small", 14),
-               menuSmallFont: getCssPixelSize("--text-size-small", 14),
+               menuButtonFont: getCssPixelSize(10),
+               menuSmallFont: getCssPixelSize(10),
 
                controlRadius: getCssNumber("--canvasboard-radius", 15)
           },
@@ -287,7 +348,7 @@ function drawRoundedRect(x, y, width, height, radius) {
      miniGameCtx.closePath();
 }
 
-// NOTE: PANEL BOX
+// PANEL BOX BORDER
 // Shared fill/stroke box is drawn here so repetition is reduced.
 function drawPanelBox(x, y, width, height, theme, lineWidth = 3) {
      const { colors, glow, sizes } = theme;
@@ -335,6 +396,37 @@ function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
      return lines.length;
 }
 
+// NOTE: SCREEN CONTENT HELPERS
+// These small helpers make the giant welcome renderer easier to read.
+// Instead of hardcoding text in 5 places, we define each screen's content here.
+function getCurrentWelcomeTitleLines() {
+     if (gameWelcomeMode === "win") {
+          return ["YOU", "WIN"];
+     }
+
+     if (gameWelcomeMode === "lose") {
+          return ["TRY", "AGAIN"];
+     }
+
+     return welcomeTitleLines;
+}
+
+function getCurrentWelcomeActionTexts() {
+     if (gameWelcomeMode === "welcome") {
+          return ["START", "TIPS", "MENU"];
+     }
+
+     if (gameWelcomeMode === "win") {
+          return ["START", "TIPS", "MENU"];
+     }
+
+     if (gameWelcomeMode === "lose") {
+          return ["START", "TIPS", "MENU"];
+     }
+
+          return ["START", "TIPS", "MENU"];
+}
+
 // WELCOME COLOR SETUP
 // Shared root color engine is reused here for canvas title letters.
 function ensureWelcomeColorEngine() {
@@ -345,25 +437,25 @@ function ensureWelcomeColorEngine() {
      welcomeColorEngine = siteTheme.createColorEngine(siteTheme.getRainbowPalette);
 }
 
-function updateWelcomeTitleColors() {
+function updateWelcomeTitleColors(titleLines = welcomeTitleLines) {
      ensureWelcomeColorEngine();
 
      const rainbowCycleSpeed = siteTheme?.getTextSettings?.().rainbowCycleSpeed ?? 900;
      const now = performance.now();
 
-     if (welcomeCurrentColors[0].length && (now - welcomeLastColorCycleTime) < rainbowCycleSpeed) {
+     if (welcomeCurrentColors.length && welcomeCurrentColors[0]?.length && (now - welcomeLastColorCycleTime) < rainbowCycleSpeed) {
           return;
      }
 
      if (!welcomeColorEngine?.nextCycle) {
           const fallbackColor = getCssColor("--text-color", "#ffffff");
-          welcomeCurrentColors = welcomeTitleLines.map((line) => Array(line.length).fill(fallbackColor));
+          welcomeCurrentColors = titleLines.map((line) => Array(line.length).fill(fallbackColor));
           welcomePreviousColors = welcomeCurrentColors.map((colors) => [...colors]);
           welcomeLastColorCycleTime = now;
           return;
      }
 
-     welcomeCurrentColors = welcomeTitleLines.map((line, lineIndex) =>
+     welcomeCurrentColors = titleLines.map((line, lineIndex) =>
           welcomeColorEngine.nextCycle(line.length, welcomePreviousColors[lineIndex] || [])
      );
 
@@ -373,7 +465,7 @@ function updateWelcomeTitleColors() {
 
 // WELCOME TITLE FIT
 // Font size is reduced until both title lines fit safely inside canvas.
-function getWelcomeTitleFontSize(theme) {
+function getWelcomeTitleFontSize(theme, titleLines = welcomeTitleLines) {
      const { fonts } = theme;
      const baseSize = Math.min(miniGameWidth * 0.18, miniGameHeight * 0.16);
      const maxSize = Math.max(48, baseSize);
@@ -386,7 +478,7 @@ function getWelcomeTitleFontSize(theme) {
      while (fontSize > minSize) {
           miniGameCtx.font = `${fontSize}px ${fonts.display}`;
 
-          const lineWidths = welcomeTitleLines.map((line) => {
+          const lineWidths = titleLines.map((line) => {
                let width = 0;
 
                for (let i = 0; i < line.length; i += 1) {
@@ -679,7 +771,7 @@ export function updateGame() {
      // WELCOME GATE
      // Gameplay updates are held here until welcome state is dismissed.
      if (gameWelcome) {
-          updateWelcomeTitleColors();
+          updateWelcomeTitleColors(getCurrentWelcomeTitleLines());
           return;
      }
 
@@ -707,11 +799,12 @@ export function updateGame() {
           setGameMenuOpen(false);
           setGameMenuView("main");
           resetTouchControls();
-          showPersistentGameOverlay("TRY AGAIN!");
+          clearGameOverlay();
+          showGameWelcomeScreen("lose");
           return;
      }
 
-     // REVIEW: MAKE WIN STATE CONDITIONAL UPON 100 POINS, NOT MAX HEALTH.
+     // REVIEW: WIN CONDITIONS
      if (sparkleScore >= 100) {
           setGameWon(true);
           setGameOver(false);
@@ -719,7 +812,8 @@ export function updateGame() {
           setGameMenuOpen(false);
           setGameMenuView("main");
           resetTouchControls();
-          showPersistentGameOverlay("YOU WIN!");
+          clearGameOverlay();
+          showGameWelcomeScreen("win");
      }
 }
 
@@ -728,7 +822,7 @@ export function drawGame() {
 
      drawMiniGameBackground();
 
-     // NOTE: WELCOME DRAW GATE
+     // WELCOME DRAW GATE
      // Canvas HUD and controls are hidden here while welcome state is active.
      if (gameWelcome) {
           drawGameWelcomeOverlay(theme);
@@ -796,7 +890,7 @@ function drawHealth(theme) {
 
      // TOP ROW: Hearts 10 → 6.
      for (let i = maxPlayerHealth - 1; i >= heartsPerRow; i -= 1) {
-          bottomRowRow += (i < playerHealth) ? filledHeart : emptyHeart;
+          bottomRow += (i < playerHealth) ? filledHeart : emptyHeart;
      }
      //NOTE: SWAPPED TOP/BOTTOM ROWS FOR TESTING
      // BOTTOM ROW: Hearts 5 → 1.
@@ -959,8 +1053,8 @@ export function drawMenuOverlay(theme) {
           // WRAP TARGET
           // Max width is limited so text stays inside panel edges.
           const instructionLines = [
-               "Move with arrows, WASD, or joystick.",
                "Collect sparkles, avoid obstacles.",
+               "Move with arrows, WASD, or joystick.",
                "100 points to win."
           ];
 
@@ -989,14 +1083,24 @@ function drawGameWelcomeOverlay(theme) {
 
      const { colors, fonts, glow, sizes } = theme;
      const alpha = getGameWelcomeAlpha();
-     const titleFontSize = getWelcomeTitleFontSize(theme);
+     const titleLines = getCurrentWelcomeTitleLines();
+     const actionTexts = getCurrentWelcomeActionTexts();
+     const titleFontSize = getWelcomeTitleFontSize(theme, titleLines);
      const lineGap = Math.max(12, titleFontSize * 0.12);
+
+     // TITLE Y POSITIONS
+     // Two-line title layout is kept centered.
      const firstLineY = (miniGameHeight / 2) - ((titleFontSize * 0.8) + (lineGap * 0.5));
      const secondLineY = firstLineY + titleFontSize + lineGap;
-     const actionY = secondLineY + Math.max(28, titleFontSize * 0.95);
-     const actionGap = Math.max(28, titleFontSize * 0.45);
 
-     updateWelcomeTitleColors();
+     // NOTE: MODE-SPECIFIC CONTENT SPACING
+     // Some modes need room for body text, while others only need action words.
+     const actionGap = Math.max(28, titleFontSize * 0.45);
+     const actionY = (gameWelcomeMode === "instructions")
+          ? (miniGameHeight * 0.82)
+          : (secondLineY + Math.max(28, titleFontSize * 0.95));
+
+     updateWelcomeTitleColors(titleLines);
 
      miniGameCtx.save();
      miniGameCtx.globalAlpha = alpha;
@@ -1012,7 +1116,7 @@ function drawGameWelcomeOverlay(theme) {
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.font = `${titleFontSize}px ${fonts.display}`;
 
-     welcomeTitleLines.forEach((line, lineIndex) => {
+     titleLines.forEach((line, lineIndex) => {
           const y = lineIndex === 0 ? firstLineY : secondLineY;
           const colorsForLine = welcomeCurrentColors[lineIndex] || [];
           const letterWidths = [];
@@ -1038,6 +1142,87 @@ function drawGameWelcomeOverlay(theme) {
           }
      });
 
+     // NOTE: MODE BODY TEXT
+     // Instructions uses a wrapped body block.
+     // Win/Lose use short centered helper text.
+     if (gameWelcomeMode === "instructions") {
+          miniGameCtx.save();
+          miniGameCtx.shadowBlur = 0;
+          miniGameCtx.fillStyle = colors.softWhite;
+          miniGameCtx.textAlign = "left";
+          miniGameCtx.textBaseline = "top";
+
+          const textWidth = Math.min(miniGameWidth * 0.72, 520);
+          const textX = (miniGameWidth - textWidth) / 2;
+          let textY = secondLineY + Math.max(24, titleFontSize * 0.8);
+          const fontSize = Math.max(14, sizes.menuSmallFont * 1.05);
+          const lineHeight = fontSize * 1.45;
+          const sectionGap = lineHeight * 0.55;
+
+          miniGameCtx.font = `400 ${fontSize}px ${fonts.body}`;
+
+          const instructionLines = [
+               "Collect sparkles, avoid obstacles.",
+               "Move with arrows, WASD, or joystick.",
+               "Speed scales with health.",
+               "Max health = 2x points.",
+               "100 points to win.",
+          ];
+
+          instructionLines.forEach((instructionLine) => {
+               textY += (
+                    drawWrappedText(
+                         miniGameCtx,
+                         instructionLine,
+                         textX,
+                         textY,
+                         textWidth,
+                         lineHeight
+                    ) * lineHeight
+               ) + sectionGap;
+          });
+
+          miniGameCtx.restore();
+     } else if (gameWelcomeMode === "win" || gameWelcomeMode === "lose") {
+          miniGameCtx.save();
+          miniGameCtx.textAlign = "center";
+          miniGameCtx.textBaseline = "middle";
+          miniGameCtx.fillStyle = colors.softWhite;
+          miniGameCtx.shadowColor = colors.overlayGlow;
+          miniGameCtx.shadowBlur = glow.uiSoftGlow;
+          miniGameCtx.font = `400 ${Math.max(16, sizes.welcomeSubFont * 1.15)}px ${fonts.body}`;
+
+          const subtext = (gameWelcomeMode === "win")
+               ? ""
+               : ""; // Just in case i want to add test later
+
+          miniGameCtx.fillText(
+               subtext,
+               miniGameWidth / 2,
+               secondLineY + Math.max(24, titleFontSize * 0.75)
+          );
+
+          miniGameCtx.restore();
+     }
+
+     // RESET ACTION BOUNDS
+     // Always clear old hit boxes first so stale click areas do not survive
+     // when switching between screens with different action counts.
+     gameWelcomeUi.startButton.x = 0;
+     gameWelcomeUi.startButton.y = 0;
+     gameWelcomeUi.startButton.width = 0;
+     gameWelcomeUi.startButton.height = 0;
+
+     gameWelcomeUi.instructionsButton.x = 0;
+     gameWelcomeUi.instructionsButton.y = 0;
+     gameWelcomeUi.instructionsButton.width = 0;
+     gameWelcomeUi.instructionsButton.height = 0;
+
+     gameWelcomeUi.menuButton.x = 0;
+     gameWelcomeUi.menuButton.y = 0;
+     gameWelcomeUi.menuButton.width = 0;
+     gameWelcomeUi.menuButton.height = 0;
+
      // NOTE: WELCOME ACTION WORDS
      // Click targets are measured and stored here for input handling.
      miniGameCtx.textAlign = "left";
@@ -1046,28 +1231,49 @@ function drawGameWelcomeOverlay(theme) {
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
      miniGameCtx.font = `400 ${Math.max(18, sizes.welcomeSubFont * 1.35)}px ${fonts.body}`;
 
-     const startText = "START";
-     const menuText = "MENU";
-     const startWidth = miniGameCtx.measureText(startText).width;
-     const menuWidth = miniGameCtx.measureText(menuText).width;
-     const totalActionWidth = startWidth + actionGap + menuWidth;
-     const startX = (miniGameWidth - totalActionWidth) / 2;
-     const menuX = startX + startWidth + actionGap;
      const actionHeight = Math.max(28, sizes.welcomeSubFont * 1.8);
+     const buttonPaddingX = 8;
 
-     gameWelcomeUi.startButton.x = startX - 8;
-     gameWelcomeUi.startButton.y = actionY - (actionHeight / 2);
-     gameWelcomeUi.startButton.width = startWidth + 16;
-     gameWelcomeUi.startButton.height = actionHeight;
+     const measuredActions = actionTexts.map((text) => ({
+          text,
+          width: miniGameCtx.measureText(text).width
+     }));
 
-     gameWelcomeUi.menuButton.x = menuX - 8;
-     gameWelcomeUi.menuButton.y = actionY - (actionHeight / 2);
-     gameWelcomeUi.menuButton.width = menuWidth + 16;
-     gameWelcomeUi.menuButton.height = actionHeight;
+     const totalActionWidth =
+          measuredActions.reduce((sum, item) => sum + item.width, 0) +
+          (actionGap * Math.max(0, measuredActions.length - 1));
 
-     miniGameCtx.fillStyle = colors.white;
-     miniGameCtx.fillText(startText, startX, actionY);
-     miniGameCtx.fillText(menuText, menuX, actionY);
+     let currentX = (miniGameWidth - totalActionWidth) / 2;
+
+     measuredActions.forEach((item) => {
+          const buttonWidth = item.width + (buttonPaddingX * 2);
+
+          if (item.text === "START") {
+               gameWelcomeUi.startButton.x = currentX - buttonPaddingX;
+               gameWelcomeUi.startButton.y = actionY - (actionHeight / 2);
+               gameWelcomeUi.startButton.width = buttonWidth;
+               gameWelcomeUi.startButton.height = actionHeight;
+          }
+
+          if (item.text === "TIPS") {
+               gameWelcomeUi.instructionsButton.x = currentX - buttonPaddingX;
+               gameWelcomeUi.instructionsButton.y = actionY - (actionHeight / 2);
+               gameWelcomeUi.instructionsButton.width = buttonWidth;
+               gameWelcomeUi.instructionsButton.height = actionHeight;
+          }
+
+          if (item.text === "MENU") {
+               gameWelcomeUi.menuButton.x = currentX - buttonPaddingX;
+               gameWelcomeUi.menuButton.y = actionY - (actionHeight / 2);
+               gameWelcomeUi.menuButton.width = buttonWidth;
+               gameWelcomeUi.menuButton.height = actionHeight;
+          }
+
+          miniGameCtx.fillStyle = colors.white;
+          miniGameCtx.fillText(item.text, currentX, actionY);
+
+          currentX += item.width + actionGap;
+     });
 
      miniGameCtx.restore();
 }
@@ -1149,20 +1355,26 @@ export function startSparkleSeeker() {
      updateTouchControlBounds();
      updateMenuUiBounds();
 
-     // NOTE: WELCOME RESET
+     // WELCOME RESET
      // Welcome state is restored here on page load.
      gameWelcome = true;
      gameWelcomeTimer = -1;
      gameWelcomeDuration = -1;
+     gameWelcomeMode = "welcome";
      welcomeColorEngine = null;
-     welcomePreviousColors = [[], []];
-     welcomeCurrentColors = [[], []];
+     welcomePreviousColors = [];
+     welcomeCurrentColors = [];
      welcomeLastColorCycleTime = 0;
 
      gameWelcomeUi.startButton.x = 0;
      gameWelcomeUi.startButton.y = 0;
      gameWelcomeUi.startButton.width = 0;
      gameWelcomeUi.startButton.height = 0;
+
+     gameWelcomeUi.instructionsButton.x = 0;
+     gameWelcomeUi.instructionsButton.y = 0;
+     gameWelcomeUi.instructionsButton.width = 0;
+     gameWelcomeUi.instructionsButton.height = 0;
 
      gameWelcomeUi.menuButton.x = 0;
      gameWelcomeUi.menuButton.y = 0;

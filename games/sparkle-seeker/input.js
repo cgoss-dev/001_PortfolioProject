@@ -17,7 +17,6 @@ import {
      keyboardInputBound,
      pointerInputBound,
      resizeHandlerBound,
-
      setKeyboardInputBound,
      setPointerInputBound,
      setResizeHandlerBound,
@@ -43,6 +42,7 @@ import {
      isGameWelcomeActive,
      getGameWelcomeUi,
      dismissGameWelcomeToStart,
+     dismissGameWelcomeToInstructionsMenu,
      dismissGameWelcomeToMenu
 } from "./ui.js";
 
@@ -93,7 +93,7 @@ function isPointInsideCircle(px, py, cx, cy, radius) {
      return (dx * dx + dy * dy) <= radius * radius;
 }
 
-// NOTE: CONTROL HIT CIRCLE
+// CONTROL HIT CIRCLE
 // Visual draw radius is matched here so click feel stays consistent.
 function isPointInsideControlButton(x, y, button) {
      if (!button) {
@@ -173,6 +173,10 @@ function getWelcomeButtonAtPoint(x, y) {
           return "start";
      }
 
+     if (isPointInsideRect(x, y, welcomeUi.instructionsButton)) {
+          return "instructions";
+     }
+
      if (isPointInsideRect(x, y, welcomeUi.menuButton)) {
           return "menu";
      }
@@ -180,7 +184,7 @@ function getWelcomeButtonAtPoint(x, y) {
      return null;
 }
 
-// NOTE: CURSOR SYNC
+// CURSOR SYNC
 // Canvas cursor is swapped here when clickable areas are crossed.
 function updateCanvasCursor(x, y) {
      if (!miniGameCanvas) {
@@ -189,7 +193,7 @@ function updateCanvasCursor(x, y) {
 
      let cursor = "default";
 
-     // NOTE: WELCOME CURSOR
+     // WELCOME CURSOR
      // Only action words are treated as clickable while welcome state is active.
      if (isGameWelcomeActive()) {
           if (getWelcomeButtonAtPoint(x, y)) {
@@ -428,7 +432,7 @@ function onKeyDown(event) {
           event.preventDefault();
      }
 
-     // NOTE: WELCOME KEY DISMISS
+     // WELCOME KEY DISMISS
      // Enter starts game from welcome state here. Escape opens menu.
      if (isGameWelcomeActive()) {
           if (key === "space" || key === "enter") {
@@ -584,13 +588,21 @@ function onPointerDown(event) {
 
      updateCanvasCursor(pos.x, pos.y);
 
-     // NOTE: WELCOME CLICK ACTIONS
+     // WELCOME CLICK ACTIONS
      // Welcome actions are routed only through measured word bounds here.
      if (isGameWelcomeActive()) {
           const welcomeTarget = getWelcomeButtonAtPoint(pos.x, pos.y);
 
           if (welcomeTarget === "start") {
                dismissGameWelcomeToStart();
+               event.preventDefault();
+               return;
+          }
+
+          // WELCOME INSTRUCTIONS ROUTE
+          // This opens the existing instructions submenu inside the menu system.
+          if (welcomeTarget === "instructions") {
+               dismissGameWelcomeToInstructionsMenu();
                event.preventDefault();
                return;
           }
@@ -650,7 +662,7 @@ function onPointerMove(event) {
 
      updateCanvasCursor(pos.x, pos.y);
 
-     // NOTE: WELCOME MOVE GATE
+     // WELCOME MOVE GATE
      // Control motion is ignored here until welcome state is dismissed.
      if (isGameWelcomeActive()) {
           return;
@@ -664,7 +676,7 @@ function onPointerMove(event) {
 }
 
 function onPointerUp(event) {
-     // NOTE: WELCOME RELEASE GATE
+     // WELCOME RELEASE GATE
      // Control resets are skipped here while welcome state is active.
      if (isGameWelcomeActive()) {
           if (miniGameCanvas) {

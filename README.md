@@ -20,9 +20,6 @@ Digital footprint, games, resources.
      -    Multipliers.
 -    Swap marquee/border color functionality.
 -    🐞 Mobile landscape mode bug.
--    Game conditions:
-     -    Max hearts = 2x points (gained & lost).
-     -    Levels begin at 0. Each level 25 points? Add level scaling.
 
 ### FUTURE GAMES
 -    Farming sim. (32x32 or 48x48?)

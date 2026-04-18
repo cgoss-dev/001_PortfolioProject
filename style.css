@@ -48,8 +48,8 @@
      /* A larger visual size is kept here.
      Full-width reclaim farther below helps cutoff stay avoided. */
      --text-size-marquee: clamp(4rem, 15vw, 15rem);
-     --text-size-medium: clamp(3rem, 10vw, 3rem);
-     --text-size-small: clamp(0.8rem, 5vw, 1.5rem);
+     --text-size-medium: clamp(1rem, 10vw, 3rem);
+     --text-size-small: clamp(0.75rem, 5vw, 1.5rem);
 
      /* Tagline size controls were added here.
      SM can keep size; XS can shrink a little if needed. */
