@@ -246,7 +246,7 @@ header {
      min-width: 0;
 
      /* A smaller em-based bottom space can be used here so row spacing follows marquee size. */
-     padding-bottom: 0;
+     padding-bottom: 1em;
 }
 
 h1 {
@@ -355,7 +355,6 @@ h1 {
      max-width: 100%;
      list-style: none;
      margin: 0 auto;
-     padding: 0.5rem 0 0 0;
      min-width: 0;
      overflow: hidden;
      opacity: 1;
@@ -632,12 +631,12 @@ A break is only introduced at chosen split point later. */
      width: 100%;
      max-width: 100%;
      margin: 0 auto;
-     padding-top: clamp(0.2rem, 0.8vh, 0.45rem);
+     padding-top: clamp(0.2rem, 0.5vh, 0.25rem);
      padding-left: 0;
      padding-right: 0;
      color: var(--text-color-small);
      font-size: var(--text-size-tagline);
-     line-height: 1.5;
+     line-height: 1;
      text-align: center;
      white-space: nowrap;
      overflow-wrap: normal;
@@ -744,7 +743,7 @@ A break is only introduced at chosen split point later. */
      .tagline {
           white-space: normal;
           font-size: var(--text-size-tagline);
-          line-height: 1.4;
+          line-height: 1;
      }
 
      .tagline-break {
@@ -786,7 +785,7 @@ A break is only introduced at chosen split point later. */
      .tagline {
           white-space: normal;
           font-size: var(--text-size-tagline-xs);
-          line-height: 1.25;
+          line-height: 1;
      }
 
      .tagline-break {
@@ -808,13 +807,13 @@ A break is only introduced at chosen split point later. */
 /* SPARKLE SEEKER */
 
 .game-container {
-     width: 100%;
+     width: 75%;
      aspect-ratio: 1 / 1;
      margin: 0 auto;
      border: var(--canvasboard-border);
      border-radius: var(--canvasboard-radius);
      box-shadow: var(--glow-canvasboard);
-     background: rgba(0, 0, 0, 0.25);
+     background: rgba(0, 0, 0, 0.75);
      overflow: hidden;
      display: flex;
      align-items: stretch;
