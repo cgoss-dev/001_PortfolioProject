@@ -849,7 +849,8 @@ export function drawTouchJoystick(theme) {
      miniGameCtx.strokeStyle = colors.outlineSoft;
      miniGameCtx.stroke();
 
-     // JOYSTICK KNOB
+     // JOYSTICK KNOB 
+     // FIXME: GIVE KNOB CROSSHAIRS
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiMediumGlow;
      miniGameCtx.beginPath();
