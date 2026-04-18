@@ -786,7 +786,7 @@ A break is only introduced at chosen split point later. */
      .tagline {
           white-space: normal;
           font-size: var(--text-size-tagline-xs);
-          line-height: 1.35;
+          line-height: 1.25;
      }
 
      .tagline-break {
@@ -814,7 +814,7 @@ A break is only introduced at chosen split point later. */
      border: var(--canvasboard-border);
      border-radius: var(--canvasboard-radius);
      box-shadow: var(--glow-canvasboard);
-     background: rgba(0, 0, 0, 0.75);
+     background: rgba(0, 0, 0, 0.25);
      overflow: hidden;
      display: flex;
      align-items: stretch;
