@@ -642,23 +642,25 @@ export function toggleAllSound() {
 }
 
 export function updateMenuUiBounds() {
-     const panelWidth = Math.max(250, Math.min(miniGameWidth * 0.5, 500));
-     const panelHeight = Math.max(250, Math.min(miniGameHeight * 0.5, 500));
-     const panelX = (miniGameWidth - panelWidth) / 2;
-     const panelY = (miniGameHeight - panelHeight) / 2;
+     // NOTE: FULL-CANVAS MENU PANEL
+     // The menu now uses the entire canvas instead of a centered popup box.
+     const panelX = 0;
+     const panelY = 0;
+     const panelWidth = miniGameWidth;
+     const panelHeight = miniGameHeight;
 
      gameMenuUi.panel.x = panelX;
      gameMenuUi.panel.y = panelY;
      gameMenuUi.panel.width = panelWidth;
      gameMenuUi.panel.height = panelHeight;
 
-     // SHARED BUTTON LAYOUT
-     const sidePadding = 20;
+     // NOTE: FULL-CANVAS MENU LAYOUT
+     // Buttons are centered inside the whole canvas now.
+     const sidePadding = Math.max(24, panelWidth * 0.12);
      const buttonHeight = 35;
      const buttonX = panelX + sidePadding;
      const buttonWidth = panelWidth - (sidePadding * 2);
 
-     // STACK ORDER
      const stackedButtons = [
           gameMenuUi.newGameButton,
           gameMenuUi.instructionsButton,
@@ -667,9 +669,10 @@ export function updateMenuUiBounds() {
           gameMenuUi.backButton
      ];
 
-     // EVEN DISTRIBUTION
      const buttonCount = stackedButtons.length;
-     const gap = (panelHeight - (buttonCount * buttonHeight)) / (buttonCount + 1);
+     const totalButtonHeight = buttonCount * buttonHeight;
+     const availableHeight = panelHeight - totalButtonHeight;
+     const gap = Math.max(18, availableHeight / (buttonCount + 1));
 
      stackedButtons.forEach((button, index) => {
           button.x = buttonX;
@@ -1006,6 +1009,18 @@ export function drawTouchButtons(theme) {
      miniGameCtx.restore();
 }
 
+// NOTE: SHARED INSTRUCTIONS TEXT
+// Single source of truth for all instructions in the game.
+function getInstructionLines() {
+     return [
+          "Collect sparkles, avoid obstacles.",
+          "Move with arrows, WASD, or joystick.",
+          "Speed scales with health.",
+          "Max health = 2x points.",
+          "100 points to win."
+     ];
+}
+
 export function drawMenuOverlay(theme) {
      if (!miniGameCtx || !gameMenuOpen) {
           return;
@@ -1016,16 +1031,18 @@ export function drawMenuOverlay(theme) {
      miniGameCtx.save();
      miniGameCtx.globalAlpha = 1;
 
-     // NOTE: DIMMED MENU BACKDROP
-     // Lower playfield is dimmed here. Focus is pushed into menu state here.
-     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.75)";
+     // NOTE: FULL-CANVAS MENU BACKDROP
+     // The entire canvas is now the menu surface.
+     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.85)";
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
+     // NOTE: FULL-CANVAS BORDER
+     // Instead of a popup box in the middle, the full canvas gets the framed border.
      drawPanelBox(
-          gameMenuUi.panel.x,
-          gameMenuUi.panel.y,
-          gameMenuUi.panel.width,
-          gameMenuUi.panel.height,
+          0,
+          0,
+          miniGameWidth,
+          miniGameHeight,
           theme
      );
 
@@ -1041,22 +1058,17 @@ export function drawMenuOverlay(theme) {
           miniGameCtx.textAlign = "left";
           miniGameCtx.textBaseline = "top";
 
-          const textX = gameMenuUi.panel.x + 24;
-          let textY = gameMenuUi.panel.y + 34;
-          const fontSize = Math.max(12, sizes.menuSmallFont * Math.min(1, gameMenuUi.panel.width / 320));
+          const textX = Math.max(24, miniGameWidth * 0.12);
+          let textY = Math.max(28, miniGameHeight * 0.12);
+          const fontSize = Math.max(12, sizes.menuSmallFont * Math.min(1, miniGameWidth / 320));
           const lineHeight = fontSize * 1.4;
           const sectionGap = lineHeight * 0.5;
-          const maxTextWidth = gameMenuUi.panel.width - 48;
+          const maxTextWidth = miniGameWidth - (textX * 2);
 
           miniGameCtx.font = `400 ${fontSize}px ${fonts.body}`;
 
-          // WRAP TARGET
-          // Max width is limited so text stays inside panel edges.
-          const instructionLines = [
-               "Collect sparkles, avoid obstacles.",
-               "Move with arrows, WASD, or joystick.",
-               "100 points to win."
-          ];
+          // NOTE: USE SHARED INSTRUCTIONS
+          const instructionLines = getInstructionLines();
 
           instructionLines.forEach((instructionLine) => {
                textY += (
@@ -1142,48 +1154,14 @@ function drawGameWelcomeOverlay(theme) {
           }
      });
 
-     // NOTE: MODE BODY TEXT
-     // Instructions uses a wrapped body block.
-     // Win/Lose use short centered helper text.
+     // NOTE: FULL-SCREEN INSTRUCTIONS (DISABLED)
+     // We now use the menu instructions instead.
+     // Leaving this block intentionally empty to avoid layout breakage.
      if (gameWelcomeMode === "instructions") {
-          miniGameCtx.save();
-          miniGameCtx.shadowBlur = 0;
-          miniGameCtx.fillStyle = colors.softWhite;
-          miniGameCtx.textAlign = "left";
-          miniGameCtx.textBaseline = "top";
+          // no-op
+     }
 
-          const textWidth = Math.min(miniGameWidth * 0.72, 520);
-          const textX = (miniGameWidth - textWidth) / 2;
-          let textY = secondLineY + Math.max(24, titleFontSize * 0.8);
-          const fontSize = Math.max(14, sizes.menuSmallFont * 1.05);
-          const lineHeight = fontSize * 1.45;
-          const sectionGap = lineHeight * 0.55;
-
-          miniGameCtx.font = `400 ${fontSize}px ${fonts.body}`;
-
-          const instructionLines = [
-               "Collect sparkles, avoid obstacles.",
-               "Move with arrows, WASD, or joystick.",
-               "Speed scales with health.",
-               "Max health = 2x points.",
-               "100 points to win.",
-          ];
-
-          instructionLines.forEach((instructionLine) => {
-               textY += (
-                    drawWrappedText(
-                         miniGameCtx,
-                         instructionLine,
-                         textX,
-                         textY,
-                         textWidth,
-                         lineHeight
-                    ) * lineHeight
-               ) + sectionGap;
-          });
-
-          miniGameCtx.restore();
-     } else if (gameWelcomeMode === "win" || gameWelcomeMode === "lose") {
+     else if (gameWelcomeMode === "win" || gameWelcomeMode === "lose") {
           miniGameCtx.save();
           miniGameCtx.textAlign = "center";
           miniGameCtx.textBaseline = "middle";

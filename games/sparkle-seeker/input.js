@@ -43,7 +43,8 @@ import {
      getGameWelcomeUi,
      dismissGameWelcomeToStart,
      dismissGameWelcomeToInstructionsMenu,
-     dismissGameWelcomeToMenu
+     dismissGameWelcomeToMenu,
+     dismissGameWelcomeBackToMain
 } from "./ui.js";
 
 // NOTE: EDGE CONTROLS
@@ -313,6 +314,15 @@ function closeMenuAndResetView() {
      setGameMenuView("main");
      resetCanvasCursor();
 
+     // NOTE: RETURN TO WELCOME BEFORE FIRST GAME
+     // If the player has not started a round yet, closing the menu should
+     // go back to the welcome screen instead of leaving the game in a
+     // "not started but visible" state.
+     if (!gameStarted) {
+          dismissGameWelcomeBackToMain();
+          return;
+     }
+
      // If player is mid-game and not in a win/lose state, closing menu should also unpause gameplay.
      if (gameStarted && !gameOver && !gameWon) {
           setGamePaused(false);
@@ -374,7 +384,9 @@ function handleMenuClick(x, y) {
 
      if (gameMenuView === "main") {
           if (isPointInsideRect(x, y, gameMenuUi.newGameButton)) {
-               startNewGameRound();
+               // NOTE: NEW GAME - RETURN TO WELCOME SCREEN
+               setGameMenuOpen(false);
+               dismissGameWelcomeBackToMain();
                return true;
           }
 
@@ -395,9 +407,15 @@ function handleMenuClick(x, y) {
      }
 
      if (isPointInsideRect(x, y, gameMenuUi.backButton)) {
-          // Back behaves in two different ways:
-          // - from a submenu -> return to main menu
-          // - from main menu -> close menu fully
+
+          // NOTE: BACK FROM INSTRUCTIONS - WELCOME SCREEN
+          if (gameMenuView === "instructions") {
+               setGameMenuOpen(false);
+               dismissGameWelcomeBackToMain();
+               return true;
+          }
+
+          // Normal behavior for other cases
           if (gameMenuView !== "main") {
                setGameMenuView("main");
           } else {
