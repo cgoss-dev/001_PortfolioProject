@@ -1,15 +1,28 @@
-// NOTE: UI / MENU / OVERLAY / STARTUP
-// Game entry file loaded by page.
+// NOTE: UI DRAW / RENDERING
+// This file owns canvas drawing and visual helpers.
 //
-// Owned here: canvas size syncing, round/startup flow, game UI drawing.
-// Shared visual values pulled from root CSS through window.SiteTheme.
+// Owned here:
+// - theme/color/font helpers
+// - shared draw helpers
+// - HUD drawing
+// - welcome / paused / menu / overlay rendering
+// - welcome title rainbow color engine
+//
+// NOT owned here:
+// - startup / round flow
+// - welcome/menu state transitions
+// - game update loop
+// - hitbox state storage
+//
+// Beginner note:
+// Think of this file as the "paintbrush."
+// It reads state from ui_mode.js / state.js and draws what should be visible.
 
 import {
      miniGameCanvas,
      miniGameCtx,
      miniGameWidth,
      miniGameHeight,
-     gameStarted,
      gamePaused,
      gameMenuOpen,
      gameMenuView,
@@ -17,58 +30,14 @@ import {
      gameWon,
      gameOverlayText,
      gameOverlaySubtext,
-     gameOverlayTimer,
-     gameOverlayDuration,
+     touchControls,
      gameMenuUi,
-     musicEnabled,
-     soundEffectsEnabled,
-     difficultyIndex,
      sparkleScore,
      playerHealth,
-     maxPlayerHealth,
-     touchControls,
-
-     setGameStarted,
-     setGamePaused,
-     setGameMenuOpen,
-     setGameMenuView,
-     setGameOver,
-     setGameWon,
-     setGameOverlayText,
-     setGameOverlaySubtext,
-     setGameOverlayTimer,
-     setGameOverlayDuration,
-     setMusicEnabled,
-     setSoundEffectsEnabled,
-     setDifficultyIndex,
-     setMiniGameSize,
-
-     resetGameState
+     maxPlayerHealth
 } from "./state.js";
 
 import {
-     bindKeyboardInput,
-     bindPointerInput,
-     bindResizeHandler,
-     updatePauseButtonState,
-     updateTouchControlBounds,
-     resetTouchControls
-} from "./input.js";
-
-import {
-     resetPlayerPosition,
-     resetEntityColorCycle,
-
-     updatePlayer,
-     updatePlayerFaceState,
-     updateSparkleSpawns,
-     updateObstacleSpawns,
-     updateSparkles,
-     updateObstacles,
-     updateCollisionBursts,
-     collectSparkles,
-     hitObstacles,
-
      drawPlayer,
      drawSparkles,
      drawObstacles,
@@ -76,133 +45,18 @@ import {
      getCurrentLevelNumber
 } from "./entities.js";
 
-// UI CONSTANTS
-
-export const difficultyOptions = ["Easy", "Normal", "Hard"];
-export const startOverlayDuration = 120;
-export const overlayFadeFrames = 30;
-
-// WELCOME STATE
-// Page-load welcome state is owned locally here.
-// First action is expected to be triggered from input handling.
-let gameWelcome = true;
-let gameWelcomeTimer = -1;
-let gameWelcomeDuration = -1;
-
-// NOTE: WELCOME MODE
-// This started as only the page-load welcome screen,
-// but now it also powers full-screen instructions / win / lose states.
-// Keeping one shared screen renderer is simpler for a beginner than
-// maintaining several different full-screen UI systems.
-let gameWelcomeMode = "welcome";
-
-// WELCOME ACTION TARGETS
-// Clickable word bounds are stored here for input handling.
-const gameWelcomeUi = {
-     startButton: { x: 0, y: 0, width: 0, height: 0 },
-     instructionsButton: { x: 0, y: 0, width: 0, height: 0 },
-     menuButton: { x: 0, y: 0, width: 0, height: 0 }
-};
-
-// WELCOME TITLE COLOR ENGINE
-// Canvas title colors are cycled here using shared root theme helpers.
-const welcomeTitleLines = ["SPARKLE", "SEEKER"];
-let welcomeColorEngine = null;
-let welcomePreviousColors = [];
-let welcomeCurrentColors = [];
-let welcomeLastColorCycleTime = 0;
-
-export function isGameWelcomeActive() {
-     return gameWelcome;
-}
-
-export function getGameWelcomeUi() {
-     return gameWelcomeUi;
-}
-
-// WELCOME MODE GETTER
-// Input code can read this to decide what each action word should do.
-export function getGameWelcomeMode() {
-     return gameWelcomeMode;
-}
-
-export function dismissGameWelcomeToStart() {
-     gameWelcome = false;
-     gameWelcomeMode = "welcome";
-     gameWelcomeTimer = 0;
-     gameWelcomeDuration = 0;
-     startNewGameRound();
-}
-
-// NOTE: WELCOME -> INSTRUCTIONS MENU
-// This uses the existing menu instructions submenu,
-// instead of a separate full-screen instructions page.
-export function dismissGameWelcomeToInstructionsMenu() {
-     gameWelcome = false;
-     gameWelcomeMode = "welcome";
-     gameWelcomeTimer = 0;
-     gameWelcomeDuration = 0;
-
-     resetGameState();
-     resetTouchControls();
-     resetEntityColorCycle();
-
-     updateMiniGameCanvasSize();
-     resetPlayerPosition();
-     updateTouchControlBounds();
-     updateMenuUiBounds();
-
-     setGameStarted(false);
-     setGamePaused(false);
-     setGameMenuOpen(true);
-     setGameMenuView("instructions");
-     setGameOver(false);
-     setGameWon(false);
-
-     clearGameOverlay();
-}
-
-export function dismissGameWelcomeToMenu() {
-     gameWelcome = false;
-     gameWelcomeMode = "welcome";
-     gameWelcomeTimer = 0;
-     gameWelcomeDuration = 0;
-
-     resetGameState();
-     resetTouchControls();
-     resetEntityColorCycle();
-
-     updateMiniGameCanvasSize();
-     resetPlayerPosition();
-     updateTouchControlBounds();
-     updateMenuUiBounds();
-
-     setGameStarted(false);
-     setGamePaused(false);
-     setGameMenuOpen(true);
-     setGameMenuView("main");
-     setGameOver(false);
-     setGameWon(false);
-
-     clearGameOverlay();
-}
-
-// FULL-SCREEN WELCOME SCREEN HELPERS
-// These functions let other files switch the big full-screen state
-// without needing to know the low-level timer details.
-export function showGameWelcomeScreen(mode = "welcome") {
-     gameWelcome = true;
-     gameWelcomeMode = mode;
-     gameWelcomeTimer = -1;
-     gameWelcomeDuration = -1;
-}
-
-export function dismissGameWelcomeBackToMain() {
-     gameWelcome = true;
-     gameWelcomeMode = "welcome";
-     gameWelcomeTimer = -1;
-     gameWelcomeDuration = -1;
-}
+import {
+     isGameWelcomeActive,
+     getGameWelcomeUi,
+     getGamePausedUi,
+     getCurrentWelcomeTitleLines,
+     getCurrentWelcomeActionTexts,
+     getGameWelcomeAlpha,
+     getInstructionLines,
+     getCurrentDifficultyLabel,
+     getCurrentSoundLabel,
+     getGameOverlayAlpha
+} from "./ui_mode.js";
 
 // CSS HELPERS
 
@@ -216,7 +70,8 @@ function getCssNumber(variableName, fallback = 0) {
      return siteTheme?.getCssNumber?.(variableName, fallback) ?? fallback;
 }
 
-// STRING VALUE HELPER: Font-family values pulled from root CSS here.
+// STRING VALUE HELPER
+// Font-family values pulled from root CSS here.
 function getCssString(variableName, fallback = "") {
      if (!document?.documentElement) {
           return fallback;
@@ -226,7 +81,9 @@ function getCssString(variableName, fallback = "") {
      return value || fallback;
 }
 
-// PIXEL SIZE HELPER: clamp()/rem values from root CSS resolved into px here for canvas text. Canvas needs a real number, not raw CSS text.
+// PIXEL SIZE HELPER
+// clamp()/rem values from root CSS resolved into px here for canvas text.
+// Canvas needs a real number, not raw CSS text.
 function getCssPixelSize(variableName, fallback = 16) {
      if (!document?.body) {
           return fallback;
@@ -299,10 +156,10 @@ function getUiTheme() {
 
                // WELCOME TITLE SIZE
                // Title is allowed to scale from canvas size here.
-               welcomeSubFont: getCssPixelSize(10),
+               welcomeSubFont: getCssPixelSize("--text-size-medium", 14),
 
-               menuButtonFont: getCssPixelSize(10),
-               menuSmallFont: getCssPixelSize(10),
+               menuButtonFont: getCssPixelSize("--text-size-medium", 14),
+               menuSmallFont: getCssPixelSize("--text-size-medium", 14),
 
                controlRadius: getCssNumber("--canvasboard-radius", 15)
           },
@@ -316,15 +173,6 @@ function getUiTheme() {
 }
 
 // NOTE: SHARED DRAW HELPERS
-
-function isPointInsideRect(x, y, rect) {
-     return (
-          x >= rect.x &&
-          x <= rect.x + rect.width &&
-          y >= rect.y &&
-          y <= rect.y + rect.height
-     );
-}
 
 function drawRoundedRect(x, y, width, height, radius) {
      if (!miniGameCtx) {
@@ -394,39 +242,13 @@ function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
      return lines.length;
 }
 
-// NOTE: SCREEN CONTENT HELPERS
-// These small helpers make the giant welcome renderer easier to read.
-// Instead of hardcoding text in 5 places, we define each screen's content here.
-function getCurrentWelcomeTitleLines() {
-     if (gameWelcomeMode === "win") {
-          return ["YOU", "WIN"];
-     }
-
-     if (gameWelcomeMode === "lose") {
-          return ["TRY", "AGAIN"];
-     }
-
-     return welcomeTitleLines;
-}
-
-function getCurrentWelcomeActionTexts() {
-     if (gameWelcomeMode === "welcome") {
-          return ["START", "TIPS", "MENU"];
-     }
-
-     if (gameWelcomeMode === "win") {
-          return ["START", "TIPS", "MENU"];
-     }
-
-     if (gameWelcomeMode === "lose") {
-          return ["START", "TIPS", "MENU"];
-     }
-
-          return ["START", "TIPS", "MENU"];
-}
-
-// WELCOME COLOR SETUP
+// WELCOME COLOR ENGINE
 // Shared root color engine is reused here for canvas title letters.
+let welcomeColorEngine = null;
+let welcomePreviousColors = [];
+let welcomeCurrentColors = [];
+let welcomeLastColorCycleTime = 0;
+
 function ensureWelcomeColorEngine() {
      if (welcomeColorEngine || !siteTheme?.createColorEngine || !siteTheme?.getRainbowPalette) {
           return;
@@ -435,7 +257,7 @@ function ensureWelcomeColorEngine() {
      welcomeColorEngine = siteTheme.createColorEngine(siteTheme.getRainbowPalette);
 }
 
-function updateWelcomeTitleColors(titleLines = welcomeTitleLines) {
+export function updateWelcomeTitleColors(titleLines = getCurrentWelcomeTitleLines()) {
      ensureWelcomeColorEngine();
 
      const rainbowCycleSpeed = siteTheme?.getTextSettings?.().rainbowCycleSpeed ?? 900;
@@ -463,7 +285,7 @@ function updateWelcomeTitleColors(titleLines = welcomeTitleLines) {
 
 // WELCOME TITLE FIT
 // Font size is reduced until both title lines fit safely inside canvas.
-function getWelcomeTitleFontSize(theme, titleLines = welcomeTitleLines) {
+function getWelcomeTitleFontSize(theme, titleLines = getCurrentWelcomeTitleLines()) {
      const { fonts } = theme;
      const baseSize = Math.min(miniGameWidth * 0.18, miniGameHeight * 0.16);
      const maxSize = Math.max(48, baseSize);
@@ -526,8 +348,6 @@ function drawMenuButton(button, label, theme) {
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
 
-     // FONT STRING
-     // Explicit normal weight used here so "Back" stays on body font consistently.
      miniGameCtx.font = `400 ${sizes.menuButtonFont}px ${fonts.body}`;
      miniGameCtx.fillText(label, centerX, centerY + 1);
 
@@ -572,293 +392,6 @@ function drawMiniGameBackground() {
      miniGameCtx.clearRect(0, 0, miniGameWidth, miniGameHeight);
      miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
-}
-
-// CANVAS
-
-export function resizeMiniGameCanvasFromCss() {
-     if (!miniGameCanvas || !miniGameCtx) {
-          return;
-     }
-
-     const rect = miniGameCanvas.getBoundingClientRect();
-     const dpr = window.devicePixelRatio || 1;
-
-     miniGameCanvas.width = Math.round(rect.width * dpr);
-     miniGameCanvas.height = Math.round(rect.height * dpr);
-     miniGameCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-     setMiniGameSize(rect.width, rect.height);
-}
-
-export function updateMiniGameCanvasSize() {
-     resizeMiniGameCanvasFromCss();
-     updateTouchControlBounds();
-     updateMenuUiBounds();
-}
-
-// ROUNDS
-
-export function startNewGameRound() {
-     resetGameState();
-     resetTouchControls();
-     resetEntityColorCycle();
-
-     updateMiniGameCanvasSize();
-     resetPlayerPosition();
-     updateTouchControlBounds();
-     updateMenuUiBounds();
-
-     setGameStarted(true);
-     setGamePaused(false);
-     setGameMenuOpen(false);
-     setGameMenuView("main");
-     setGameOver(false);
-     setGameWon(false);
-
-     showTimedGameOverlay("LET'S PLAY!");
-}
-
-// MENU
-
-export function getCurrentDifficultyLabel() {
-     return difficultyOptions[difficultyIndex] || "Normal";
-}
-
-export function getCurrentSoundLabel() {
-     return (musicEnabled && soundEffectsEnabled) ? "On" : "Off";
-}
-
-export function cycleDifficulty() {
-     setDifficultyIndex((difficultyIndex + 1) % difficultyOptions.length);
-}
-
-export function toggleAllSound() {
-     const next = !(musicEnabled && soundEffectsEnabled);
-     setMusicEnabled(next);
-     setSoundEffectsEnabled(next);
-}
-
-export function updateMenuUiBounds() {
-     // NOTE: FULL-CANVAS MENU PANEL
-     // The menu now uses the entire canvas instead of a centered popup box.
-     const panelX = 0;
-     const panelY = 0;
-     const panelWidth = miniGameWidth;
-     const panelHeight = miniGameHeight;
-
-     gameMenuUi.panel.x = panelX;
-     gameMenuUi.panel.y = panelY;
-     gameMenuUi.panel.width = panelWidth;
-     gameMenuUi.panel.height = panelHeight;
-
-     // NOTE: FULL-CANVAS MENU LAYOUT
-     // Buttons are centered inside the whole canvas now.
-     const sidePadding = Math.max(24, panelWidth * 0.12);
-     const buttonHeight = 35;
-     const buttonX = panelX + sidePadding;
-     const buttonWidth = panelWidth - (sidePadding * 2);
-
-     const stackedButtons = [
-          gameMenuUi.newGameButton,
-          gameMenuUi.instructionsButton,
-          gameMenuUi.difficultyButton,
-          gameMenuUi.soundButton,
-          gameMenuUi.backButton
-     ];
-
-     const buttonCount = stackedButtons.length;
-     const totalButtonHeight = buttonCount * buttonHeight;
-     const availableHeight = panelHeight - totalButtonHeight;
-     const gap = Math.max(18, availableHeight / (buttonCount + 1));
-
-     stackedButtons.forEach((button, index) => {
-          button.x = buttonX;
-          button.y = panelY + gap + (index * (buttonHeight + gap));
-          button.width = buttonWidth;
-          button.height = buttonHeight;
-     });
-}
-
-export function isPointInsideMenuPanel(x, y) {
-     return isPointInsideRect(x, y, gameMenuUi.panel);
-}
-
-// OVERLAY SYSTEM
-
-export function clearGameOverlay() {
-     setGameOverlayText("");
-     setGameOverlaySubtext("");
-     setGameOverlayTimer(0);
-     setGameOverlayDuration(0);
-}
-
-export function showTimedGameOverlay(text, sub = "", duration = startOverlayDuration) {
-     setGameOverlayText(text);
-     setGameOverlaySubtext(sub);
-     setGameOverlayTimer(duration);
-     setGameOverlayDuration(duration);
-}
-
-export function showPersistentGameOverlay(text, sub = "") {
-     setGameOverlayText(text);
-     setGameOverlaySubtext(sub);
-     setGameOverlayTimer(-1);
-     setGameOverlayDuration(-1);
-}
-
-export function updateGameOverlayTimer() {
-     if (gameOverlayTimer > 0) {
-          const nextTimer = gameOverlayTimer - 1;
-          setGameOverlayTimer(nextTimer);
-
-          if (nextTimer === 0) {
-               clearGameOverlay();
-          }
-     }
-}
-
-export function getGameOverlayAlpha() {
-     if (!gameOverlayText) return 0;
-     if (gameOverlayTimer < 0 || gameOverlayDuration < 0) return 1;
-
-     const elapsed = gameOverlayDuration - gameOverlayTimer;
-     const fadeIn = Math.min(1, elapsed / overlayFadeFrames);
-     const fadeOut = Math.min(1, gameOverlayTimer / overlayFadeFrames);
-
-     return Math.max(0, Math.min(1, Math.min(fadeIn, fadeOut)));
-}
-
-// WELCOME ALPHA
-// Same fade math is reused here for page-load welcome state.
-function getGameWelcomeAlpha() {
-     if (!gameWelcome) {
-          return 0;
-     }
-
-     if (gameWelcomeTimer < 0 || gameWelcomeDuration < 0) {
-          return 1;
-     }
-
-     const elapsed = gameWelcomeDuration - gameWelcomeTimer;
-     const fadeIn = Math.min(1, elapsed / overlayFadeFrames);
-     const fadeOut = Math.min(1, gameWelcomeTimer / overlayFadeFrames);
-
-     return Math.max(0, Math.min(1, Math.min(fadeIn, fadeOut)));
-}
-
-// PAUSE SYNC
-
-export function syncPauseOverlay() {
-     const shouldShow = gameStarted && gamePaused && !gameMenuOpen && !gameOver && !gameWon;
-
-     if (shouldShow) {
-          showPersistentGameOverlay("PAUSED");
-          return;
-     }
-
-     if (gameOverlayText === "PAUSED" && (!gamePaused || gameMenuOpen || gameOver || gameWon)) {
-          clearGameOverlay();
-     }
-}
-
-// GAME UPDATE / DRAW
-
-export function updateGame() {
-     updatePauseButtonState();
-     updateGameOverlayTimer();
-     syncPauseOverlay();
-
-     // WELCOME GATE
-     // Gameplay updates are held here until welcome state is dismissed.
-     if (gameWelcome) {
-          updateWelcomeTitleColors(getCurrentWelcomeTitleLines());
-          return;
-     }
-
-     if (!gameStarted) {
-          return;
-     }
-
-     // NOTE: FACE STATE SHOULD STILL UPDATE WHILE PAUSED
-     // This lets pause force the neutral face even though gameplay itself is frozen.
-     updatePlayerFaceState();
-
-     if (gamePaused || gameMenuOpen || gameOver || gameWon) {
-          return;
-     }
-
-     updatePlayer();
-
-     updateSparkleSpawns();
-     updateObstacleSpawns();
-
-     updateSparkles();
-     updateObstacles();
-     updateCollisionBursts();
-
-     collectSparkles();
-     hitObstacles();
-
-     if (playerHealth <= 0) {
-          setGameOver(true);
-          setGameWon(false);
-          setGamePaused(true);
-          setGameMenuOpen(false);
-          setGameMenuView("main");
-          resetTouchControls();
-          clearGameOverlay();
-          showGameWelcomeScreen("lose");
-          return;
-     }
-
-     // REVIEW: WIN CONDITIONS
-     if (sparkleScore >= 1000) {
-          setGameWon(true);
-          setGameOver(false);
-          setGamePaused(true);
-          setGameMenuOpen(false);
-          setGameMenuView("main");
-          resetTouchControls();
-          clearGameOverlay();
-          showGameWelcomeScreen("win");
-     }
-}
-
-export function drawGame() {
-     const theme = getUiTheme();
-
-     drawMiniGameBackground();
-
-     // WELCOME DRAW GATE
-     // Canvas HUD and controls are hidden here while welcome state is active.
-     if (gameWelcome) {
-          drawGameWelcomeOverlay(theme);
-          return;
-     }
-
-     drawSparkles();
-     drawObstacles();
-     drawCollisionBursts();
-     drawPlayer();
-
-     drawScore(theme);
-     drawHealth(theme);
-     drawTouchButtons(theme);
-
-     // LAYER GATE
-     // Only one top UI state is drawn here. Stack order is kept clear by branching here.
-     if (gameMenuOpen) {
-          drawMenuOverlay(theme);
-     } else {
-          drawGameStatusOverlay(theme);
-     }
-}
-
-function gameLoop() {
-     updateGame();
-     drawGame();
-     requestAnimationFrame(gameLoop);
 }
 
 // UI DRAW FUNCTIONS
@@ -914,12 +447,11 @@ function drawHealth(theme) {
      let topRow = "";
      let bottomRow = "";
 
-     // TOP ROW: Hearts 10 → 6.
      for (let i = maxPlayerHealth - 1; i >= heartsPerRow; i -= 1) {
           bottomRow += (i < playerHealth) ? filledHeart : emptyHeart;
      }
+
      //NOTE: SWAPPED TOP/BOTTOM ROWS FOR TESTING
-     // BOTTOM ROW: Hearts 5 → 1.
      for (let i = heartsPerRow - 1; i >= 0; i -= 1) {
           topRow += (i < playerHealth) ? filledHeart : emptyHeart;
      }
@@ -937,7 +469,7 @@ function drawHealth(theme) {
 }
 
 // BUTTON LABELS
-export function drawTouchButtons(theme) {
+function drawTouchButtons(theme) {
      if (!miniGameCtx) {
           return;
      }
@@ -946,8 +478,6 @@ export function drawTouchButtons(theme) {
      const leftButton = touchControls.leftButton;
      const rightButton = touchControls.rightButton;
 
-     // BUTTON DRAW
-     // Circular button rendering handled in drawControlButton.
      drawControlButton(leftButton, leftButton.isPressed, theme);
      drawControlButton(rightButton, rightButton.isPressed, theme);
 
@@ -958,8 +488,6 @@ export function drawTouchButtons(theme) {
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
 
-     // LABEL SIZE
-     // Scaled from button size here for consistent visual balance.
      miniGameCtx.font = `${leftButton.height * 0.5}px ${fonts.symbol}`;
      miniGameCtx.fillText(
           leftButton.label,
@@ -977,19 +505,7 @@ export function drawTouchButtons(theme) {
      miniGameCtx.restore();
 }
 
-// NOTE: SHARED INSTRUCTIONS TEXT
-// Single source of truth for all instructions in the game.
-function getInstructionLines() {
-     return [
-          "Collect sparkles, avoid obstacles.",
-          "Hold WASD/arrows or pointer/touch to move.",
-          "Speed scales with health.",
-          "Fall rate scales with level.",
-          "Max health = double points."
-     ];
-}
-
-export function drawMenuOverlay(theme) {
+function drawMenuOverlay(theme) {
      if (!miniGameCtx || !gameMenuOpen) {
           return;
      }
@@ -999,13 +515,9 @@ export function drawMenuOverlay(theme) {
      miniGameCtx.save();
      miniGameCtx.globalAlpha = 1;
 
-     // NOTE: FULL-CANVAS MENU BACKDROP
-     // The entire canvas is now the menu surface.
      miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.85)";
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
-     // NOTE: FULL-CANVAS BORDER
-     // Instead of a popup box in the middle, the full canvas gets the framed border.
      drawPanelBox(
           0,
           0,
@@ -1035,7 +547,6 @@ export function drawMenuOverlay(theme) {
 
           miniGameCtx.font = `400 ${fontSize}px ${fonts.body}`;
 
-          // NOTE: USE SHARED INSTRUCTIONS
           const instructionLines = getInstructionLines();
 
           instructionLines.forEach((instructionLine) => {
@@ -1057,7 +568,7 @@ export function drawMenuOverlay(theme) {
 }
 
 function drawGameWelcomeOverlay(theme) {
-     if (!miniGameCtx || !gameWelcome) {
+     if (!miniGameCtx || !isGameWelcomeActive()) {
           return;
      }
 
@@ -1068,30 +579,20 @@ function drawGameWelcomeOverlay(theme) {
      const titleFontSize = getWelcomeTitleFontSize(theme, titleLines);
      const lineGap = Math.max(12, titleFontSize * 0.12);
 
-     // TITLE Y POSITIONS
-     // Two-line title layout is kept centered.
      const firstLineY = (miniGameHeight / 2) - ((titleFontSize * 0.8) + (lineGap * 0.5));
      const secondLineY = firstLineY + titleFontSize + lineGap;
 
-     // NOTE: MODE-SPECIFIC CONTENT SPACING
-     // Some modes need room for body text, while others only need action words.
      const actionGap = Math.max(28, titleFontSize * 0.45);
-     const actionY = (gameWelcomeMode === "instructions")
-          ? (miniGameHeight * 0.82)
-          : (secondLineY + Math.max(28, titleFontSize * 0.95));
+     const actionY = (secondLineY + Math.max(28, titleFontSize * 0.95));
 
      updateWelcomeTitleColors(titleLines);
 
      miniGameCtx.save();
      miniGameCtx.globalAlpha = alpha;
 
-     // WELCOME BACKDROP
-     // Subtle dimming is applied here so marquee title reads cleanly.
      miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.25)";
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
-     // WELCOME TITLE LETTERS
-     // Each letter is measured and placed individually here so colors can vary per character.
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.font = `${titleFontSize}px ${fonts.display}`;
@@ -1122,55 +623,23 @@ function drawGameWelcomeOverlay(theme) {
           }
      });
 
-     // FULL-SCREEN INSTRUCTIONS (DISABLED)
-     // We now use the menu instructions instead.
-     // Leaving this block intentionally empty to avoid layout breakage.
-     if (gameWelcomeMode === "instructions") {
-          // no-op
-     }
+     const welcomeUi = getGameWelcomeUi();
 
-     else if (gameWelcomeMode === "win" || gameWelcomeMode === "lose") {
-          miniGameCtx.save();
-          miniGameCtx.textAlign = "center";
-          miniGameCtx.textBaseline = "middle";
-          miniGameCtx.fillStyle = colors.softWhite;
-          miniGameCtx.shadowColor = colors.overlayGlow;
-          miniGameCtx.shadowBlur = glow.uiSoftGlow;
-          miniGameCtx.font = `400 ${Math.max(16, sizes.welcomeSubFont * 1.15)}px ${fonts.body}`;
+     welcomeUi.startButton.x = 0;
+     welcomeUi.startButton.y = 0;
+     welcomeUi.startButton.width = 0;
+     welcomeUi.startButton.height = 0;
 
-          const subtext = (gameWelcomeMode === "win")
-               ? ""
-               : ""; // Just in case i want to add test later
+     welcomeUi.instructionsButton.x = 0;
+     welcomeUi.instructionsButton.y = 0;
+     welcomeUi.instructionsButton.width = 0;
+     welcomeUi.instructionsButton.height = 0;
 
-          miniGameCtx.fillText(
-               subtext,
-               miniGameWidth / 2,
-               secondLineY + Math.max(24, titleFontSize * 0.75)
-          );
+     welcomeUi.menuButton.x = 0;
+     welcomeUi.menuButton.y = 0;
+     welcomeUi.menuButton.width = 0;
+     welcomeUi.menuButton.height = 0;
 
-          miniGameCtx.restore();
-     }
-
-     // RESET ACTION BOUNDS
-     // Always clear old hit boxes first so stale click areas do not survive
-     // when switching between screens with different action counts.
-     gameWelcomeUi.startButton.x = 0;
-     gameWelcomeUi.startButton.y = 0;
-     gameWelcomeUi.startButton.width = 0;
-     gameWelcomeUi.startButton.height = 0;
-
-     gameWelcomeUi.instructionsButton.x = 0;
-     gameWelcomeUi.instructionsButton.y = 0;
-     gameWelcomeUi.instructionsButton.width = 0;
-     gameWelcomeUi.instructionsButton.height = 0;
-
-     gameWelcomeUi.menuButton.x = 0;
-     gameWelcomeUi.menuButton.y = 0;
-     gameWelcomeUi.menuButton.width = 0;
-     gameWelcomeUi.menuButton.height = 0;
-
-     // NOTE: WELCOME ACTION WORDS
-     // Click targets are measured and stored here for input handling.
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.shadowColor = colors.overlayGlow;
@@ -1195,24 +664,24 @@ function drawGameWelcomeOverlay(theme) {
           const buttonWidth = item.width + (buttonPaddingX * 2);
 
           if (item.text === "START") {
-               gameWelcomeUi.startButton.x = currentX - buttonPaddingX;
-               gameWelcomeUi.startButton.y = actionY - (actionHeight / 2);
-               gameWelcomeUi.startButton.width = buttonWidth;
-               gameWelcomeUi.startButton.height = actionHeight;
+               welcomeUi.startButton.x = currentX - buttonPaddingX;
+               welcomeUi.startButton.y = actionY - (actionHeight / 2);
+               welcomeUi.startButton.width = buttonWidth;
+               welcomeUi.startButton.height = actionHeight;
           }
 
           if (item.text === "TIPS") {
-               gameWelcomeUi.instructionsButton.x = currentX - buttonPaddingX;
-               gameWelcomeUi.instructionsButton.y = actionY - (actionHeight / 2);
-               gameWelcomeUi.instructionsButton.width = buttonWidth;
-               gameWelcomeUi.instructionsButton.height = actionHeight;
+               welcomeUi.instructionsButton.x = currentX - buttonPaddingX;
+               welcomeUi.instructionsButton.y = actionY - (actionHeight / 2);
+               welcomeUi.instructionsButton.width = buttonWidth;
+               welcomeUi.instructionsButton.height = actionHeight;
           }
 
           if (item.text === "MENU") {
-               gameWelcomeUi.menuButton.x = currentX - buttonPaddingX;
-               gameWelcomeUi.menuButton.y = actionY - (actionHeight / 2);
-               gameWelcomeUi.menuButton.width = buttonWidth;
-               gameWelcomeUi.menuButton.height = actionHeight;
+               welcomeUi.menuButton.x = currentX - buttonPaddingX;
+               welcomeUi.menuButton.y = actionY - (actionHeight / 2);
+               welcomeUi.menuButton.width = buttonWidth;
+               welcomeUi.menuButton.height = actionHeight;
           }
 
           miniGameCtx.fillStyle = colors.white;
@@ -1224,7 +693,104 @@ function drawGameWelcomeOverlay(theme) {
      miniGameCtx.restore();
 }
 
-export function drawGameStatusOverlay(theme) {
+function drawPausedOverlay(theme) {
+     if (!miniGameCtx || !gamePaused || gameMenuOpen || gameOver || gameWon) {
+          return;
+     }
+
+     const { colors, fonts, glow, sizes } = theme;
+     const title = "PAUSED";
+     const actionTexts = ["RESUME", "TIPS", "MENU"];
+
+     miniGameCtx.save();
+
+     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.25)";
+     miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
+
+     const titleFontSize = Math.max(40, Math.min(miniGameWidth * 0.16, miniGameHeight * 0.16));
+     const titleY = miniGameHeight * 0.38;
+
+     miniGameCtx.textAlign = "center";
+     miniGameCtx.textBaseline = "middle";
+     miniGameCtx.font = `${titleFontSize}px ${fonts.display}`;
+     miniGameCtx.fillStyle = colors.white;
+     miniGameCtx.shadowColor = colors.overlayGlow;
+     miniGameCtx.shadowBlur = glow.uiStrongGlow;
+     miniGameCtx.fillText(title, miniGameWidth / 2, titleY);
+
+     const pausedUi = getGamePausedUi();
+
+     pausedUi.resumeButton.x = 0;
+     pausedUi.resumeButton.y = 0;
+     pausedUi.resumeButton.width = 0;
+     pausedUi.resumeButton.height = 0;
+
+     pausedUi.instructionsButton.x = 0;
+     pausedUi.instructionsButton.y = 0;
+     pausedUi.instructionsButton.width = 0;
+     pausedUi.instructionsButton.height = 0;
+
+     pausedUi.menuButton.x = 0;
+     pausedUi.menuButton.y = 0;
+     pausedUi.menuButton.width = 0;
+     pausedUi.menuButton.height = 0;
+
+     const actionY = titleY + Math.max(40, titleFontSize * 0.95);
+     const actionGap = Math.max(28, titleFontSize * 0.4);
+     const buttonPaddingX = 8;
+     const actionHeight = Math.max(28, sizes.welcomeSubFont * 1.8);
+
+     miniGameCtx.textAlign = "left";
+     miniGameCtx.textBaseline = "middle";
+     miniGameCtx.font = `400 ${Math.max(18, sizes.welcomeSubFont * 1.35)}px ${fonts.body}`;
+     miniGameCtx.shadowColor = colors.overlayGlow;
+     miniGameCtx.shadowBlur = glow.uiSoftGlow;
+
+     const measuredActions = actionTexts.map((text) => ({
+          text,
+          width: miniGameCtx.measureText(text).width
+     }));
+
+     const totalActionWidth =
+          measuredActions.reduce((sum, item) => sum + item.width, 0) +
+          (actionGap * Math.max(0, measuredActions.length - 1));
+
+     let currentX = (miniGameWidth - totalActionWidth) / 2;
+
+     measuredActions.forEach((item) => {
+          const buttonWidth = item.width + (buttonPaddingX * 2);
+
+          if (item.text === "RESUME") {
+               pausedUi.resumeButton.x = currentX - buttonPaddingX;
+               pausedUi.resumeButton.y = actionY - (actionHeight / 2);
+               pausedUi.resumeButton.width = buttonWidth;
+               pausedUi.resumeButton.height = actionHeight;
+          }
+
+          if (item.text === "TIPS") {
+               pausedUi.instructionsButton.x = currentX - buttonPaddingX;
+               pausedUi.instructionsButton.y = actionY - (actionHeight / 2);
+               pausedUi.instructionsButton.width = buttonWidth;
+               pausedUi.instructionsButton.height = actionHeight;
+          }
+
+          if (item.text === "MENU") {
+               pausedUi.menuButton.x = currentX - buttonPaddingX;
+               pausedUi.menuButton.y = actionY - (actionHeight / 2);
+               pausedUi.menuButton.width = buttonWidth;
+               pausedUi.menuButton.height = actionHeight;
+          }
+
+          miniGameCtx.fillStyle = colors.white;
+          miniGameCtx.fillText(item.text, currentX, actionY);
+
+          currentX += item.width + actionGap;
+     });
+
+     miniGameCtx.restore();
+}
+
+function drawGameStatusOverlay(theme) {
      if (!miniGameCtx || !gameOverlayText || gameMenuOpen) {
           return;
      }
@@ -1238,8 +804,6 @@ export function drawGameStatusOverlay(theme) {
      miniGameCtx.save();
      miniGameCtx.globalAlpha = alpha;
 
-     // OVERLAY BACKDROP
-     // Lower playfield is dimmed here. Status state is separated more clearly here.
      miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.25)";
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
@@ -1271,7 +835,6 @@ export function drawGameStatusOverlay(theme) {
 
      drawPanelBox(panelX, panelY, panelWidth, panelHeight, theme);
 
-     // TEXT
      miniGameCtx.fillStyle = colors.white;
      miniGameCtx.textAlign = "center";
      miniGameCtx.textBaseline = "middle";
@@ -1289,53 +852,32 @@ export function drawGameStatusOverlay(theme) {
      miniGameCtx.restore();
 }
 
-// NOTE: STARTUP
+// MASTER DRAW ENTRY
 
-export function startSparkleSeeker() {
-     resetGameState();
-     resetTouchControls();
-     resetEntityColorCycle();
+export function drawGame() {
+     const theme = getUiTheme();
 
-     updateMiniGameCanvasSize();
-     resetPlayerPosition();
-     updateTouchControlBounds();
-     updateMenuUiBounds();
+     drawMiniGameBackground();
 
-     // WELCOME RESET
-     // Welcome state is restored here on page load.
-     gameWelcome = true;
-     gameWelcomeTimer = -1;
-     gameWelcomeDuration = -1;
-     gameWelcomeMode = "welcome";
-     welcomeColorEngine = null;
-     welcomePreviousColors = [];
-     welcomeCurrentColors = [];
-     welcomeLastColorCycleTime = 0;
+     if (isGameWelcomeActive()) {
+          drawGameWelcomeOverlay(theme);
+          return;
+     }
 
-     gameWelcomeUi.startButton.x = 0;
-     gameWelcomeUi.startButton.y = 0;
-     gameWelcomeUi.startButton.width = 0;
-     gameWelcomeUi.startButton.height = 0;
+     drawSparkles();
+     drawObstacles();
+     drawCollisionBursts();
+     drawPlayer();
 
-     gameWelcomeUi.instructionsButton.x = 0;
-     gameWelcomeUi.instructionsButton.y = 0;
-     gameWelcomeUi.instructionsButton.width = 0;
-     gameWelcomeUi.instructionsButton.height = 0;
+     drawScore(theme);
+     drawHealth(theme);
+     drawTouchButtons(theme);
 
-     gameWelcomeUi.menuButton.x = 0;
-     gameWelcomeUi.menuButton.y = 0;
-     gameWelcomeUi.menuButton.width = 0;
-     gameWelcomeUi.menuButton.height = 0;
-
-     bindKeyboardInput();
-     bindPointerInput();
-     bindResizeHandler();
-
-     gameLoop();
-}
-
-if (!miniGameCanvas || !miniGameCtx) {
-     console.warn("Sparkle Seeker canvas not found.");
-} else {
-     startSparkleSeeker();
+     if (gameMenuOpen) {
+          drawMenuOverlay(theme);
+     } else if (gamePaused && !gameOver && !gameWon) {
+          drawPausedOverlay(theme);
+     } else {
+          drawGameStatusOverlay(theme);
+     }
 }
