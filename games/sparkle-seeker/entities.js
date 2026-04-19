@@ -48,7 +48,7 @@ const siteTheme = window.SiteTheme;
 // ==================================================
 
 export const sparkleSpawnDelay = 40;
-export const sparkleSpawnCap = 10;
+export const sparkleSpawnCap = 15;
 
 export const obstacleSpawnDelay = 90;
 export const obstacleSpawnCap = 3; // Increase cap on lvlup.
@@ -69,7 +69,7 @@ export const playerFaces = {
 };
 
 export const playerBaseHealth = 3;
-export const playerBaseSpeed = 2;
+export const playerBaseSpeed = 3;
 export const playerSpeedPerHeart = 1; // Adjust for if it's 5 hearts during testing or 10 hearts during final.
 
 // ==================================================
@@ -182,6 +182,12 @@ export function applyTemporaryPlayerFace(face, duration) {
      player.sparkleFaceTimer = duration;
 }
 
+// NOTE: SHARED FACE POP
+// Centralized collision scale effect for both sparkles and obstacles.
+export function triggerPlayerFacePop(scale = 1.25) {
+     player.hitScale = Math.max(player.hitScale, scale);
+}
+
 // ==================================================
 // PLAYER MOVEMENT
 // ==================================================
@@ -190,6 +196,8 @@ export function resetPlayerPosition() {
      player.x = miniGameWidth / 2;
      player.y = miniGameHeight / 2;
      player.sparkleFaceTimer = 0;
+     player.hitScale = 1;
+     player.lowHealthPulseTime = 0;
      syncPlayerHealthState();
 }
 
@@ -273,6 +281,15 @@ export function updatePlayerFaceState() {
      if (player.sparkleFaceTimer <= 0) {
           refreshPlayerFaceFromHealth();
      }
+
+     // HIT SCALE RECOVERY - Brief enlarge effect eases back to normal after collision.
+     if (player.hitScale > 1) {
+          player.hitScale += (1 - player.hitScale) * 0.18;
+
+          if (Math.abs(player.hitScale - 1) < 0.01) {
+               player.hitScale = 1;
+          }
+     }
 }
 
 export function drawPlayer() {
@@ -281,7 +298,10 @@ export function drawPlayer() {
      }
 
      miniGameCtx.save();
-     miniGameCtx.font = `${player.size}px Arial, Helvetica, sans-serif`;
+
+     const drawSize = player.size * player.hitScale;
+
+     miniGameCtx.font = `${drawSize}px Arial, Helvetica, sans-serif`;
      miniGameCtx.textAlign = "center";
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.fillStyle = "#ffffff";
@@ -370,6 +390,7 @@ export function collectSparkles() {
                setSparkleHealProgress(progress);
                syncPlayerHealthState();
                applyTemporaryPlayerFace(playerFaces.sparkle, 60);
+               triggerPlayerFacePop(1.25);
           }
      }
 }
@@ -477,6 +498,7 @@ export function hitObstacles() {
 
                syncPlayerHealthState();
                applyTemporaryPlayerFace(playerFaces.obstacle, 30);
+               triggerPlayerFacePop(1.25);
           }
      }
 }
