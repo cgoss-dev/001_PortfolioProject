@@ -577,13 +577,13 @@ function drawGameWelcomeOverlay(theme) {
      const titleLines = getCurrentWelcomeTitleLines();
      const actionTexts = getCurrentWelcomeActionTexts();
      const titleFontSize = getWelcomeTitleFontSize(theme, titleLines);
-     const lineGap = Math.max(12, titleFontSize * 0.12);
+     const lineGap = Math.max(12, titleFontSize * 0.012);
 
-     const firstLineY = (miniGameHeight / 2) - ((titleFontSize * 0.8) + (lineGap * 0.5));
+     const firstLineY = (miniGameHeight / 2) - ((titleFontSize * 1) + (lineGap * 0.5));
      const secondLineY = firstLineY + titleFontSize + lineGap;
 
-     const actionGap = Math.max(18, titleFontSize * 0.2);
-     const actionY = secondLineY + Math.max(34, titleFontSize * 0.95);
+     const actionGap = Math.max(18, titleFontSize * 0.5);
+     const actionY = secondLineY + Math.max(34, titleFontSize * 1.25);
 
      updateWelcomeTitleColors(titleLines);
 
