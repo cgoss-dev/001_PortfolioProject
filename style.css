@@ -47,10 +47,10 @@
 
      /* NOTE: TEXT SIZE */
      --text-size-marquee: 64px;
-     --text-size-marquee: clamp(5rem, 15vw, 15rem);
+     --text-size-marquee: clamp(2rem, 15vw, 15rem);
 
      --text-size-large: 32px;
-     --text-size-large: clamp(2rem, 10vw, 3rem);
+     --text-size-large: clamp(1.5rem, 10vw, 3rem);
 
      --text-size-medium: 16px;
      --text-size-medium: clamp(1rem, 7vw, 2rem);
@@ -98,7 +98,6 @@
      /* Leaving these variables in place so JS does not break, but neutralizing them. */
      --glow-bg-particle-blur: 10;
      --glow-game-particle-blur: 10;
-     --bungee-glow-blur: 0 0 0.05rem;
      --bungee-shadow-offset-1: 0 0 0 transparent;
      --bungee-shadow-offset-2: 0 0 0 transparent;
 
@@ -149,15 +148,11 @@
      /* Tighter clamp values are used here so a single row is kept longer. */
 
      --nav-panel-width: 100%;
-     --nav-pill-gap: clamp(0.5rem, 1vw, 1rem);
+     --nav-pill-gap: clamp(1.5rem, 1vw, 2rem);
      --nav-pill-padding-y: 0.5rem;
      --nav-pill-padding-x: 0.5rem;
 
-     --nav-icon-size: clamp(2.5rem, 5vw, 3rem);
-
-     /* Label size is allowed to shrink harder here so a single row is preserved. */
-     --nav-label-size: clamp(0.85rem, 1.35vw, 1.1rem);
-     --nav-desc-size: clamp(0.75rem, 1.5vw, 2rem);
+     --nav-icon-size: clamp(2rem, 5vw, 3rem);
 }
 
 /* NON-ROOT CORE */
@@ -467,14 +462,14 @@ h1 {
 }
 
 .nav-label {
-     font-size: var(--nav-label-size);
-     line-height: 1.25;
+     font-size: var(--text-size-small);
+     line-height: 1;
      white-space: nowrap;
 }
 
 .nav-desc {
      display: none;
-     font-size: var(--nav-desc-size);
+     font-size: var(--text-size-small);
      opacity: 0.78;
      white-space: nowrap;
 }
@@ -549,7 +544,7 @@ h1 {
      width: 100%;
      max-width: 100%;
      margin: 0 auto;
-     padding: 0 var(--page-padding-x);
+     padding: 0;
      text-align: center;
      font-family: var(--font-fancy);
      font-size: var(--text-size-marquee);
@@ -561,6 +556,7 @@ h1 {
      width: fit-content;
      max-width: 100%;
      margin: 0 auto;
+     padding: 0;
      text-align: center;
      white-space: nowrap;
      overflow-wrap: normal;
