@@ -323,9 +323,6 @@ export function startNewGameRound() {
      setGameMenuView("main");
      setGameOver(false);
      setGameWon(false);
-
-     // NOTE: OLD "LET'S PLAY!" OVERLAY REMOVED
-     // Start now goes straight into gameplay instead of showing a centered text overlay.
 }
 
 // MENU
@@ -349,7 +346,7 @@ export function toggleAllSound() {
 }
 
 export function updateMenuUiBounds() {
-     // NOTE: FULL-CANVAS MENU PANEL
+     // FULL-CANVAS MENU PANEL
      // The menu now uses the entire canvas instead of a centered popup box.
      const panelX = 0;
      const panelY = 0;
@@ -361,7 +358,7 @@ export function updateMenuUiBounds() {
      gameMenuUi.panel.width = panelWidth;
      gameMenuUi.panel.height = panelHeight;
 
-     // NOTE: FULL-CANVAS MENU LAYOUT
+     // FULL-CANVAS MENU LAYOUT
      // Buttons are centered inside the whole canvas now.
      const sidePadding = Math.max(24, panelWidth * 0.12);
      const buttonHeight = 35;

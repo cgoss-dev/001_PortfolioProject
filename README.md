@@ -5,10 +5,6 @@ Digital footprint, games, resources.
 <br><br>
 
 ### TO DO
--    Make the joystick base a classic cross d-pad, keep the round joystick overlay.
--    Unify menu stying. Background opacity, border thickness/color, glow.
-     -    Large menu popup.
-     -    Small menu popup.
 -    Flesh out menu options.
      -    Sound: music/sfx (on/off)(volume: min-x-med-x-max).
      -    Difficulty: obstacles (on/off)(pace/damage/scaling: min-x-med-x-max).
@@ -18,7 +14,6 @@ Digital footprint, games, resources.
      -    Rate/type.
      -    Inc/dec health/points.
      -    Multipliers.
--    Swap marquee/border color functionality.
 -    🐞 Mobile landscape mode bug.
 
 ### FUTURE GAMES

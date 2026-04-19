@@ -141,7 +141,7 @@ function getUiTheme() {
                heartGlow: "#ffffff"
           },
 
-          sizes: {
+          sizes: {//REVIEW - NAV MENU OPTION SIZES (8, 16, 32)
                scoreFont: 24,
                scoreX: 8,
                scoreY: 8,
@@ -158,7 +158,7 @@ function getUiTheme() {
                // Title is allowed to scale from canvas size here.
                welcomeSubFont: getCssPixelSize("--text-size-small", 8),
 
-               menuButtonFont: getCssPixelSize("--text-size-small", 8), //REVIEW - NAV MENU OPTION SIZES (8, 16, 32)
+               menuButtonFont: getCssPixelSize("--text-size-small", 8), 
                menuSmallFont: getCssPixelSize("--text-size-small", 8),
 
                controlRadius: getCssNumber("--canvasboard-radius", 15)
@@ -322,6 +322,8 @@ function getWelcomeTitleFontSize(theme, titleLines = getCurrentWelcomeTitleLines
      return fontSize;
 }
 
+// NOTE: MENU BUTTON SHAPES
+
 function drawMenuButton(button, label, theme) {
      if (!miniGameCtx) {
           return;
@@ -332,7 +334,7 @@ function drawMenuButton(button, label, theme) {
      const centerY = button.y + (button.height / 2);
 
      miniGameCtx.save();
-     miniGameCtx.fillStyle = colors.buttonFill; // FIXME: REVISIT MENU BUTTONS
+     miniGameCtx.fillStyle = colors.buttonFill;
      miniGameCtx.strokeStyle = colors.outlineSoft;
      miniGameCtx.lineWidth = 2;
      miniGameCtx.shadowColor = colors.controlGlow;
@@ -354,7 +356,8 @@ function drawMenuButton(button, label, theme) {
      miniGameCtx.restore();
 }
 
-// START/STOP BUTTON SHAPE
+// NOTE: START/STOP BUTTON SHAPE
+
 function drawControlButton(button, isPressed, theme) {
      if (!miniGameCtx) {
           return;
@@ -363,19 +366,19 @@ function drawControlButton(button, isPressed, theme) {
      const { colors, glow } = theme;
      const centerX = button.x + (button.width / 2);
      const centerY = button.y + (button.height / 2);
-     const radius = button.width / 2;
+     const radius = button.width / 3; // BUTTON SIZE RADIUS
 
      miniGameCtx.save();
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = isPressed ? glow.uiStrongGlow : glow.uiMediumGlow;
 
      miniGameCtx.beginPath();
-     miniGameCtx.arc(centerX, centerY, radius * 1.25, 0, Math.PI * 2);
+     miniGameCtx.arc(centerX, centerY, radius * 1.5, 0, Math.PI * 2);
 
      miniGameCtx.fillStyle = isPressed ? colors.controlFillPressed : colors.controlFill;
      miniGameCtx.fill();
 
-     miniGameCtx.lineWidth = 3;
+     miniGameCtx.lineWidth = 2;
      miniGameCtx.strokeStyle = colors.outlineStrong;
      miniGameCtx.stroke();
 
@@ -488,12 +491,14 @@ function drawTouchButtons(theme) {
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
 
+     //FIXME: REVISIT BUTTON LABELS
+
      miniGameCtx.font = `${leftButton.height * 0.5}px ${fonts.symbol}`;
      miniGameCtx.fillText(
           leftButton.label,
           leftButton.x + (leftButton.width / 2),
           leftButton.y + (leftButton.height / 2) + 1
-     ); //FIXME: REVISIT LABELS
+     );
 
      miniGameCtx.font = `${rightButton.height * 0.5}px ${fonts.symbol}`;
      miniGameCtx.fillText(
@@ -504,6 +509,8 @@ function drawTouchButtons(theme) {
 
      miniGameCtx.restore();
 }
+
+// NOTE: MENU OVERLAY
 
 function drawMenuOverlay(theme) {
      if (!miniGameCtx || !gameMenuOpen) {
@@ -566,6 +573,8 @@ function drawMenuOverlay(theme) {
      drawMenuButton(gameMenuUi.backButton, "Back", theme);
      miniGameCtx.restore();
 }
+
+// NOTE: WELCOME MENU OVERLAY
 
 function drawGameWelcomeOverlay(theme) {
      if (!miniGameCtx || !isGameWelcomeActive()) {

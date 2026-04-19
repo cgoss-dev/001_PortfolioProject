@@ -55,10 +55,9 @@ const touchControlLayout = {
      buttonEdgePaddingX: 5,
      buttonEdgePaddingY: 5,
 
-     buttonGap: 16,
+     buttonGap: 5,
 
-     // VISUAL EDGE BUFFER
-     // Extra room is added here because drawn circles extend past raw rect size.
+     // VISUAL EDGE BUFFER - Extra room is added here because drawn circles extend past raw rect size.
      buttonVisualScale: 1.25
 };
 
