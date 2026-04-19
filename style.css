@@ -46,7 +46,7 @@
      --header-text-align: left;
 
      /* NOTE: TEXT SIZE */
-     --text-size-marquee: 64px;
+     --text-size-marquee: 32px;
      --text-size-marquee: clamp(0.5rem, 20vw, 10rem);
 
      --text-size-large: 32px;
