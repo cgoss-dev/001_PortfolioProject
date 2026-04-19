@@ -25,9 +25,9 @@ export const player = {
      x: 0,
      y: 0,
      char: "😐",
-     size: 54,
+     size: 64,
      speed: 2,
-     radius: 30,
+     radius: 32,
      
      baseSize: 54,
      baseRadius: 30,

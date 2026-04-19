@@ -31,6 +31,9 @@ import {
      setRightButtonPointerId
 } from "./state.js";
 
+// NOTE: UI MODE IMPORTS
+// input.js should talk to ui_mode.js, not ui_draw.js.
+// Input needs hitboxes/state transitions, not rendering functions.
 import {
      updateMenuUiBounds,
      startNewGameRound,
@@ -39,11 +42,12 @@ import {
      isPointInsideMenuPanel,
      isGameWelcomeActive,
      getGameWelcomeUi,
+     getGamePausedUi,
      dismissGameWelcomeToStart,
      dismissGameWelcomeToInstructionsMenu,
      dismissGameWelcomeToMenu,
      dismissGameWelcomeBackToMain
-} from "./ui.js";
+} from "./ui_mode.js";
 
 // NOTE: EDGE CONTROLS
 // Fixed edge spacing is defined here. Resize drift is prevented by anchoring from canvas edges here.
@@ -179,6 +183,30 @@ function getWelcomeButtonAtPoint(x, y) {
      return null;
 }
 
+// NOTE: PAUSED BUTTON LOOKUP
+// Pause marquee action word bounds are read from ui_mode state here.
+function getPausedButtonAtPoint(x, y) {
+     if (!gamePaused || gameMenuOpen || gameOver || gameWon) {
+          return null;
+     }
+
+     const pausedUi = getGamePausedUi();
+
+     if (isPointInsideRect(x, y, pausedUi.resumeButton)) {
+          return "resume";
+     }
+
+     if (isPointInsideRect(x, y, pausedUi.instructionsButton)) {
+          return "instructions";
+     }
+
+     if (isPointInsideRect(x, y, pausedUi.menuButton)) {
+          return "menu";
+     }
+
+     return null;
+}
+
 // CURSOR SYNC
 // Canvas cursor is swapped here when clickable areas are crossed.
 function updateCanvasCursor(x, y) {
@@ -192,6 +220,11 @@ function updateCanvasCursor(x, y) {
      // Only action words are treated as clickable while welcome state is active.
      if (isGameWelcomeActive()) {
           if (getWelcomeButtonAtPoint(x, y)) {
+               cursor = "pointer";
+          }
+
+     } else if (gamePaused && !gameMenuOpen && !gameOver && !gameWon) {
+          if (getPausedButtonAtPoint(x, y)) {
                cursor = "pointer";
           }
 
@@ -323,6 +356,11 @@ function closeMenuAndResetView(shouldUnpause = true) {
           return;
      }
 
+     // OPTIONAL UNPAUSE
+     // Some menu exits should resume gameplay, but Back can stay paused.
+     if (shouldUnpause && gameStarted && !gameOver && !gameWon) {
+          setGamePaused(false);
+     }
 }
 
 // ROUND + MENU ACTIONS
@@ -403,7 +441,6 @@ function handleMenuClick(x, y) {
      }
 
      if (isPointInsideRect(x, y, gameMenuUi.backButton)) {
-
           // NOTE: BACK FROM INSTRUCTIONS - WELCOME SCREEN
           if (gameMenuView === "instructions") {
                setGameMenuOpen(false);
@@ -415,7 +452,9 @@ function handleMenuClick(x, y) {
           if (gameMenuView !== "main") {
                setGameMenuView("main");
           } else {
-               closeMenuAndResetView();
+               // NOTE: BACK SHOULD NOT UNPAUSE
+               // Closing from the Back button leaves the game paused.
+               closeMenuAndResetView(false);
           }
 
           return true;
@@ -456,6 +495,21 @@ function onKeyDown(event) {
           }
 
           return;
+     }
+
+     // PAUSED MARQUEE KEY ACTIONS
+     // Enter/space resumes from the paused marquee before reaching gameplay input.
+     if (gamePaused && !gameMenuOpen && !gameOver && !gameWon) {
+          if (key === "space" || key === "enter") {
+               setGamePaused(false);
+               return;
+          }
+
+          if (key === "escape") {
+               setGameMenuOpen(true);
+               setGameMenuView("main");
+               return;
+          }
      }
 
      if (key === "escape") {
@@ -548,6 +602,35 @@ function onPointerDown(event) {
                return;
           }
 
+          return;
+     }
+
+     // PAUSED MARQUEE CLICK ACTIONS
+     // Resume/Tips/Menu are routed through measured word bounds here.
+     if (gamePaused && !gameMenuOpen && !gameOver && !gameWon) {
+          const pausedTarget = getPausedButtonAtPoint(pos.x, pos.y);
+
+          if (pausedTarget === "resume") {
+               setGamePaused(false);
+               event.preventDefault();
+               return;
+          }
+
+          if (pausedTarget === "instructions") {
+               setGameMenuOpen(true);
+               setGameMenuView("instructions");
+               event.preventDefault();
+               return;
+          }
+
+          if (pausedTarget === "menu") {
+               setGameMenuOpen(true);
+               setGameMenuView("main");
+               event.preventDefault();
+               return;
+          }
+
+          // While paused, clicks should not steer movement behind the marquee.
           return;
      }
 
@@ -650,7 +733,7 @@ export function bindPointerInput() {
 // NOTE: RESIZE
 
 function handleWindowResize() {
-     // Canvas sizing itself is handled by ui.js.
+     // Canvas sizing itself is handled by ui_mode.js.
      // This file only refreshes input layout after size changes.
      updateTouchControlBounds();
      updateMenuUiBounds();
