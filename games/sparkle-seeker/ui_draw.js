@@ -156,10 +156,10 @@ function getUiTheme() {
 
                // WELCOME TITLE SIZE
                // Title is allowed to scale from canvas size here.
-               welcomeSubFont: getCssPixelSize("--text-size-medium", 14),
+               welcomeSubFont: getCssPixelSize("--text-size-small", 10),
 
                menuButtonFont: getCssPixelSize("--text-size-medium", 14),
-               menuSmallFont: getCssPixelSize("--text-size-medium", 14),
+               menuSmallFont: getCssPixelSize("--text-size-small", 10),
 
                controlRadius: getCssNumber("--canvasboard-radius", 15)
           },
@@ -644,9 +644,9 @@ function drawGameWelcomeOverlay(theme) {
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.shadowColor = colors.overlayGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
-     miniGameCtx.font = `400 ${Math.max(18, sizes.welcomeSubFont * 1.35)}px ${fonts.body}`;
+     miniGameCtx.font = `400 ${Math.max(18, sizes.welcomeSubFont * 1.1)}px ${fonts.body}`;
 
-     const actionHeight = Math.max(28, sizes.welcomeSubFont * 1.8);
+     const actionHeight = Math.max(28, sizes.welcomeSubFont * 1.1);
      const buttonPaddingX = 8;
 
      const measuredActions = actionTexts.map((text) => ({
