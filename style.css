@@ -58,12 +58,6 @@
      --text-size-small: 8px;
      --text-size-small: clamp(0.5rem, 3vw, 1rem);
 
-
-     /* Tagline size controls were added here.
-     SM can keep size; XS can shrink a little if needed. */
-     --text-size-tagline: clamp(0.8rem, 3vw, 1rem);
-     --text-size-tagline-xs: clamp(0.75rem, 3vw, 1rem);
-
      --text-color-marquee: var(--text-color);
      --text-color-medium: var(--text-color);
      --text-color-small: var(--text-color);
@@ -587,7 +581,7 @@ h1 {
      padding-left: 0;
      padding-right: 0;
      color: var(--text-color-small);
-     font-size: var(--text-size-tagline);
+     font-size: var(--text-size-small);
      line-height: 1;
      text-align: center;
      white-space: normal;
@@ -631,7 +625,7 @@ h1 {
      .tagline {
           white-space: nowrap;
           overflow-wrap: normal;
-          font-size: var(--text-size-tagline);
+          font-size: var(--text-size-small);
      }
 
      .tagline-break {
@@ -665,7 +659,7 @@ h1 {
      .tagline {
           white-space: nowrap;
           overflow-wrap: normal;
-          font-size: var(--text-size-tagline);
+          font-size: var(--text-size-small);
      }
 
      .tagline-break {
@@ -710,7 +704,7 @@ h1 {
 
      .tagline {
           white-space: normal;
-          font-size: var(--text-size-tagline);
+          font-size: var(--text-size-small);
           line-height: 1;
      }
 
@@ -759,7 +753,7 @@ h1 {
 
      .tagline {
           white-space: normal;
-          font-size: var(--text-size-tagline-xs);
+          font-size: var(--text-size-small);
           line-height: 1;
      }
 
