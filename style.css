@@ -47,7 +47,7 @@
 
      /* NOTE: TEXT SIZE */
      --text-size-marquee: 64px;
-     --text-size-marquee: clamp(3rem, 25vw, 10rem);
+     --text-size-marquee: clamp(2.5rem, 25vw, 10rem);
 
      --text-size-large: 32px;
      --text-size-large: clamp(1.5rem, 10vw, 3rem);
