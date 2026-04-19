@@ -142,7 +142,7 @@ function getUiTheme() {
           },
 
           sizes: {
-               scoreFont: 32,
+               scoreFont: 24,
                scoreX: 8,
                scoreY: 8,
 
@@ -152,14 +152,14 @@ function getUiTheme() {
                heartXPadding: 8,
 
                overlayTitleFont: 36,
-               overlaySubFont: getCssPixelSize("--text-size-medium", 14),
+               overlaySubFont: getCssPixelSize("--text-size-medium", 16),
 
                // WELCOME TITLE SIZE
                // Title is allowed to scale from canvas size here.
-               welcomeSubFont: getCssPixelSize("--text-size-small", 10),
+               welcomeSubFont: getCssPixelSize("--text-size-small", 8),
 
-               menuButtonFont: getCssPixelSize("--text-size-medium", 14),
-               menuSmallFont: getCssPixelSize("--text-size-small", 10),
+               menuButtonFont: getCssPixelSize("--text-size-small", 8), //REVIEW - NAV MENU OPTION SIZES (8, 16, 32)
+               menuSmallFont: getCssPixelSize("--text-size-small", 8),
 
                controlRadius: getCssNumber("--canvasboard-radius", 15)
           },
@@ -451,7 +451,7 @@ function drawHealth(theme) {
           bottomRow += (i < playerHealth) ? filledHeart : emptyHeart;
      }
 
-     //NOTE: SWAPPED TOP/BOTTOM ROWS FOR TESTING
+     //SWAPPED TOP/BOTTOM ROWS FOR TESTING
      for (let i = heartsPerRow - 1; i >= 0; i -= 1) {
           topRow += (i < playerHealth) ? filledHeart : emptyHeart;
      }
@@ -541,8 +541,8 @@ function drawMenuOverlay(theme) {
           const textX = Math.max(24, miniGameWidth * 0.12);
           let textY = Math.max(28, miniGameHeight * 0.12);
           const fontSize = Math.max(12, sizes.menuSmallFont * Math.min(1, miniGameWidth / 320));
-          const lineHeight = fontSize * 1.4;
-          const sectionGap = lineHeight * 0.5;
+          const lineHeight = fontSize * 1;
+          const sectionGap = lineHeight * 1.25;
           const maxTextWidth = miniGameWidth - (textX * 2);
 
           miniGameCtx.font = `400 ${fontSize}px ${fonts.body}`;
@@ -582,16 +582,13 @@ function drawGameWelcomeOverlay(theme) {
      const firstLineY = (miniGameHeight / 2) - ((titleFontSize * 0.8) + (lineGap * 0.5));
      const secondLineY = firstLineY + titleFontSize + lineGap;
 
-     const actionGap = Math.max(28, titleFontSize * 0.45);
-     const actionY = (secondLineY + Math.max(28, titleFontSize * 0.95));
+     const actionGap = Math.max(18, titleFontSize * 0.2);
+     const actionY = secondLineY + Math.max(34, titleFontSize * 0.95);
 
      updateWelcomeTitleColors(titleLines);
 
      miniGameCtx.save();
      miniGameCtx.globalAlpha = alpha;
-
-     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.25)";
-     miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "middle";
@@ -640,54 +637,73 @@ function drawGameWelcomeOverlay(theme) {
      welcomeUi.menuButton.width = 0;
      welcomeUi.menuButton.height = 0;
 
+     const buttonPaddingX = 12;
+     const buttonPaddingY = 6;
+     const actionTextSize = Math.max(10, sizes.welcomeSubFont * 1.1);
+
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.shadowColor = colors.overlayGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
-     miniGameCtx.font = `400 ${Math.max(18, sizes.welcomeSubFont * 1.1)}px ${fonts.body}`;
-
-     const actionHeight = Math.max(28, sizes.welcomeSubFont * 1.1);
-     const buttonPaddingX = 8;
+     miniGameCtx.font = `400 ${actionTextSize}px ${fonts.body}`;
 
      const measuredActions = actionTexts.map((text) => ({
           text,
-          width: miniGameCtx.measureText(text).width
+          textWidth: miniGameCtx.measureText(text).width
      }));
 
      const totalActionWidth =
-          measuredActions.reduce((sum, item) => sum + item.width, 0) +
+          measuredActions.reduce((sum, item) => sum + item.textWidth + (buttonPaddingX * 2), 0) +
           (actionGap * Math.max(0, measuredActions.length - 1));
 
      let currentX = (miniGameWidth - totalActionWidth) / 2;
 
      measuredActions.forEach((item) => {
-          const buttonWidth = item.width + (buttonPaddingX * 2);
+          const buttonWidth = item.textWidth + (buttonPaddingX * 2);
+          const buttonHeight = actionTextSize + (buttonPaddingY * 2);
+          const buttonX = currentX;
+          const buttonY = actionY - (buttonHeight / 2);
+          const textX = buttonX + (buttonWidth / 2);
+
+          miniGameCtx.save();
+          miniGameCtx.fillStyle = "rgba(255, 255, 255, 0.11)";
+          miniGameCtx.strokeStyle = "rgba(255, 255, 255, 0.75)";
+          miniGameCtx.lineWidth = 2;
+          miniGameCtx.shadowColor = colors.controlGlow;
+          miniGameCtx.shadowBlur = glow.uiSoftGlow;
+
+          drawRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, sizes.controlRadius);
+          miniGameCtx.fill();
+          miniGameCtx.stroke();
+
+          miniGameCtx.fillStyle = colors.buttonText;
+          miniGameCtx.textAlign = "center";
+          miniGameCtx.textBaseline = "middle";
+          miniGameCtx.fillText(item.text, textX, actionY);
+          miniGameCtx.restore();
 
           if (item.text === "START") {
-               welcomeUi.startButton.x = currentX - buttonPaddingX;
-               welcomeUi.startButton.y = actionY - (actionHeight / 2);
+               welcomeUi.startButton.x = buttonX;
+               welcomeUi.startButton.y = buttonY;
                welcomeUi.startButton.width = buttonWidth;
-               welcomeUi.startButton.height = actionHeight;
+               welcomeUi.startButton.height = buttonHeight;
           }
 
           if (item.text === "TIPS") {
-               welcomeUi.instructionsButton.x = currentX - buttonPaddingX;
-               welcomeUi.instructionsButton.y = actionY - (actionHeight / 2);
+               welcomeUi.instructionsButton.x = buttonX;
+               welcomeUi.instructionsButton.y = buttonY;
                welcomeUi.instructionsButton.width = buttonWidth;
-               welcomeUi.instructionsButton.height = actionHeight;
+               welcomeUi.instructionsButton.height = buttonHeight;
           }
 
           if (item.text === "MENU") {
-               welcomeUi.menuButton.x = currentX - buttonPaddingX;
-               welcomeUi.menuButton.y = actionY - (actionHeight / 2);
+               welcomeUi.menuButton.x = buttonX;
+               welcomeUi.menuButton.y = buttonY;
                welcomeUi.menuButton.width = buttonWidth;
-               welcomeUi.menuButton.height = actionHeight;
+               welcomeUi.menuButton.height = buttonHeight;
           }
 
-          miniGameCtx.fillStyle = colors.white;
-          miniGameCtx.fillText(item.text, currentX, actionY);
-
-          currentX += item.width + actionGap;
+          currentX += buttonWidth + actionGap;
      });
 
      miniGameCtx.restore();
@@ -699,24 +715,16 @@ function drawPausedOverlay(theme) {
      }
 
      const { colors, fonts, glow, sizes } = theme;
-     const title = "PAUSED";
+     const titleLines = ["PAUSED"];
      const actionTexts = ["RESUME", "TIPS", "MENU"];
+     const titleFontSize = Math.max(40, Math.min(miniGameWidth * 0.16, miniGameHeight * 0.16));
+     const titleY = miniGameHeight * 0.46;
+     const actionGap = Math.max(18, titleFontSize * 0.2);
+     const actionY = titleY + Math.max(52, titleFontSize * 1.05);
+
+     updateWelcomeTitleColors(titleLines);
 
      miniGameCtx.save();
-
-     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.25)";
-     miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
-
-     const titleFontSize = Math.max(40, Math.min(miniGameWidth * 0.16, miniGameHeight * 0.16));
-     const titleY = miniGameHeight * 0.38;
-
-     miniGameCtx.textAlign = "center";
-     miniGameCtx.textBaseline = "middle";
-     miniGameCtx.font = `${titleFontSize}px ${fonts.display}`;
-     miniGameCtx.fillStyle = colors.white;
-     miniGameCtx.shadowColor = colors.overlayGlow;
-     miniGameCtx.shadowBlur = glow.uiStrongGlow;
-     miniGameCtx.fillText(title, miniGameWidth / 2, titleY);
 
      const pausedUi = getGamePausedUi();
 
@@ -735,56 +743,103 @@ function drawPausedOverlay(theme) {
      pausedUi.menuButton.width = 0;
      pausedUi.menuButton.height = 0;
 
-     const actionY = titleY + Math.max(40, titleFontSize * 0.95);
-     const actionGap = Math.max(28, titleFontSize * 0.4);
-     const buttonPaddingX = 8;
-     const actionHeight = Math.max(28, sizes.welcomeSubFont * 1.8);
+     miniGameCtx.textAlign = "left";
+     miniGameCtx.textBaseline = "middle";
+     miniGameCtx.font = `${titleFontSize}px ${fonts.display}`;
+
+     titleLines.forEach((line, lineIndex) => {
+          const y = titleY + (lineIndex * titleFontSize);
+          const colorsForLine = welcomeCurrentColors[lineIndex] || [];
+          const letterWidths = [];
+
+          for (let i = 0; i < line.length; i += 1) {
+               letterWidths.push(miniGameCtx.measureText(line[i]).width);
+          }
+
+          const totalWidth = letterWidths.reduce((sum, width) => sum + width, 0);
+          let x = (miniGameWidth - totalWidth) / 2;
+
+          for (let i = 0; i < line.length; i += 1) {
+               const letter = line[i];
+               const letterWidth = letterWidths[i];
+               const letterColor = colorsForLine[i] || colors.white;
+
+               miniGameCtx.fillStyle = letterColor;
+               miniGameCtx.shadowColor = letterColor;
+               miniGameCtx.shadowBlur = glow.uiStrongGlow;
+               miniGameCtx.fillText(letter, x, y);
+
+               x += letterWidth;
+          }
+     });
+
+     const buttonPaddingX = 12;
+     const buttonPaddingY = 6;
+     const actionTextSize = Math.max(10, sizes.welcomeSubFont * 1.1);
 
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "middle";
-     miniGameCtx.font = `400 ${Math.max(18, sizes.welcomeSubFont * 1.35)}px ${fonts.body}`;
      miniGameCtx.shadowColor = colors.overlayGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
+     miniGameCtx.font = `400 ${actionTextSize}px ${fonts.body}`;
 
      const measuredActions = actionTexts.map((text) => ({
           text,
-          width: miniGameCtx.measureText(text).width
+          textWidth: miniGameCtx.measureText(text).width
      }));
 
      const totalActionWidth =
-          measuredActions.reduce((sum, item) => sum + item.width, 0) +
+          measuredActions.reduce((sum, item) => sum + item.textWidth + (buttonPaddingX * 2), 0) +
           (actionGap * Math.max(0, measuredActions.length - 1));
 
      let currentX = (miniGameWidth - totalActionWidth) / 2;
 
      measuredActions.forEach((item) => {
-          const buttonWidth = item.width + (buttonPaddingX * 2);
+          const buttonWidth = item.textWidth + (buttonPaddingX * 2);
+          const buttonHeight = actionTextSize + (buttonPaddingY * 2);
+          const buttonX = currentX;
+          const buttonY = actionY - (buttonHeight / 2);
+          const textX = buttonX + (buttonWidth / 2);
+
+          miniGameCtx.save();
+          miniGameCtx.fillStyle = "rgba(255, 255, 255, 0.11)";
+          miniGameCtx.strokeStyle = "rgba(255, 255, 255, 0.75)";
+          miniGameCtx.lineWidth = 2;
+          miniGameCtx.shadowColor = colors.controlGlow;
+          miniGameCtx.shadowBlur = glow.uiSoftGlow;
+
+          drawRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, sizes.controlRadius);
+          miniGameCtx.fill();
+          miniGameCtx.stroke();
+
+          miniGameCtx.fillStyle = colors.buttonText;
+          miniGameCtx.textAlign = "center";
+          miniGameCtx.textBaseline = "middle";
+          miniGameCtx.fillText(item.text, textX, actionY);
+          miniGameCtx.restore();
 
           if (item.text === "RESUME") {
-               pausedUi.resumeButton.x = currentX - buttonPaddingX;
-               pausedUi.resumeButton.y = actionY - (actionHeight / 2);
+               pausedUi.resumeButton.x = buttonX;
+               pausedUi.resumeButton.y = buttonY;
                pausedUi.resumeButton.width = buttonWidth;
-               pausedUi.resumeButton.height = actionHeight;
+               pausedUi.resumeButton.height = buttonHeight;
           }
 
           if (item.text === "TIPS") {
-               pausedUi.instructionsButton.x = currentX - buttonPaddingX;
-               pausedUi.instructionsButton.y = actionY - (actionHeight / 2);
+               pausedUi.instructionsButton.x = buttonX;
+               pausedUi.instructionsButton.y = buttonY;
                pausedUi.instructionsButton.width = buttonWidth;
-               pausedUi.instructionsButton.height = actionHeight;
+               pausedUi.instructionsButton.height = buttonHeight;
           }
 
           if (item.text === "MENU") {
-               pausedUi.menuButton.x = currentX - buttonPaddingX;
-               pausedUi.menuButton.y = actionY - (actionHeight / 2);
+               pausedUi.menuButton.x = buttonX;
+               pausedUi.menuButton.y = buttonY;
                pausedUi.menuButton.width = buttonWidth;
-               pausedUi.menuButton.height = actionHeight;
+               pausedUi.menuButton.height = buttonHeight;
           }
 
-          miniGameCtx.fillStyle = colors.white;
-          miniGameCtx.fillText(item.text, currentX, actionY);
-
-          currentX += item.width + actionGap;
+          currentX += buttonWidth + actionGap;
      });
 
      miniGameCtx.restore();
@@ -871,7 +926,10 @@ export function drawGame() {
 
      drawScore(theme);
      drawHealth(theme);
-     drawTouchButtons(theme);
+
+     if (!gamePaused && !gameMenuOpen && !gameOver && !gameWon) {
+          drawTouchButtons(theme);
+     }
 
      if (gameMenuOpen) {
           drawMenuOverlay(theme);

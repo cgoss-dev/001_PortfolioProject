@@ -240,13 +240,13 @@ export function getCurrentLevelNumber() {
 }
 
 // NOTE: PLAYER LEVEL SCALE
-// Level 5 makes the player 25% larger.
+// Level 5 makes the player 10% larger.
 // This affects BOTH the drawn icon size and the collision radius.
 export function getPlayerLevelScale() {
      const level = getCurrentLevelNumber();
 
      if (level >= 5) {
-          return 1.25;
+          return 1.1;
      }
 
      return 1;

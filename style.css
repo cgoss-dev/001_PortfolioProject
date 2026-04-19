@@ -45,11 +45,19 @@
 
      --header-text-align: left;
 
-     /* A larger visual size is kept here.
-     Full-width reclaim farther below helps cutoff stay avoided. */
+     /* NOTE: TEXT SIZE */
+     --text-size-marquee: 64px;
      --text-size-marquee: clamp(4rem, 15vw, 15rem);
-     --text-size-medium: clamp(1rem, 10vw, 3rem);
-     --text-size-small: clamp(0.75rem, 5vw, 1.5rem);
+
+     --text-size-large: 32px;
+     --text-size-large: clamp(2rem, 10vw, 3rem);
+
+     --text-size-medium: 16px;
+     --text-size-medium: clamp(1rem, 7vw, 2rem);
+
+     --text-size-small: 8px;
+     --text-size-small: clamp(0.5rem, 3vw, 1rem);
+
 
      /* Tagline size controls were added here.
      SM can keep size; XS can shrink a little if needed. */
@@ -142,7 +150,7 @@
 
      --nav-panel-width: 100%;
      --nav-pill-gap: clamp(0.5rem, 1vw, 1rem);
-     --nav-pill-padding-y: 0.25rem;
+     --nav-pill-padding-y: 0.5rem;
      --nav-pill-padding-x: 0.5rem;
 
      --nav-icon-size: clamp(2.5rem, 5vw, 3rem);
@@ -674,7 +682,7 @@ A break is only introduced at chosen split point later. */
 @media (min-width: 40.0001rem) and (max-width: 59.9999rem) {
 
      .nav-link {
-          flex-direction: row;
+          flex-direction: column;
           gap: clamp(0rem, 0.5vw, 0.6rem);
      }
 
@@ -702,16 +710,10 @@ A break is only introduced at chosen split point later. */
 
 @media (min-width: 20.0001rem) and (max-width: 40rem) {
 
-     /* NAV: icons only, but spacing preserved */
-
-     .nav-label,
-     .nav-desc {
-          display: none;
-     }
-
      .nav-link {
           gap: 0;
           padding-inline: 0.2rem;
+          flex-direction: column;
      }
 
      .nav-list {
@@ -743,13 +745,6 @@ A break is only introduced at chosen split point later. */
 /* ========================= */
 
 @media (max-width: 20rem) {
-
-     /* NAV: icons only, but spacing preserved */
-
-     .nav-label,
-     .nav.desc {
-          display: none;
-     }
 
      .nav-link {
           gap: 0;

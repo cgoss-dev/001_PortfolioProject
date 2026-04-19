@@ -1,4 +1,4 @@
-// NOTE: UI STATE / MENU / OVERLAY / STARTUP
+// NOTE: UI MODE / MENU / OVERLAY / STARTUP
 // Game entry file loaded by page.
 //
 // Owned here:
