@@ -29,6 +29,9 @@ export const player = {
      speed: 2,
      radius: 30,
      
+     baseSize: 54,
+     baseRadius: 30,
+
      // Temporary face-expression timer.
      // Example: sparkle pickup changes the face briefly, then it returns.
      sparkleFaceTimer: 0,

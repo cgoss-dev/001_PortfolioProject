@@ -72,7 +72,8 @@ import {
      drawPlayer,
      drawSparkles,
      drawObstacles,
-     drawCollisionBursts
+     drawCollisionBursts,
+     getCurrentLevelNumber
 } from "./entities.js";
 
 // UI CONSTANTS
@@ -867,17 +868,36 @@ function drawScore(theme) {
           return;
      }
 
-     const { colors, sizes, fonts } = theme;
+     const { colors, sizes, fonts, glow } = theme;
      const formattedScore = String(sparkleScore).padStart(3, "0");
+     const currentLevel = Math.max(1, Math.min(5, getCurrentLevelNumber()));
+
+     // REVIEW - LEVEL STARS
+     // Filled stars show unlocked levels.
+     // Empty stars show remaining level slots up to 5.
+     let starRow = "";
+
+     for (let i = 1; i <= 5; i += 1) {
+          starRow += (i <= currentLevel) ? "\u2605\uFE0E" : "\u2606\uFE0E";
+     }
 
      miniGameCtx.save();
-     miniGameCtx.font = `${sizes.scoreFont}px ${fonts.display}`;
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "top";
      miniGameCtx.fillStyle = colors.white;
-     miniGameCtx.shadowColor = colors.white;
-     miniGameCtx.shadowBlur = 10;
-     miniGameCtx.fillText(formattedScore, sizes.scoreX, sizes.scoreY);
+     miniGameCtx.shadowColor = colors.scoreGlow;
+     miniGameCtx.shadowBlur = glow.uiSoftGlow;
+
+     // STAR ROW
+     // This sits above the score, similar to how hearts are grouped in rows.
+     miniGameCtx.font = `${Math.max(18, sizes.scoreFont * 0.7)}px ${fonts.symbol}`;
+     miniGameCtx.fillText(starRow, sizes.scoreX, Math.max(2, sizes.scoreY - 2));
+
+     // SCORE ROW
+     // Score is pushed down a bit so the stars have their own line above it.
+     miniGameCtx.font = `${sizes.scoreFont}px ${fonts.display}`;
+     miniGameCtx.fillText(formattedScore, sizes.scoreX, sizes.scoreY + 20);
+
      miniGameCtx.restore();
 }
 

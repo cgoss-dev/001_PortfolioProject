@@ -89,6 +89,12 @@ export const playerBaseHealth = 3;
 export const playerBaseSpeed = 3;
 export const playerSpeedPerHeart = 1; // Adjust for if it's 5 hearts during testing or 10 hearts during final.
 
+// NOTE: PLAYER BASE SIZE
+// These are the player's normal visual/collision values.
+// We keep them separate so level-based scaling can always return to the original size cleanly.
+export const playerBaseSize = 54;
+export const playerBaseRadius = 30;
+
 // ==================================================
 // SHARED VISUAL HELPERS
 // Pull visual values from root helpers when possible.
@@ -227,10 +233,38 @@ export function getCurrentLevelData() {
      };
 }
 
-// NOTE: LEVEL NUMBER HELPER
+// LEVEL NUMBER HELPER
 // Handy if you want to draw "LVL 3" in the HUD later.
 export function getCurrentLevelNumber() {
      return getCurrentLevelData().level;
+}
+
+// NOTE: PLAYER LEVEL SCALE
+// Level 5 makes the player 50% larger.
+// This affects BOTH the drawn icon size and the collision radius.
+export function getPlayerLevelScale() {
+     const level = getCurrentLevelNumber();
+
+     if (level >= 5) {
+          return 1.25;
+     }
+
+     return 1;
+}
+
+// APPLY PLAYER LEVEL SCALE
+// This keeps size/radius changes centralized instead of scattering them through draw/collision code.
+// Newbie tip:
+// - player.size controls how big the emoji LOOKS
+// - player.radius controls how big the hitbox/collision area IS
+export function applyPlayerLevelScale() {
+     const levelScale = getPlayerLevelScale();
+
+     player.size = playerBaseSize * levelScale;
+     player.radius = playerBaseRadius * levelScale;
+
+     // If the player grows near a wall, keep them safely inside the canvas.
+     clampPlayerToCanvas();
 }
 
 // ==================================================
@@ -240,6 +274,8 @@ export function getCurrentLevelNumber() {
 export function resetPlayerPosition() {
      player.x = miniGameWidth / 2;
      player.y = miniGameHeight / 2;
+     player.size = playerBaseSize;
+     player.radius = playerBaseRadius;
      player.sparkleFaceTimer = 0;
      player.hitScale = 1;
      player.lowHealthPulseTime = 0;
@@ -319,6 +355,10 @@ export function updatePlayer() {
 }
 
 export function updatePlayerFaceState() {
+     // NOTE: LEVEL SIZE SHOULD STILL APPLY WHILE PAUSED
+     // Pause changes the face to 😐, but size/radius still reflect current level.
+     applyPlayerLevelScale();
+
      // When paused, always show neutral face.
      if (gamePaused) {
           player.char = playerFaces.neutral;
@@ -458,7 +498,7 @@ export function drawSparkles() {
      miniGameCtx.textAlign = "center";
      miniGameCtx.textBaseline = "middle";
 
-     for (let i = 0; i < sparkles.length; i += 1) {
+     for (let i = sparkles.length - 1; i >= 0; i -= 1) {
           const sparkle = sparkles[i];
 
           miniGameCtx.save();
@@ -569,7 +609,7 @@ export function drawObstacles() {
      miniGameCtx.textAlign = "center";
      miniGameCtx.textBaseline = "middle";
 
-     for (let i = 0; i < obstacles.length; i += 1) {
+     for (let i = obstacles.length - 1; i >= 0; i -= 1) {
           const obstacle = obstacles[i];
 
           miniGameCtx.save();
@@ -642,7 +682,7 @@ export function drawCollisionBursts() {
      miniGameCtx.textAlign = "center";
      miniGameCtx.textBaseline = "middle";
 
-     for (let i = 0; i < collisionBursts.length; i += 1) {
+     for (let i = collisionBursts.length - 1; i >= 0; i -= 1) {
           const burst = collisionBursts[i];
           const lifeRatio = burst.life / burst.maxLife;
           const sizeMultiplier = 0.7 + ((1 - lifeRatio) * 0.6);
