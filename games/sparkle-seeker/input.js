@@ -1,5 +1,5 @@
 // NOTE: INPUT SYSTEM
-// Handles keyboard, pointer, touch joystick, touch buttons, menu clicks, and resize binding.
+// Handles keyboard, pointer/touch movement, touch buttons, menu clicks, and resize binding.
 
 import {
      miniGameCanvas,
@@ -23,7 +23,8 @@ import {
      setGamePaused,
      setGameMenuOpen,
      setGameMenuView,
-
+     setTouchMoveTarget,
+     clearTouchMoveTarget,
      setLeftButtonPressed,
      setLeftButtonPointerId,
      setRightButtonPressed,
@@ -217,6 +218,9 @@ function resetCanvasCursor() {
      miniGameCanvas.style.cursor = "default";
 }
 
+// NOTE: FULL-CANVAS TOUCH MOVEMENT
+// This is the part that actually sends pointer position into shared game state.
+// Without this setter call, touch/mouse movement will look dead even though events are firing.
 function updateTouchMovementFromPointer(event) {
      const pos = getCanvasPointerPosition(event);
 
@@ -228,12 +232,14 @@ function updateTouchMovementFromPointer(event) {
      const clampedX = Math.max(0, Math.min(1, nx));
      const clampedY = Math.max(0, Math.min(1, ny));
 
+     setTouchMoveTarget(clampedX, clampedY, event.pointerId);
 }
 
+// NOTE: TOUCH RELEASE
+// Releasing clears the movement target for the pointer that was controlling movement.
 function clearTouchMovement(pointerId) {
-     // Only clear movement if this pointer owns movement.
      clearTouchMoveTarget(pointerId);
-     
+
      if (miniGameCanvas?.hasPointerCapture(pointerId)) {
           miniGameCanvas.releasePointerCapture(pointerId);
      }
@@ -278,6 +284,10 @@ export function resetTouchControls() {
           rightButton.isPressed = false;
           rightButton.pointerId = null;
      }
+
+     // NOTE: MOVEMENT RESET
+     // When a round/menu/welcome reset happens, touch movement should stop too.
+     clearTouchMoveTarget(touchControls.touchMoveTarget.pointerId);
 
      resetCanvasCursor();
 
@@ -504,9 +514,6 @@ function clearButtons(pointerId) {
      }
 }
 
-
-
-
 // POINTER INPUT
 
 function onPointerDown(event) {
@@ -579,9 +586,6 @@ function onPointerDown(event) {
      event.preventDefault();
 }
 
-
-
-
 function onPointerMove(event) {
      const pos = getCanvasPointerPosition(event);
 
@@ -593,9 +597,16 @@ function onPointerMove(event) {
           return;
      }
 
-     // Only active pointer can move joystick.
-     updateTouchMovementFromPointer(event);
-     event.preventDefault();
+     // NOTE: ACTIVE POINTER CHECK
+     // Only the pointer that started movement is allowed to keep updating it.
+     // This matters more on touchscreens, where multiple fingers can exist at once.
+     if (
+          touchControls.touchMoveTarget.isActive &&
+          touchControls.touchMoveTarget.pointerId === event.pointerId
+     ) {
+          updateTouchMovementFromPointer(event);
+          event.preventDefault();
+     }
 }
 
 function onPointerUp(event) {

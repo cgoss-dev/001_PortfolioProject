@@ -247,7 +247,7 @@ export function updatePlayer() {
           const tdy = targetY - player.y;
           const distance = Math.hypot(tdx, tdy);
 
-          if (distance > 4) { // REVIEW - tighten if want finer control over player.
+          if (distance > 4) { // REVIEW - FINETUNE TOUCH
                const dirX = tdx / distance;
                const dirY = tdy / distance;
 
