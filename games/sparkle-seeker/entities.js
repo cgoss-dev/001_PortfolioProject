@@ -49,8 +49,8 @@ const siteTheme = window.SiteTheme;
 // These are game rules, so they belong in JS.
 // ==================================================
 
-export const sparkleSpawnDelay = 40;
-export const sparkleSpawnCap = 15;
+export const sparkleSpawnDelay = 30;
+export const sparkleSpawnCap = 20;
 
 export const obstacleSpawnDelay = 60;
 
@@ -92,7 +92,7 @@ export const playerSpeedPerHeart = 1; // Adjust for if it's 5 hearts during test
 // NOTE: PLAYER BASE SIZE
 // These are the player's normal visual/collision values.
 // We keep them separate so level-based scaling can always return to the original size cleanly.
-export const playerBaseSize = 54;
+export const playerBaseSize = 64;
 export const playerBaseRadius = 30;
 
 // ==================================================
