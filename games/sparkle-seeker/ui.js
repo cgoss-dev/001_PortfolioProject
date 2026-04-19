@@ -775,12 +775,19 @@ export function updateGame() {
           return;
      }
 
-     if (!gameStarted || gamePaused || gameMenuOpen || gameOver || gameWon) {
+     if (!gameStarted) {
+          return;
+     }
+
+     // NOTE: FACE STATE SHOULD STILL UPDATE WHILE PAUSED
+     // This lets pause force the neutral face even though gameplay itself is frozen.
+     updatePlayerFaceState();
+
+     if (gamePaused || gameMenuOpen || gameOver || gameWon) {
           return;
      }
 
      updatePlayer();
-     updatePlayerFaceState();
 
      updateSparkleSpawns();
      updateObstacleSpawns();
@@ -805,7 +812,7 @@ export function updateGame() {
      }
 
      // REVIEW: WIN CONDITIONS
-     if (sparkleScore >= 100) {
+     if (sparkleScore >= 1000) {
           setGameWon(true);
           setGameOver(false);
           setGamePaused(true);
@@ -955,10 +962,9 @@ export function drawTouchButtons(theme) {
 function getInstructionLines() {
      return [
           "Collect sparkles, avoid obstacles.",
-          "Move with WASD/arrows or touchscreen.",
+          "Use WASD/arrows or pointer/touch.",
           "Speed scales with health.",
           "Max health = 2x points.",
-          "100 points to win."
      ];
 }
 

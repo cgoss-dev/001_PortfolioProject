@@ -309,12 +309,12 @@ export function updatePauseButtonState() {
 // 2. gameMenuView = which screen inside menu is showing
 // If only menu is closed, old screen will be remembered and reopened next time.
 // This helper makes sure every close resets back to main menu.
-function closeMenuAndResetView() {
+function closeMenuAndResetView(shouldUnpause = true) {
      setGameMenuOpen(false);
      setGameMenuView("main");
      resetCanvasCursor();
 
-     // NOTE: RETURN TO WELCOME BEFORE FIRST GAME
+     // RETURN TO WELCOME BEFORE FIRST GAME
      // If the player has not started a round yet, closing the menu should
      // go back to the welcome screen instead of leaving the game in a
      // "not started but visible" state.
@@ -323,10 +323,6 @@ function closeMenuAndResetView() {
           return;
      }
 
-     // If player is mid-game and not in a win/lose state, closing menu should also unpause gameplay.
-     if (gameStarted && !gameOver && !gameWon) {
-          setGamePaused(false);
-     }
 }
 
 // ROUND + MENU ACTIONS

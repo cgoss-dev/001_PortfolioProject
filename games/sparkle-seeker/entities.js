@@ -16,6 +16,8 @@ import {
      player,
      keys,
      touchControls,
+
+     gamePaused,
      playerHealth,
      maxPlayerHealth,
      sparkleScore,
@@ -50,8 +52,22 @@ const siteTheme = window.SiteTheme;
 export const sparkleSpawnDelay = 40;
 export const sparkleSpawnCap = 15;
 
-export const obstacleSpawnDelay = 90;
-export const obstacleSpawnCap = 3; // Increase cap on lvlup.
+export const obstacleSpawnDelay = 60;
+
+// LEVEL RULES
+// Score controls the current level here.
+// Each level sets the obstacle cap that the spawner is allowed to reach.
+// Keeping this in one place makes balancing much easier later.
+export const levelRules = [
+     { level: 1, minScore: 0, maxScore: 49, obstacleSpawnCap: 3 },
+     { level: 2, minScore: 50, maxScore: 149, obstacleSpawnCap: 3 },
+     { level: 3, minScore: 150, maxScore: 249, obstacleSpawnCap: 5 },
+     { level: 4, minScore: 250, maxScore: 449, obstacleSpawnCap: 7 },
+     { level: 5, minScore: 450, maxScore: 999, obstacleSpawnCap: 10 }
+];
+
+// WIN SCORE: 1000+ ends the run in a win state.
+export const winScore = 1000;
 
 export const collisionBurstParticleCount = 15;
 
@@ -60,7 +76,8 @@ export const collisionBurstParticleCount = 15;
 // ==================================================
 
 export const playerFaces = {
-     neutral: "🙂",
+     neutral: "😐",
+     smile: "🙂",
      sparkle: "😁",
      obstacle: "😫",
      maxHealth: "🤩",
@@ -150,7 +167,7 @@ export function getDefaultPlayerFace() {
      if (playerHealth <= 0) return playerFaces.dead;
      if (playerHealth === maxPlayerHealth) return playerFaces.maxHealth;
      if (playerHealth <= 2) return playerFaces.lowHealth;
-     return playerFaces.neutral;
+     return playerFaces.smile;
 }
 
 export function refreshPlayerFaceFromHealth() {
@@ -186,6 +203,34 @@ export function applyTemporaryPlayerFace(face, duration) {
 // Centralized collision scale effect for both sparkles and obstacles.
 export function triggerPlayerFacePop(scale = 1.25) {
      player.hitScale = Math.max(player.hitScale, scale);
+}
+
+// NOTE: LEVEL LOOKUP
+// This helper reads the current score and returns the matching level rule.
+// The obstacle spawner uses this so it does not need hardcoded score checks.
+export function getCurrentLevelData() {
+     for (let i = 0; i < levelRules.length; i += 1) {
+          const rule = levelRules[i];
+
+          if (sparkleScore >= rule.minScore && sparkleScore <= rule.maxScore) {
+               return rule;
+          }
+     }
+
+     // Anything at or above win score is treated like the final level band.
+     // This keeps the function safe even if it gets called right before win cleanup happens.
+     return {
+          level: 5,
+          minScore: 450,
+          maxScore: winScore - 1,
+          obstacleSpawnCap: 10
+     };
+}
+
+// NOTE: LEVEL NUMBER HELPER
+// Handy if you want to draw "LVL 3" in the HUD later.
+export function getCurrentLevelNumber() {
+     return getCurrentLevelData().level;
 }
 
 // ==================================================
@@ -274,6 +319,14 @@ export function updatePlayer() {
 }
 
 export function updatePlayerFaceState() {
+     // When paused, always show neutral face.
+     if (gamePaused) {
+          player.char = playerFaces.neutral;
+          player.hitScale = 1;
+          return;
+     }
+
+     // TEMPORARY FACE TIMER (sparkle / obstacle reactions)
      if (player.sparkleFaceTimer > 0) {
           player.sparkleFaceTimer -= 1;
      }
@@ -282,7 +335,7 @@ export function updatePlayerFaceState() {
           refreshPlayerFaceFromHealth();
      }
 
-     // HIT SCALE RECOVERY - Brief enlarge effect eases back to normal after collision.
+     // HIT SCALE RECOVERY
      if (player.hitScale > 1) {
           player.hitScale += (1 - player.hitScale) * 0.18;
 
@@ -308,7 +361,7 @@ export function drawPlayer() {
 
      let playerYOffset = 0;
 
-     if (player.char === playerFaces.neutral) {
+     if (player.char === playerFaces.smile) {
           playerYOffset = 3;
      }
 
@@ -458,12 +511,15 @@ export function updateObstacleSpawns() {
      const nextObstacleSpawnTimer = obstacleSpawnTimer + 1;
      setObstacleSpawnTimer(nextObstacleSpawnTimer);
 
+     const levelData = getCurrentLevelData();
+
      // LIGHT DIFFICULTY SCALING
      // As score rises, obstacles arrive a little sooner.
+     // This affects timing, while levelData.obstacleSpawnCap affects crowd size.
      const difficultyBoost = Math.min(24, sparkleScore * 0.4);
 
      if (nextObstacleSpawnTimer >= obstacleSpawnDelay - difficultyBoost) {
-          if (obstacles.length < obstacleSpawnCap) {
+          if (obstacles.length < levelData.obstacleSpawnCap) {
                createObstacle();
           }
 
