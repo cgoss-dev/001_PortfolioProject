@@ -171,6 +171,7 @@
 /* Base document sizing is kept together here for easier scanning. */
 html {
      font-size: 16px;
+     overflow-x: hidden;
 }
 
 body {
@@ -182,11 +183,13 @@ body {
      color: var(--text-color);
      font-family: var(--font-body);
      position: relative;
-     overflow: hidden;
+     overflow-x: hidden;
+     overflow-y: auto;
 }
 
 .body-ody {
      width: 100%;
+     max-width: 100%;
      min-height: 100dvh;
      margin: 0 auto;
      padding: var(--page-padding-y) var(--page-padding-x);
@@ -194,7 +197,7 @@ body {
      z-index: var(--ui-layer-z);
      display: grid;
      grid-template-rows: auto 1fr;
-     overflow: hidden;
+     overflow: visible;
 }
 
 /* BACKGROUND SPARKLE CANVAS */
@@ -213,8 +216,6 @@ body {
 /* NOTE: HEADER */
 
 header {
-     /* border: red, solid, 5px; */
-
      width: 100%;
      max-width: 100%;
      margin: 0 auto;
@@ -225,15 +226,16 @@ header {
      display: flex;
      flex-direction: column;
      justify-content: center;
-
-     /* Header spacing can be tied to current text size here so it shrinks more gracefully on smaller screens. */
      gap: 0;
+     min-width: 0;
 }
 
 .site-header {
      width: 100%;
      max-width: 1000px;
+     margin: 0 auto;
      z-index: var(--menu-layer-z);
+     min-width: 0;
 }
 
 .header-top {
@@ -244,24 +246,17 @@ header {
      justify-content: center;
      gap: 1rem;
      min-width: 0;
-
-     /* A smaller em-based bottom space can be used here so row spacing follows marquee size. */
      padding-bottom: 0.25em;
 }
 
 h1 {
-     /* border: yellow, solid, 5px; */
-
      margin: 0;
      padding: 0;
      text-align: center;
      line-height: 1;
      width: 100%;
-     flex: 0 0 auto;
+     flex: 0 1 auto;
      min-width: 0;
-
-     /* Title area can be allowed to shrink inside shared top row. */
-     /* Centering is reinforced here so resize stays clean. */
      display: flex;
      align-items: center;
      justify-content: center;
@@ -355,16 +350,10 @@ h1 {
      list-style: none;
      margin: 0 auto;
      min-width: 0;
-     overflow: hidden;
+     overflow: visible;
      opacity: 1;
      transform: none;
      pointer-events: auto;
-
-     /* border: var(--canvasboard-border); */
-     /* border-radius: 999px; */
-     /* background: rgba(0, 0, 0, 0.72); */
-     /* box-shadow: var(--glow-canvasboard); */
-
      transition:
           opacity 0.25s ease-in-out,
           transform 0.25s ease-in-out;
@@ -385,25 +374,22 @@ h1 {
 
 .nav-list {
      display: flex;
-     justify-content: space-between;
+     justify-content: center;
      align-items: stretch;
      gap: var(--nav-pill-gap);
      width: 100%;
-
-     /* Wrapping is blocked here so a single row is kept. */
-     flex-wrap: nowrap;
+     max-width: 100%;
+     flex-wrap: wrap;
+     min-width: 0;
 }
 
 .nav-menu li {
      margin: 0;
      padding: 0;
      min-width: 0;
-     flex: 1 1 0;
+     flex: 1 1 9rem;
      font-size: var(--text-size-small);
      text-align: center;
-
-     /* Equal-width slots are used here so icon-only mode
-     keeps same overall spread instead of bunching up. */
 }
 
 .nav-menu a {
@@ -417,19 +403,15 @@ h1 {
      min-height: 100%;
      width: 100%;
      max-width: 100%;
+     min-width: 0;
      padding: var(--nav-pill-padding-y) var(--nav-pill-padding-x);
      color: var(--text-color-medium);
      background: transparent;
      border-radius: 999px;
      cursor: pointer;
      text-align: center;
-     white-space: nowrap;
-
-     /* Gap is allowed to shrink here so a single row is kept. */
+     white-space: normal;
      gap: clamp(0rem, 0.5vw, 0.7rem);
-
-     /* NOTE: SIMPLE LINK HOVER RESPONSE
-     Color and glow are eased here. Scale motion is intentionally omitted here. */
      transition:
           background-color 0.2s ease-in-out,
           color 0.2s ease-in-out,
@@ -481,6 +463,7 @@ h1 {
 .nav-desc {
      display: inline-block;
      min-width: 0;
+     max-width: 100%;
 }
 
 .nav-label {
@@ -504,56 +487,48 @@ h1 {
 }
 
 /* NOTE: HERO LAYOUT */
-/* Marquee stays centered inside remaining page space. */
 
 .main-squeeze {
      width: 100%;
      max-width: 100%;
+     min-width: 0;
      margin: 0 auto;
      flex: 1;
-     /* min-height: 20rem; */
      display: flex;
      flex-direction: column;
-     /* background-color: #04a5e5; */
-
-     /* full height below header */
 }
 
 .hero-stack {
-     width: calc(100% + (var(--page-padding-x) * 2));
-     max-width: calc(100% + (var(--page-padding-x) * 2));
-     margin: 0 calc(var(--page-padding-x) * -1);
+     width: 100%;
+     max-width: 100%;
+     margin: 0 auto;
      flex: 1;
      min-height: 0;
+     min-width: 0;
      position: relative;
      display: flex;
      flex-direction: column;
      justify-content: center;
      align-items: center;
      gap: 0;
-     padding-inline: 0;
-     padding-bottom: calc(1rem + var(--page-padding-y));
-     padding-left: 0;
-     padding-right: 0;
-
-     /* vertical + horizontal centering */
-     /* Extra bottom room is reserved here so tagline can sit near lower edge without overlap. */
-     /* Full viewport room is reclaimed here.
-     Earlier page padding was causing early shrink. */
+     padding: 0 0 calc(1rem + var(--page-padding-y));
 }
 
 .hero-stack h1 {
      margin: 0;
      width: 100%;
+     max-width: 100%;
+     min-width: 0;
      display: flex;
      justify-content: center;
 }
 
 .hero-blurb {
-     width: calc(100% - (var(--page-padding-x) * 2));
-     max-width: calc(100vw - (var(--page-padding-x) * 2));
+     width: 100%;
+     max-width: 100%;
      flex: 0 0 auto;
      margin: 0 auto;
+     padding-inline: var(--page-padding-x);
      display: flex;
      align-items: center;
      justify-content: center;
@@ -566,17 +541,18 @@ h1 {
 
  /* NOTE: MARQUEE */
 
-.marquee {
-     /* border: blue, solid, 5px; */
+/* NOTE: MARQUEE */
 
+.marquee {
      display: inline-flex;
      flex-direction: column;
      align-items: center;
      justify-content: center;
-     width: calc(100% - (var(--page-padding-x) * 2));
-     max-width: calc(100vw - (var(--page-padding-x) * 2));
+     width: 100%;
+     max-width: 100%;
+     min-width: 0;
      margin: 0 auto;
-     padding: 0;
+     padding: 0 var(--page-padding-x);
      text-align: center;
      color: var(--text-color-marquee);
      text-decoration: none;
@@ -584,27 +560,21 @@ h1 {
      font-size: var(--text-size-marquee);
      line-height: 0.95;
      white-space: normal;
-     overflow: visible;
+     overflow-wrap: anywhere;
      transform: translateY(-10%);
-
-     /* Full available width is used here so resize can keep happening.
-     fit-content was causing an early stop point before. */
-     /* "rem" is relative to base html font size (16px), this does NOT resize.
-          "em" is relative to parent element's font size, this DOES resize.*/
-     /* A slightly tighter line-height is used so both rows feel evenly stacked. */
-     /* A full viewport lane is used here, minus tiny edge room.
-     Big visual feel can now be kept longer without cutoff. */
 }
 
 .marquee > span {
      display: block;
      width: 100%;
      max-width: 100%;
+     min-width: 0;
      margin: 0;
      padding: 0;
      text-align: center;
      text-shadow: var(--glow-text);
-     white-space: nowrap;
+     white-space: normal;
+     overflow-wrap: anywhere;
      transition:
           color var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style),
           text-shadow var(--text-rainbow-transition-speed) var(--text-rainbow-transition-style);
@@ -616,8 +586,6 @@ h1 {
 }
 
 /* NOTE: TAGLINE */
-/* One row is kept as long as room still exists.
-A break is only introduced at chosen split point later. */
 
 .tagline {
      width: 100%;
@@ -630,11 +598,11 @@ A break is only introduced at chosen split point later. */
      font-size: var(--text-size-tagline);
      line-height: 1;
      text-align: center;
-     white-space: nowrap;
-     overflow-wrap: normal;
+     white-space: normal;
+     overflow-wrap: anywhere;
 }
 
-/* NOTE: TAGLINE BREAK */
+/* TAGLINE BREAK */
 /* A line break is only forced on smaller widths. */
 
 .tagline-break {
@@ -645,16 +613,19 @@ A break is only introduced at chosen split point later. */
 /* NOTE: RESPONSIVE NAV MODES */
 
 /* ========================= */
-/* LG — FULL NAV (>= 60rem)  */
+/* LG >= 60rem  */
 /* ========================= */
 
 @media (min-width: 60rem) {
-
      .nav-link {
           flex-direction: column;
           gap: clamp(0rem, 0.35vw, 0.35rem);
           padding-top: 0.8rem;
           padding-bottom: 0.8rem;
+     }
+
+     .nav-menu li {
+          flex: 1 1 0;
      }
 
      .nav-label {
@@ -667,6 +638,7 @@ A break is only introduced at chosen split point later. */
 
      .tagline {
           white-space: nowrap;
+          overflow-wrap: normal;
           font-size: var(--text-size-tagline);
      }
 
@@ -676,14 +648,17 @@ A break is only introduced at chosen split point later. */
 }
 
 /* ========================= */
-/* MD — ICON + LABEL (40–60) */
+/* MD 40–60 */
 /* ========================= */
 
 @media (min-width: 40.0001rem) and (max-width: 59.9999rem) {
-
      .nav-link {
           flex-direction: column;
           gap: clamp(0rem, 0.5vw, 0.6rem);
+     }
+
+     .nav-menu li {
+          flex: 1 1 8rem;
      }
 
      .nav-label {
@@ -696,6 +671,7 @@ A break is only introduced at chosen split point later. */
 
      .tagline {
           white-space: nowrap;
+          overflow-wrap: normal;
           font-size: var(--text-size-tagline);
      }
 
@@ -705,22 +681,23 @@ A break is only introduced at chosen split point later. */
 }
 
 /* ========================= */
-/* SM — ICON ONLY (<= 40rem) */
+/* SM <= 40rem */
 /* ========================= */
 
 @media (min-width: 20.0001rem) and (max-width: 40rem) {
-
      .nav-link {
           gap: 0;
-          padding-inline: 0.2rem;
+          padding-inline: 0.35rem;
           flex-direction: column;
      }
 
      .nav-list {
-          justify-content: space-between;
+          justify-content: center;
      }
 
-     /* TAGLINE: break ONLY at chosen split point */
+     .nav-menu li {
+          flex: 1 1 5.5rem;
+     }
 
      .tagline {
           white-space: normal;
@@ -732,30 +709,36 @@ A break is only introduced at chosen split point later. */
           display: block;
      }
 
-     /* MARQUEE: full-width lane stays in place */
-
      .marquee {
-          width: calc(100% - (var(--page-padding-x) * 2));
-          max-width: calc(100vw - (var(--page-padding-x) * 2));
+          width: 100%;
+          max-width: 100%;
      }
 }
 
 /* ========================= */
-/* XS — ICON ONLY (<= 20rem) */
+/* XS <= 20rem */
 /* ========================= */
 
 @media (max-width: 20rem) {
-
      .nav-link {
           gap: 0;
           padding-inline: 0.2rem;
+          flex-direction: column;
      }
 
      .nav-list {
-          justify-content: space-between;
+          justify-content: center;
+          gap: clamp(0.2rem, 1vw, 0.4rem);
      }
 
-     /* TAGLINE: break ONLY at chosen split point */
+     .nav-menu li {
+          flex: 1 1 4.5rem;
+     }
+
+     .nav-icon {
+          width: clamp(2rem, 12vw, 2.4rem);
+          height: clamp(2rem, 12vw, 2.4rem);
+     }
 
      .tagline {
           white-space: normal;
@@ -767,11 +750,13 @@ A break is only introduced at chosen split point later. */
           display: block;
      }
 
-     /* MARQUEE: full-width lane stays in place */
-
      .marquee {
-          width: calc(100% - (var(--page-padding-x) * 2));
-          max-width: calc(100vw - (var(--page-padding-x) * 2));
+          width: 100%;
+          max-width: 100%;
+     }
+
+     .marquee > span {
+          white-space: normal;
      }
 }
 
