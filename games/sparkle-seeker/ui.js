@@ -261,10 +261,10 @@ function getUiTheme() {
 
                panelFill: "rgba(0, 0, 0, 0.9)",
 
-               // OUTLINE GROUP A: Menu popup outline + touch button outline + joystick knob outline.
+               // OUTLINE GROUP A: Menu popup outline + touch button outline.
                outlineStrong: getCssColor("--accent-color", "#ffffff"),
 
-               // OUTLINE GROUP B: Menu option button outline + joystick static circle outlines.
+               // OUTLINE GROUP B: Menu option button outline.
                outlineSoft: "rgba(255, 255, 255, 0.25)",
 
                buttonFill: "rgba(255, 255, 255, 0.15)", // MENU OPTIONS BUTTONS
@@ -278,9 +278,6 @@ function getUiTheme() {
 
                overlayGlow: getCssColor("--accent-color", "#ffffff"),
                scoreGlow: getCssColor("--accent-color", "#ffffff"),
-
-               joystickBase: "rgba(255, 255, 255, 0.05)",
-               joystickThumbprint: "rgba(255, 255, 255, 0.1)",
 
                heartFull: "#ffffff",
                heartGlow: "#ffffff"
@@ -839,7 +836,6 @@ export function drawGame() {
 
      drawScore(theme);
      drawHealth(theme);
-     drawTouchJoystick(theme);
      drawTouchButtons(theme);
 
      // LAYER GATE
@@ -913,61 +909,6 @@ function drawHealth(theme) {
      miniGameCtx.restore();
 }
 
-export function drawTouchJoystick(theme) {
-     if (!miniGameCtx) {
-          return;
-     }
-
-     const { colors, glow } = theme;
-     const joystick = touchControls.joystick;
-     const cx = joystick.centerX;
-     const cy = joystick.centerY;
-     const crosshairSize = joystick.baseRadius * 0.75;
-
-     miniGameCtx.save();
-     miniGameCtx.shadowColor = colors.controlGlow;
-     miniGameCtx.shadowBlur = glow.uiSoftGlow;
-
-     // JOYSTICK BASE CIRCLE
-     miniGameCtx.beginPath();
-     miniGameCtx.arc(cx, cy, joystick.baseRadius * 0.25, 0, Math.PI * 2);
-     miniGameCtx.fillStyle = colors.joystickBase;
-     miniGameCtx.fill();
-     miniGameCtx.lineWidth = 3;
-     miniGameCtx.strokeStyle = colors.outlineSoft;
-     miniGameCtx.stroke();
-
-     // JOYSTICK BASE CROSSHAIRS
-     miniGameCtx.beginPath();
-     miniGameCtx.moveTo(cx - crosshairSize, cy);
-     miniGameCtx.lineTo(cx + crosshairSize, cy);
-     miniGameCtx.moveTo(cx, cy - crosshairSize);
-     miniGameCtx.lineTo(cx, cy + crosshairSize);
-     miniGameCtx.lineWidth = 3;
-     miniGameCtx.strokeStyle = colors.outlineSoft;
-     miniGameCtx.stroke();
-
-     // JOYSTICK KNOB 
-     // FIXME: GIVE KNOB CROSSHAIRS
-     miniGameCtx.shadowColor = colors.controlGlow;
-     miniGameCtx.shadowBlur = glow.uiMediumGlow;
-     miniGameCtx.beginPath();
-     miniGameCtx.arc(
-          cx + joystick.knobX,
-          cy + joystick.knobY,
-          joystick.thumbRadius * 1.5,
-          0,
-          Math.PI * 2
-     );
-     miniGameCtx.fillStyle = colors.joystickThumbprint;
-     miniGameCtx.fill();
-     miniGameCtx.lineWidth = 3;
-     miniGameCtx.strokeStyle = colors.outlineStrong;
-     miniGameCtx.stroke();
-
-     miniGameCtx.restore();
-}
-
 // BUTTON LABELS
 export function drawTouchButtons(theme) {
      if (!miniGameCtx) {
@@ -1014,7 +955,7 @@ export function drawTouchButtons(theme) {
 function getInstructionLines() {
      return [
           "Collect sparkles, avoid obstacles.",
-          "Move with arrows, WASD, or joystick.",
+          "Move with WASD/arrows or touchscreen.",
           "Speed scales with health.",
           "Max health = 2x points.",
           "100 points to win."

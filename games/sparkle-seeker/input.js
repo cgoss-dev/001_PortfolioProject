@@ -23,10 +23,7 @@ import {
      setGamePaused,
      setGameMenuOpen,
      setGameMenuView,
-     setJoystickActive,
-     setJoystickPointerId,
-     setJoystickKnobOffset,
-     setJoystickInput,
+
      setLeftButtonPressed,
      setLeftButtonPointerId,
      setRightButtonPressed,
@@ -50,9 +47,6 @@ import {
 // NOTE: EDGE CONTROLS
 // Fixed edge spacing is defined here. Resize drift is prevented by anchoring from canvas edges here.
 const touchControlLayout = {
-     joystickEdgePaddingX: 2,
-     joystickEdgePaddingY: 2,
-
      buttonEdgePaddingX: 5,
      buttonEdgePaddingY: 5,
 
@@ -60,7 +54,6 @@ const touchControlLayout = {
 
      // VISUAL EDGE BUFFER
      // Extra room is added here because drawn circles extend past raw rect size.
-     joystickVisualScale: 1,
      buttonVisualScale: 1.25
 };
 
@@ -211,16 +204,6 @@ function updateCanvasCursor(x, y) {
           cursor = "pointer";
      } else if (isPointInsideControlButton(x, y, touchControls.rightButton)) {
           cursor = "pointer";
-     } else if (
-          isPointInsideCircle(
-               x,
-               y,
-               touchControls.joystick.centerX,
-               touchControls.joystick.centerY,
-               touchControls.joystick.baseRadius
-          )
-     ) {
-          cursor = "pointer";
      }
 
      miniGameCanvas.style.cursor = cursor;
@@ -234,25 +217,40 @@ function resetCanvasCursor() {
      miniGameCanvas.style.cursor = "default";
 }
 
+function updateTouchMovementFromPointer(event) {
+     const pos = getCanvasPointerPosition(event);
+
+     // Normalized 0..1 target across the whole canvas.
+     const nx = miniGameWidth > 0 ? (pos.x / miniGameWidth) : 0.5;
+     const ny = miniGameHeight > 0 ? (pos.y / miniGameHeight) : 0.5;
+
+     // Clamp just to be safe.
+     const clampedX = Math.max(0, Math.min(1, nx));
+     const clampedY = Math.max(0, Math.min(1, ny));
+
+}
+
+function clearTouchMovement(pointerId) {
+     // Only clear movement if this pointer owns movement.
+     clearTouchMoveTarget(pointerId);
+     
+     if (miniGameCanvas?.hasPointerCapture(pointerId)) {
+          miniGameCanvas.releasePointerCapture(pointerId);
+     }
+}
+
 // TOUCH CONTROL LAYOUT
 
 export function updateTouchControlBounds() {
-     const joystick = touchControls.joystick;
      const leftButton = touchControls.leftButton;
      const rightButton = touchControls.rightButton;
 
-     if (!joystick || !leftButton || !rightButton) {
+     if (!leftButton || !rightButton) {
           return;
      }
 
-     const joystickEdgeRadius = joystick.baseRadius * touchControlLayout.joystickVisualScale;
      const buttonLeftRadius = (leftButton.width / 2) * touchControlLayout.buttonVisualScale;
      const buttonRightRadius = (rightButton.width / 2) * touchControlLayout.buttonVisualScale;
-
-     // JOYSTICK EDGE ANCHOR
-     // Position is measured from left and bottom canvas edges here. Same spacing is preserved during resize here.
-     joystick.centerX = touchControlLayout.joystickEdgePaddingX + joystickEdgeRadius;
-     joystick.centerY = miniGameHeight - touchControlLayout.joystickEdgePaddingY - joystickEdgeRadius;
 
      // RIGHT BUTTON EDGE ANCHOR
      // Position is measured from right and bottom canvas edges here. Same spacing is preserved during resize here.
@@ -268,16 +266,8 @@ export function updateTouchControlBounds() {
 // TOUCH RESET
 
 export function resetTouchControls() {
-     const joystick = touchControls.joystick;
      const leftButton = touchControls.leftButton;
      const rightButton = touchControls.rightButton;
-
-     if (joystick) {
-          joystick.knobX = 0;
-          joystick.knobY = 0;
-          joystick.pointerId = null;
-          joystick.isActive = false;
-     }
 
      if (leftButton) {
           leftButton.isPressed = false;
@@ -502,84 +492,6 @@ export function bindKeyboardInput() {
      setKeyboardInputBound(true);
 }
 
-// JOYSTICK MATH
-// Converts pointer position into:
-// - knob position (visual)
-// - normalized movement input (-1 to 1)
-
-function updateJoystickFromPointer(event) {
-     const joystick = touchControls.joystick;
-     const pos = getCanvasPointerPosition(event);
-
-     // Offset from joystick center
-     const dx = pos.x - joystick.centerX;
-     const dy = pos.y - joystick.centerY;
-
-     // Distance from center (how far thumb moved)
-     const distance = Math.sqrt((dx * dx) + (dy * dy));
-     const max = joystick.baseRadius;
-
-     // Clamp movement so knob never leaves base circle
-     const clamped = Math.min(distance, max);
-
-     // Convert direction into angle (smooth diagonal movement)
-     const angle = Math.atan2(dy, dx);
-
-     // Convert back into x/y using clamped distance
-     const x = Math.cos(angle) * clamped;
-     const y = Math.sin(angle) * clamped;
-
-     // Move visible knob
-     setJoystickKnobOffset(x, y);
-
-     // Normalize input (-1 to 1 range)
-     const nx = x / max;
-     const ny = y / max;
-
-     // Instead of sqrt(nx*nx + ny*ny), clamped/max can be reused.
-     const magnitude = clamped / max;
-
-     // DEADZONE
-     // Very tiny movements near center are usually accidental.
-     if (magnitude < joystick.deadZone) {
-          // SOFT CENTER
-          // Instead of snapping instantly to zero,
-          // small movement is scaled down near center.
-          const scale = magnitude / joystick.deadZone;
-          setJoystickInput(nx * scale, ny * scale);
-          return;
-     }
-
-     // SMOOTH RAMP
-     // Movement is scaled smoothly after leaving deadzone.
-     const adjustedMagnitude = (magnitude - joystick.deadZone) / (1 - joystick.deadZone);
-     const safeMagnitude = Math.max(0, Math.min(1, adjustedMagnitude));
-
-     setJoystickInput(nx * safeMagnitude, ny * safeMagnitude);
-}
-
-// JOYSTICK RESET
-// When touch ends, joystick state is fully reset.
-
-function clearJoystick(pointerId) {
-     const joystick = touchControls.joystick;
-
-     // Only pointer that started this joystick can release it.
-     if (joystick.pointerId !== pointerId) {
-          return;
-     }
-
-     setJoystickActive(false);
-     setJoystickPointerId(null);
-     setJoystickKnobOffset(0, 0);
-     setJoystickInput(0, 0);
-
-     // Release pointer capture so future touches work normally.
-     if (miniGameCanvas?.hasPointerCapture(pointerId)) {
-          miniGameCanvas.releasePointerCapture(pointerId);
-     }
-}
-
 function clearButtons(pointerId) {
      if (touchControls.leftButton.pointerId === pointerId) {
           setLeftButtonPressed(false);
@@ -592,6 +504,9 @@ function clearButtons(pointerId) {
      }
 }
 
+
+
+
 // POINTER INPUT
 
 function onPointerDown(event) {
@@ -600,7 +515,6 @@ function onPointerDown(event) {
      }
 
      const pos = getCanvasPointerPosition(event);
-     const joystick = touchControls.joystick;
      const leftButton = touchControls.leftButton;
      const rightButton = touchControls.rightButton;
 
@@ -655,27 +569,20 @@ function onPointerDown(event) {
           return;
      }
 
-     // JOYSTICK ACTIVATE
-     // Only activate if touch starts inside joystick base.
-     if (isPointInsideCircle(pos.x, pos.y, joystick.centerX, joystick.centerY, joystick.baseRadius)) {
-          setJoystickActive(true);
-          setJoystickPointerId(event.pointerId);
-
-          // Immediately update knob so it feels responsive on first touch.
-          updateJoystickFromPointer(event);
-
-          // Lock this pointer to canvas so control is not lost
-          // if finger drifts slightly outside.
-          if (miniGameCanvas?.setPointerCapture) {
-               miniGameCanvas.setPointerCapture(event.pointerId);
-          }
-
-          event.preventDefault();
+     // FULL-CANVAS TOUCH MOVE
+     // Any touch that is not on the pause/menu buttons is used for movement.
+     if (miniGameCanvas?.setPointerCapture) {
+          miniGameCanvas.setPointerCapture(event.pointerId);
      }
+
+     updateTouchMovementFromPointer(event);
+     event.preventDefault();
 }
 
+
+
+
 function onPointerMove(event) {
-     const joystick = touchControls.joystick;
      const pos = getCanvasPointerPosition(event);
 
      updateCanvasCursor(pos.x, pos.y);
@@ -687,10 +594,8 @@ function onPointerMove(event) {
      }
 
      // Only active pointer can move joystick.
-     if (joystick.isActive && joystick.pointerId === event.pointerId) {
-          updateJoystickFromPointer(event);
-          event.preventDefault();
-     }
+     updateTouchMovementFromPointer(event);
+     event.preventDefault();
 }
 
 function onPointerUp(event) {
@@ -705,7 +610,7 @@ function onPointerUp(event) {
      }
 
      // Reset any control that belongs to this pointer.
-     clearJoystick(event.pointerId);
+     clearTouchMovement(event.pointerId);
      clearButtons(event.pointerId);
 
      if (miniGameCanvas) {

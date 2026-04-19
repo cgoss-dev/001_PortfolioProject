@@ -70,7 +70,7 @@ export const playerFaces = {
 
 export const playerBaseHealth = 3;
 export const playerBaseSpeed = 2;
-export const playerSpeedPerHeart = 0.5;
+export const playerSpeedPerHeart = 1; // Adjust for if it's 5 hearts during testing or 10 hearts during final.
 
 // ==================================================
 // SHARED VISUAL HELPERS
@@ -227,14 +227,31 @@ export function updatePlayer() {
           dx += 1;
      }
 
-     // If keyboard is not moving the player, use joystick input instead.
-     if (dx === 0 && dy === 0) {
-          dx = touchControls.joystick.inputX;
-          dy = touchControls.joystick.inputY;
+     // ==================================================
+     // TOUCH INPUT (FULL CANVAS MOVEMENT)
+     // ==================================================
+
+     if (touchControls.touchMoveTarget.isActive) {
+          const targetX = touchControls.touchMoveTarget.x * miniGameWidth;
+          const targetY = touchControls.touchMoveTarget.y * miniGameHeight;
+
+          const tdx = targetX - player.x;
+          const tdy = targetY - player.y;
+          const distance = Math.hypot(tdx, tdy);
+
+          if (distance > 4) { // REVIEW - tighten if want finer control over player.
+               const dirX = tdx / distance;
+               const dirY = tdy / distance;
+
+               dx += dirX;
+               dy += dirY;
+          }
      }
 
-     // NORMALIZE DIAGONALS
-     // Without this, diagonal movement is faster than straight movement.
+     // ==================================================
+     // NORMALIZE COMBINED INPUT (KEYBOARD + TOUCH)
+     // ==================================================
+
      const magnitude = Math.hypot(dx, dy);
 
      if (magnitude > 0) {

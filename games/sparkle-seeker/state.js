@@ -104,18 +104,11 @@ export const gameMenuUi = {
 // ==================================================
 
 export const touchControls = {
-     joystick: {
-          centerX: 0,
-          centerY: 0,
-          baseRadius: 64,
-          thumbRadius: 32,
-          knobX: 0,
-          knobY: 0,
-          isActive: false,
+     touchMoveTarget: {
+          x: 0.5,
+          y: 0.5,
           pointerId: null,
-          inputX: 0,
-          inputY: 0,
-          deadZone: 0.18
+          isActive: false
      },
 
      leftButton: {
@@ -138,6 +131,23 @@ export const touchControls = {
           label: "\u2630\uFE0E"
      }
 };
+
+// REVIEW - TOUCHSCREEN FUNCTIONALITY
+export function setTouchMoveTarget(x, y, pointerId) {
+     touchControls.touchMoveTarget.x = x;
+     touchControls.touchMoveTarget.y = y;
+     touchControls.touchMoveTarget.pointerId = pointerId;
+     touchControls.touchMoveTarget.isActive = true;
+}
+
+export function clearTouchMoveTarget(pointerId) {
+     if (touchControls.touchMoveTarget.pointerId !== pointerId) {
+          return;
+     }
+
+     touchControls.touchMoveTarget.isActive = false;
+     touchControls.touchMoveTarget.pointerId = null;
+}
 
 // ==================================================
 // ONE-TIME BIND FLAGS
@@ -274,28 +284,6 @@ export function setGameOverlayTimer(value) {
 
 export function setGameOverlayDuration(value) {
      gameOverlayDuration = value;
-}
-
-// ==================================================
-// JOYSTICK SETTERS
-// ==================================================
-
-export function setJoystickActive(value) {
-     touchControls.joystick.isActive = value;
-}
-
-export function setJoystickPointerId(value) {
-     touchControls.joystick.pointerId = value;
-}
-
-export function setJoystickKnobOffset(x, y) {
-     touchControls.joystick.knobX = x;
-     touchControls.joystick.knobY = y;
-}
-
-export function setJoystickInput(x, y) {
-     touchControls.joystick.inputX = x;
-     touchControls.joystick.inputY = y;
 }
 
 // ==================================================
