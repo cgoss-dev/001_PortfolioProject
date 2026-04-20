@@ -144,9 +144,10 @@ function getUiTheme() {
           },
 
           sizes: {
-               scoreFont: 24,
+               scoreFont: getCssPixelSize("--text-size-small", 8),
                scoreX: 8,
                scoreY: 8,
+               hudDetailGap: 20,
 
                heartFont: 24,
                heartGap: 15,
@@ -420,8 +421,15 @@ function drawScore(theme) {
      miniGameCtx.font = `${Math.max(18, sizes.scoreFont * 0.7)}px ${fonts.symbol}`;
      miniGameCtx.fillText(starRow, sizes.scoreX, Math.max(2, sizes.scoreY - 2));
 
+     const scoreY = sizes.scoreY + sizes.hudDetailGap;
      miniGameCtx.font = `${sizes.scoreFont}px ${fonts.display}`;
-     miniGameCtx.fillText(formattedScore, sizes.scoreX, sizes.scoreY + 20);
+
+     const scoreLabel = "Score:";
+     const scoreValue = ` ${formattedScore}`;
+     const labelWidth = miniGameCtx.measureText(scoreLabel).width;
+
+     miniGameCtx.fillText(scoreLabel, sizes.scoreX, scoreY);
+     miniGameCtx.fillText(scoreValue, sizes.scoreX + labelWidth, scoreY);
 
      miniGameCtx.restore();
 }
@@ -456,6 +464,41 @@ function drawHealth(theme) {
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
      miniGameCtx.fillText(topRow, miniGameWidth - sizes.heartXPadding, sizes.heartY);
      miniGameCtx.fillText(bottomRow, miniGameWidth - sizes.heartXPadding, sizes.heartY + sizes.heartGap);
+     miniGameCtx.restore();
+}
+
+function drawHealthStatus(theme) {
+     if (!miniGameCtx) {
+          return;
+     }
+
+     const { colors, sizes, fonts, glow } = theme;
+     let statusText = "Ok!";
+
+     if (playerHealth >= 5) {
+          statusText = "Points x2!";
+     } else if (playerHealth === 4) {
+          statusText = "Speed +1";
+     } else if (playerHealth === 2) {
+          statusText = "Speed -1";
+     } else if (playerHealth === 1) {
+          statusText = "Speed -2";
+     }
+
+     miniGameCtx.save();
+     miniGameCtx.font = `${sizes.scoreFont}px ${fonts.display}`;
+     miniGameCtx.textAlign = "right";
+     miniGameCtx.textBaseline = "top";
+     miniGameCtx.fillStyle = colors.white;
+     miniGameCtx.shadowColor = colors.heartGlow;
+     miniGameCtx.shadowBlur = glow.uiSoftGlow;
+
+     miniGameCtx.fillText(
+          statusText,
+          miniGameWidth - sizes.heartXPadding,
+          sizes.heartY + sizes.hudDetailGap
+     );
+
      miniGameCtx.restore();
 }
 
@@ -555,7 +598,7 @@ function drawMenuOverlay(theme) {
           const titleY = Math.max(28, miniGameHeight * 0.12);
 
           miniGameCtx.font = `400 ${sizes.menuSmallFont}px ${fonts.body}`;
-          miniGameCtx.fillText("", miniGameWidth / 2, titleY); // Just in case I want title text on the Options menu.
+          miniGameCtx.fillText("", miniGameWidth / 2, titleY);
 
           drawMenuButton(
                gameMenuUi.obstaclesToggleButton,
@@ -743,7 +786,6 @@ function drawPausedOverlay(theme) {
 
      miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
-
 
      const pausedUi = getGamePausedUi();
 
@@ -946,6 +988,7 @@ export function drawGame() {
 
           drawScore(theme);
           drawHealth(theme);
+          drawHealthStatus(theme);
 
           if (!gamePaused && !gameMenuOpen && !gameOver && !gameWon) {
                drawTouchButtons(theme);
@@ -960,4 +1003,3 @@ export function drawGame() {
           drawGameStatusOverlay(theme);
      }
 }
-
