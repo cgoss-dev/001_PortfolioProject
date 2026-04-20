@@ -61,6 +61,16 @@ export let playerHealth = 3;
 export const maxPlayerHealth = 5;
 
 // ==================================================
+// OPTIONS LEVELS
+// Shared scale for Options submenu items.
+// ==================================================
+
+export const optionLevelLabels = ["Off", "Low", "Med", "High", "Max"];
+export const optionLevelValues = [0, 0.25, 0.5, 0.75, 1];
+export const maxOptionLevelIndex = optionLevelLabels.length - 1;
+export const defaultOptionLevelIndex = 1;
+
+// ==================================================
 // GAME FLOW FLAGS
 // ==================================================
 
@@ -70,13 +80,20 @@ export let gamePaused = true;
 export let gameMenuOpen = false;
 export let gameMenuView = "main";
 
+// NOTE: TRANSITIONAL BOOLEAN FLAGS
+// These stay for compatibility while the rest of the files are updated.
 export let musicEnabled = true;
 export let soundEffectsEnabled = true;
-
-// NOTE: DIFFICULTY / CUSTOM TOGGLES
-// Keeping these in shared state lets UI + gameplay read the same values.
-export let difficultyIndex = 1;
 export let obstaclesEnabled = true;
+
+// NOTE: NEW OPTIONS LEVEL STATE
+// These persist across rounds and only change when the player changes them.
+export let musicLevel = defaultOptionLevelIndex;
+export let soundEffectsLevel = defaultOptionLevelIndex;
+export let obstaclesLevel = defaultOptionLevelIndex;
+
+// Old difficulty model can stay for now while Options is being rebuilt.
+export let difficultyIndex = 1;
 
 export let gameOver = false;
 export let gameWon = false;
@@ -99,11 +116,24 @@ export let gameOverlayDuration = 0;
 
 export const gameMenuUi = {
      panel: { x: 0, y: 0, width: 0, height: 0 },
+
      newGameButton: { x: 0, y: 0, width: 0, height: 0 },
      instructionsButton: { x: 0, y: 0, width: 0, height: 0 },
+
+     // Transitional: keep difficultyButton for current code until ui files are updated.
      difficultyButton: { x: 0, y: 0, width: 0, height: 0 },
-     obstaclesToggleButton: { x: 0, y: 0, width: 0, height: 0 },
+
+     // New main-menu entry for the rebuilt submenu.
+     optionsButton: { x: 0, y: 0, width: 0, height: 0 },
+
+     // Transitional: keep soundButton for current code until ui files are updated.
      soundButton: { x: 0, y: 0, width: 0, height: 0 },
+
+     // New Options submenu controls.
+     obstaclesToggleButton: { x: 0, y: 0, width: 0, height: 0 },
+     musicToggleButton: { x: 0, y: 0, width: 0, height: 0 },
+     soundEffectsToggleButton: { x: 0, y: 0, width: 0, height: 0 },
+
      backButton: { x: 0, y: 0, width: 0, height: 0 }
 };
 
@@ -237,6 +267,40 @@ export function addPlayerHealth(value) {
 }
 
 // ==================================================
+// OPTIONS HELPERS
+// ==================================================
+
+function clampOptionLevelIndex(value) {
+     return Math.max(0, Math.min(maxOptionLevelIndex, value));
+}
+
+function syncMusicEnabledFromLevel() {
+     musicEnabled = musicLevel > 0;
+}
+
+function syncSoundEffectsEnabledFromLevel() {
+     soundEffectsEnabled = soundEffectsLevel > 0;
+}
+
+function syncObstaclesEnabledFromLevel() {
+     obstaclesEnabled = obstaclesLevel > 0;
+}
+
+export function syncOptionFlagsFromLevels() {
+     syncMusicEnabledFromLevel();
+     syncSoundEffectsEnabledFromLevel();
+     syncObstaclesEnabledFromLevel();
+}
+
+export function resetOptionsToDefaults() {
+     musicLevel = defaultOptionLevelIndex;
+     soundEffectsLevel = defaultOptionLevelIndex;
+     obstaclesLevel = defaultOptionLevelIndex;
+
+     syncOptionFlagsFromLevels();
+}
+
+// ==================================================
 // GAME FLOW SETTERS
 // ==================================================
 
@@ -256,12 +320,15 @@ export function setGameMenuView(value) {
      gameMenuView = value;
 }
 
+// Transitional boolean setters: keep old callers working by syncing level state too.
 export function setMusicEnabled(value) {
      musicEnabled = value;
+     musicLevel = value ? maxOptionLevelIndex : 0;
 }
 
 export function setSoundEffectsEnabled(value) {
      soundEffectsEnabled = value;
+     soundEffectsLevel = value ? maxOptionLevelIndex : 0;
 }
 
 export function setDifficultyIndex(value) {
@@ -270,6 +337,23 @@ export function setDifficultyIndex(value) {
 
 export function setObstaclesEnabled(value) {
      obstaclesEnabled = value;
+     obstaclesLevel = value ? maxOptionLevelIndex : 0;
+}
+
+// New level setters: these are what the rebuilt Options menu should use.
+export function setMusicLevel(value) {
+     musicLevel = clampOptionLevelIndex(value);
+     syncMusicEnabledFromLevel();
+}
+
+export function setSoundEffectsLevel(value) {
+     soundEffectsLevel = clampOptionLevelIndex(value);
+     syncSoundEffectsEnabledFromLevel();
+}
+
+export function setObstaclesLevel(value) {
+     obstaclesLevel = clampOptionLevelIndex(value);
+     syncObstaclesEnabledFromLevel();
 }
 
 export function setGameOver(value) {
@@ -338,10 +422,11 @@ export function resetGameState() {
      gameMenuOpen = false;
      gameMenuView = "main";
 
-     musicEnabled = true;
-     soundEffectsEnabled = true;
      difficultyIndex = 1;
-     obstaclesEnabled = true;
+
+     // Options are intentionally NOT reset here.
+     // They persist across rounds until the player changes them.
+     syncOptionFlagsFromLevels();
 
      gameOver = false;
      gameWon = false;

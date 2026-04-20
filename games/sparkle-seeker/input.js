@@ -40,6 +40,9 @@ import {
      cycleDifficulty,
      toggleAllSound,
      toggleObstaclesEnabled,
+     cycleObstaclesLevel,
+     cycleMusicLevel,
+     cycleSoundEffectsLevel,
      isPointInsideMenuPanel,
      isGameWelcomeActive,
      getGameWelcomeUi,
@@ -90,6 +93,11 @@ function isPointInsideCircle(px, py, cx, cy, radius) {
      const dx = px - cx;
      const dy = py - cy;
      return (dx * dx + dy * dy) <= radius * radius;
+}
+
+function setMenuViewAndRefresh(view) {
+     setGameMenuView(view);
+     updateMenuUiBounds();
 }
 
 // CONTROL HIT CIRCLE
@@ -143,18 +151,22 @@ function getMenuButtonAtPoint(x, y) {
                return gameMenuUi.instructionsButton;
           }
 
-          if (isPointInsideRect(x, y, gameMenuUi.difficultyButton)) {
-               return gameMenuUi.difficultyButton;
-          }
-
-          if (isPointInsideRect(x, y, gameMenuUi.soundButton)) {
-               return gameMenuUi.soundButton;
+          if (isPointInsideRect(x, y, gameMenuUi.optionsButton)) {
+               return gameMenuUi.optionsButton;
           }
      }
 
-     if (gameMenuView === "difficulty") {
+     if (gameMenuView === "options") {
           if (isPointInsideRect(x, y, gameMenuUi.obstaclesToggleButton)) {
                return gameMenuUi.obstaclesToggleButton;
+          }
+
+          if (isPointInsideRect(x, y, gameMenuUi.musicToggleButton)) {
+               return gameMenuUi.musicToggleButton;
+          }
+
+          if (isPointInsideRect(x, y, gameMenuUi.soundEffectsToggleButton)) {
+               return gameMenuUi.soundEffectsToggleButton;
           }
      }
 
@@ -392,7 +404,7 @@ function triggerMenuAction() {
           // If menu is open on a submenu like "instructions",
           // first menu-button press returns to main menu.
           if (gameMenuView !== "main") {
-               setGameMenuView("main");
+               setMenuViewAndRefresh("main");
                return;
           }
 
@@ -403,7 +415,7 @@ function triggerMenuAction() {
 
      // Always open fresh on main menu screen.
      setGameMenuOpen(true);
-     setGameMenuView("main");
+     setMenuViewAndRefresh("main");
 
      if (gameStarted && !gameOver && !gameWon) {
           setGamePaused(true);
@@ -432,27 +444,31 @@ function handleMenuClick(x, y) {
           }
 
           if (isPointInsideRect(x, y, gameMenuUi.instructionsButton)) {
-               setGameMenuView("instructions");
-               updateMenuUiBounds();
+               setMenuViewAndRefresh("instructions");
                return true;
           }
 
-          if (isPointInsideRect(x, y, gameMenuUi.difficultyButton)) {
-               setGameMenuView("difficulty");
-               updateMenuUiBounds();
-               return true;
-          }
-
-          if (isPointInsideRect(x, y, gameMenuUi.soundButton)) {
-               toggleAllSound();
-               updateMenuUiBounds();
+          if (isPointInsideRect(x, y, gameMenuUi.optionsButton)) {
+               setMenuViewAndRefresh("options");
                return true;
           }
      }
 
-     if (gameMenuView === "difficulty") {
+     if (gameMenuView === "options") {
           if (isPointInsideRect(x, y, gameMenuUi.obstaclesToggleButton)) {
-               toggleObstaclesEnabled();
+               cycleObstaclesLevel();
+               updateMenuUiBounds();
+               return true;
+          }
+
+          if (isPointInsideRect(x, y, gameMenuUi.musicToggleButton)) {
+               cycleMusicLevel();
+               updateMenuUiBounds();
+               return true;
+          }
+
+          if (isPointInsideRect(x, y, gameMenuUi.soundEffectsToggleButton)) {
+               cycleSoundEffectsLevel();
                updateMenuUiBounds();
                return true;
           }
@@ -460,14 +476,12 @@ function handleMenuClick(x, y) {
 
      if (isPointInsideRect(x, y, gameMenuUi.backButton)) {
           if (gameMenuView === "instructions") {
-               setGameMenuView("main");
-               updateMenuUiBounds();
+               setMenuViewAndRefresh("main");
                return true;
           }
 
-          if (gameMenuView === "difficulty") {
-               setGameMenuView("main");
-               updateMenuUiBounds();
+          if (gameMenuView === "options") {
+               setMenuViewAndRefresh("main");
                return true;
           }
 
@@ -479,7 +493,6 @@ function handleMenuClick(x, y) {
 
      return true;
 }
-
 
 // KEYBOARD INPUT
 
@@ -525,7 +538,7 @@ function onKeyDown(event) {
 
           if (key === "escape") {
                setGameMenuOpen(true);
-               setGameMenuView("main");
+               setMenuViewAndRefresh("main");
                return;
           }
      }
@@ -533,14 +546,14 @@ function onKeyDown(event) {
      if (key === "escape") {
           if (gameMenuOpen) {
                if (gameMenuView !== "main") {
-                    setGameMenuView("main");
+                    setMenuViewAndRefresh("main");
                } else {
                     closeMenuAndResetView();
                }
           } else {
                // ESC always opens to main menu, never last submenu.
                setGameMenuOpen(true);
-               setGameMenuView("main");
+               setMenuViewAndRefresh("main");
 
                if (gameStarted && !gameOver && !gameWon) {
                     setGamePaused(true);
@@ -636,19 +649,18 @@ function onPointerDown(event) {
 
           if (pausedTarget === "instructions") {
                setGameMenuOpen(true);
-               setGameMenuView("instructions");
+               setMenuViewAndRefresh("instructions");
                event.preventDefault();
                return;
           }
 
           if (pausedTarget === "menu") {
                setGameMenuOpen(true);
-               setGameMenuView("main");
+               setMenuViewAndRefresh("main");
                event.preventDefault();
                return;
           }
 
-          // While paused, clicks should not steer movement behind the marquee.
           return;
      }
 

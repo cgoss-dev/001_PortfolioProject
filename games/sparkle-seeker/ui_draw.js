@@ -23,6 +23,7 @@ import {
      miniGameCtx,
      miniGameWidth,
      miniGameHeight,
+     gameStarted,
      gamePaused,
      gameMenuOpen,
      gameMenuView,
@@ -53,8 +54,9 @@ import {
      getCurrentWelcomeActionTexts,
      getGameWelcomeAlpha,
      getInstructionLines,
-     getCurrentSoundLabel,
      getObstaclesToggleLabel,
+     getMusicToggleLabel,
+     getSoundEffectsToggleLabel,
      getGameOverlayAlpha
 } from "./ui_mode.js";
 
@@ -117,7 +119,7 @@ function getUiTheme() {
                white: getCssColor("--white", "#ffffff"),
                softWhite: getCssColor("rgba(255, 255, 255, 0.75)"),
 
-               panelFill: "rgba(0, 0, 0, 0.9)",
+               panelFill: "rgba(0, 0, 0, 0)",
 
                // OUTLINE GROUP A: Menu popup outline + touch button outline.
                outlineStrong: getCssColor("--white", "#ffffff"),
@@ -125,10 +127,10 @@ function getUiTheme() {
                // OUTLINE GROUP B: Menu option button outline.
                outlineSoft: "rgba(255, 255, 255, 0.25)",
 
-               buttonFill: "rgba(255, 255, 255, 0.15)", // MENU OPTIONS BUTTONS
+               buttonFill: "rgba(255, 255, 255, 0.15)",
                buttonText: getCssColor("--white", "#ffffff"),
 
-               controlFill: "rgba(255, 255, 255, 0.1)", // START/MENU BUTTONS
+               controlFill: "rgba(255, 255, 255, 0.1)",
                controlFillPressed: "rgba(255, 255, 255, 0.25)",
                controlText: getCssColor("--text-color", "#ffffff"),
 
@@ -154,8 +156,6 @@ function getUiTheme() {
                overlayTitleFont: 36,
                overlaySubFont: getCssPixelSize("--text-size-medium", 16),
 
-               // WELCOME TITLE SIZE
-               // Title is allowed to scale from canvas size here.
                welcomeSubFont: getCssPixelSize("--text-size-small", 8),
 
                menuButtonFont: getCssPixelSize("--text-size-small", 8),
@@ -195,7 +195,6 @@ function drawRoundedRect(x, y, width, height, radius) {
 }
 
 // PANEL BOX BORDER
-// Shared fill/stroke box is drawn here so repetition is reduced.
 function drawPanelBox(x, y, width, height, theme, lineWidth = 3) {
      const { colors, glow, sizes } = theme;
 
@@ -215,7 +214,6 @@ function drawPanelBox(x, y, width, height, theme, lineWidth = 3) {
 }
 
 // WRAPPED TEXT DRAW
-// Line breaks are measured from available width here. Line count is returned so spacing can be advanced below.
 function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
      const words = text.split(" ");
      let line = "";
@@ -243,7 +241,6 @@ function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
 }
 
 // WELCOME COLOR ENGINE
-// Shared root color engine is reused here for canvas title letters.
 let welcomeColorEngine = null;
 let welcomePreviousColors = [];
 let welcomeCurrentColors = [];
@@ -284,7 +281,6 @@ export function updateWelcomeTitleColors(titleLines = getCurrentWelcomeTitleLine
 }
 
 // WELCOME TITLE FIT
-// Font size is reduced until both title lines fit safely inside canvas.
 function getWelcomeTitleFontSize(theme, titleLines = getCurrentWelcomeTitleLines()) {
      const { fonts } = theme;
      const baseSize = Math.min(miniGameWidth * 0.18, miniGameHeight * 0.16);
@@ -325,7 +321,7 @@ function getWelcomeTitleFontSize(theme, titleLines = getCurrentWelcomeTitleLines
 // MENU BUTTON SHAPES
 
 function drawMenuButton(button, label, theme) {
-     if (!miniGameCtx) {
+     if (!miniGameCtx || !button) {
           return;
      }
 
@@ -512,22 +508,13 @@ function drawMenuOverlay(theme) {
      miniGameCtx.save();
      miniGameCtx.globalAlpha = 1;
 
-     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.75)";
+     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
-
-     drawPanelBox(
-          0,
-          0,
-          miniGameWidth,
-          miniGameHeight,
-          theme
-     );
 
      if (gameMenuView === "main") {
           drawMenuButton(gameMenuUi.newGameButton, "New Game", theme);
-          drawMenuButton(gameMenuUi.instructionsButton, "Instructions", theme);
-          drawMenuButton(gameMenuUi.difficultyButton, "Difficulty", theme);
-          drawMenuButton(gameMenuUi.soundButton, `Sound: ${getCurrentSoundLabel()}`, theme);
+          drawMenuButton(gameMenuUi.instructionsButton, "Tips", theme);
+          drawMenuButton(gameMenuUi.optionsButton, "Options", theme);
 
      } else if (gameMenuView === "instructions") {
           miniGameCtx.shadowBlur = 0;
@@ -559,7 +546,7 @@ function drawMenuOverlay(theme) {
                ) + sectionGap;
           });
 
-     } else if (gameMenuView === "difficulty") {
+     } else if (gameMenuView === "options") {
           miniGameCtx.shadowBlur = 0;
           miniGameCtx.fillStyle = colors.softWhite;
           miniGameCtx.textAlign = "center";
@@ -568,11 +555,23 @@ function drawMenuOverlay(theme) {
           const titleY = Math.max(28, miniGameHeight * 0.12);
 
           miniGameCtx.font = `400 ${sizes.menuSmallFont}px ${fonts.body}`;
-          miniGameCtx.fillText("Customize challenge options.", miniGameWidth / 2, titleY);
+          miniGameCtx.fillText("", miniGameWidth / 2, titleY); // Just in case I want title text on the Options menu.
 
           drawMenuButton(
                gameMenuUi.obstaclesToggleButton,
                `Obstacles: ${getObstaclesToggleLabel()}`,
+               theme
+          );
+
+          drawMenuButton(
+               gameMenuUi.musicToggleButton,
+               `Music: ${getMusicToggleLabel()}`,
+               theme
+          );
+
+          drawMenuButton(
+               gameMenuUi.soundEffectsToggleButton,
+               `Sound FX: ${getSoundEffectsToggleLabel()}`,
                theme
           );
      }
@@ -741,6 +740,10 @@ function drawPausedOverlay(theme) {
      updateWelcomeTitleColors(titleLines);
 
      miniGameCtx.save();
+
+     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
+     miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
+
 
      const pausedUi = getGamePausedUi();
 
@@ -935,16 +938,18 @@ export function drawGame() {
           return;
      }
 
-     drawSparkles();
-     drawObstacles();
-     drawCollisionBursts();
-     drawPlayer();
+     if (gameStarted) {
+          drawSparkles();
+          drawObstacles();
+          drawCollisionBursts();
+          drawPlayer();
 
-     drawScore(theme);
-     drawHealth(theme);
+          drawScore(theme);
+          drawHealth(theme);
 
-     if (!gamePaused && !gameMenuOpen && !gameOver && !gameWon) {
-          drawTouchButtons(theme);
+          if (!gamePaused && !gameMenuOpen && !gameOver && !gameWon) {
+               drawTouchButtons(theme);
+          }
      }
 
      if (gameMenuOpen) {
@@ -955,3 +960,4 @@ export function drawGame() {
           drawGameStatusOverlay(theme);
      }
 }
+

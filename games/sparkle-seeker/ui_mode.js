@@ -35,9 +35,14 @@ import {
      gameMenuUi,
      musicEnabled,
      soundEffectsEnabled,
+     musicLevel,
+     soundEffectsLevel,
+     obstaclesLevel,
      difficultyIndex,
      obstaclesEnabled,
-     sparkles,
+     optionLevelLabels,
+     optionLevelValues,
+     maxOptionLevelIndex,
      obstacles,
      sparkleScore,
      playerHealth,
@@ -54,6 +59,9 @@ import {
      setGameOverlayDuration,
      setMusicEnabled,
      setSoundEffectsEnabled,
+     setMusicLevel,
+     setSoundEffectsLevel,
+     setObstaclesLevel,
      setDifficultyIndex,
      setObstaclesEnabled,
      setMiniGameSize,
@@ -85,36 +93,26 @@ import {
      hitObstacles
 } from "./entities.js";
 
-// DRAW IMPORTS
-// These will come from ui_draw.js after the second half of the split.
-// This keeps state/update logic separate from canvas rendering.
 import {
      drawGame,
      updateWelcomeTitleColors
 } from "./ui_draw.js";
 
-// NOTE - 🛑 DIFFICULTY OPTIONS
-
+// NOTE - LEGACY DIFFICULTY OPTIONS
+// Kept temporarily so older menu code does not break while Options menu is rebuilt.
 export const difficultyOptions = ["Easy", "Normal", "Hard"];
 export const startOverlayDuration = 120;
 export const overlayFadeFrames = 30;
 
 // WELCOME STATE
-// Page-load welcome state is owned locally here.
-// First action is expected to be triggered from input handling.
 let gameWelcome = true;
 let gameWelcomeTimer = -1;
 let gameWelcomeDuration = -1;
 
 // NOTE: WELCOME MODE
-// This started as only the page-load welcome screen,
-// but now it also powers full-screen instructions / win / lose states.
-// Keeping one shared screen state is simpler for a beginner than
-// maintaining several separate full-screen UI systems.
 let gameWelcomeMode = "welcome";
 
 // WELCOME ACTION TARGETS
-// Clickable word bounds are stored here for input handling.
 const gameWelcomeUi = {
      startButton: { x: 0, y: 0, width: 0, height: 0 },
      instructionsButton: { x: 0, y: 0, width: 0, height: 0 },
@@ -122,7 +120,6 @@ const gameWelcomeUi = {
 };
 
 // PAUSE ACTION TARGETS
-// Clickable word bounds for the paused marquee are stored here.
 const gamePausedUi = {
      resumeButton: { x: 0, y: 0, width: 0, height: 0 },
      instructionsButton: { x: 0, y: 0, width: 0, height: 0 },
@@ -130,9 +127,12 @@ const gamePausedUi = {
 };
 
 // WELCOME TITLE CONTENT
-// The actual rainbow color engine + drawing lives in ui_draw.js now.
-// This file only owns the state/mode that decides what should be shown.
 const welcomeTitleLines = ["SPARKLE", "SEEKER"];
+
+function setMenuViewAndRefresh(view) {
+     setGameMenuView(view);
+     updateMenuUiBounds();
+}
 
 export function isGameWelcomeActive() {
      return gameWelcome;
@@ -146,20 +146,14 @@ export function getGamePausedUi() {
      return gamePausedUi;
 }
 
-// WELCOME MODE GETTER
-// Input code can read this to decide what each action word should do.
 export function getGameWelcomeMode() {
      return gameWelcomeMode;
 }
 
-// WELCOME TITLE GETTER
-// ui_draw.js reads this instead of owning the source text itself.
 export function getWelcomeTitleLines() {
      return welcomeTitleLines;
 }
 
-// NOTE: WELCOME TITLE LINE LOOKUP
-// Draw code asks state code which title should be displayed.
 export function getCurrentWelcomeTitleLines() {
      if (gameWelcomeMode === "win") {
           return ["YOU", "WIN"];
@@ -172,8 +166,6 @@ export function getCurrentWelcomeTitleLines() {
      return welcomeTitleLines;
 }
 
-// NOTE: WELCOME ACTION TEXT LOOKUP
-// Draw code asks state code which action words should be displayed.
 export function getCurrentWelcomeActionTexts() {
      if (gameWelcomeMode === "welcome") {
           return ["START", "TIPS", "MENU"];
@@ -198,9 +190,6 @@ export function dismissGameWelcomeToStart() {
      startNewGameRound();
 }
 
-// NOTE: WELCOME -> INSTRUCTIONS MENU
-// This uses the existing menu instructions submenu,
-// instead of a separate full-screen instructions page.
 export function dismissGameWelcomeToInstructionsMenu() {
      gameWelcome = false;
      gameWelcomeMode = "welcome";
@@ -214,12 +203,11 @@ export function dismissGameWelcomeToInstructionsMenu() {
      updateMiniGameCanvasSize();
      resetPlayerPosition();
      updateTouchControlBounds();
-     updateMenuUiBounds();
 
      setGameStarted(false);
      setGamePaused(false);
      setGameMenuOpen(true);
-     setGameMenuView("instructions");
+     setMenuViewAndRefresh("instructions");
      setGameOver(false);
      setGameWon(false);
 
@@ -239,21 +227,17 @@ export function dismissGameWelcomeToMenu() {
      updateMiniGameCanvasSize();
      resetPlayerPosition();
      updateTouchControlBounds();
-     updateMenuUiBounds();
 
      setGameStarted(false);
      setGamePaused(false);
      setGameMenuOpen(true);
-     setGameMenuView("main");
+     setMenuViewAndRefresh("main");
      setGameOver(false);
      setGameWon(false);
 
      clearGameOverlay();
 }
 
-// FULL-SCREEN WELCOME SCREEN HELPERS
-// These functions let other files switch the big full-screen state
-// without needing to know the low-level timer details.
 export function showGameWelcomeScreen(mode = "welcome") {
      gameWelcome = true;
      gameWelcomeMode = mode;
@@ -268,8 +252,6 @@ export function dismissGameWelcomeBackToMain() {
      gameWelcomeDuration = -1;
 }
 
-// WELCOME ALPHA
-// Same fade math is reused here for page-load welcome state.
 export function getGameWelcomeAlpha() {
      if (!gameWelcome) {
           return 0;
@@ -324,13 +306,26 @@ export function startNewGameRound() {
      setGameStarted(true);
      setGamePaused(false);
      setGameMenuOpen(false);
-     setGameMenuView("main");
+     setMenuViewAndRefresh("main");
      setGameOver(false);
      setGameWon(false);
 }
 
 // MENU
 
+export function getOptionLevelLabel(levelIndex) {
+     return optionLevelLabels[levelIndex] || optionLevelLabels[0];
+}
+
+export function getOptionLevelValue(levelIndex) {
+     return optionLevelValues[levelIndex] ?? optionLevelValues[0];
+}
+
+function getNextOptionLevelIndex(levelIndex) {
+     return (levelIndex + 1) % (maxOptionLevelIndex + 1);
+}
+
+// LEGACY HELPERS
 export function getCurrentDifficultyLabel() {
      return difficultyOptions[difficultyIndex] || "Normal";
 }
@@ -339,32 +334,64 @@ export function getCurrentSoundLabel() {
      return (musicEnabled && soundEffectsEnabled) ? "On" : "Off";
 }
 
+// NEW OPTIONS LABELS
 export function getObstaclesToggleLabel() {
-     return obstaclesEnabled ? "On" : "Off";
+     return getOptionLevelLabel(obstaclesLevel);
 }
 
+export function getMusicToggleLabel() {
+     return getOptionLevelLabel(musicLevel);
+}
+
+export function getSoundEffectsToggleLabel() {
+     return getOptionLevelLabel(soundEffectsLevel);
+}
+
+// LEGACY DIFFICULTY CYCLE
 export function cycleDifficulty() {
      setDifficultyIndex((difficultyIndex + 1) % difficultyOptions.length);
 }
 
+// LEGACY COMBINED SOUND TOGGLE
 export function toggleAllSound() {
-     const next = !(musicEnabled && soundEffectsEnabled);
-     setMusicEnabled(next);
-     setSoundEffectsEnabled(next);
+     if (musicEnabled || soundEffectsEnabled) {
+          setMusicLevel(0);
+          setSoundEffectsLevel(0);
+     } else {
+          setMusicLevel(maxOptionLevelIndex);
+          setSoundEffectsLevel(maxOptionLevelIndex);
+     }
 }
 
-export function toggleObstaclesEnabled() {
-     const nextValue = !obstaclesEnabled;
-     setObstaclesEnabled(nextValue);
+// NEW OPTIONS CYCLES
+export function cycleMusicLevel() {
+     setMusicLevel(getNextOptionLevelIndex(musicLevel));
+}
 
-     if (!nextValue) {
+export function cycleSoundEffectsLevel() {
+     setSoundEffectsLevel(getNextOptionLevelIndex(soundEffectsLevel));
+}
+
+export function cycleObstaclesLevel() {
+     const nextLevel = getNextOptionLevelIndex(obstaclesLevel);
+     setObstaclesLevel(nextLevel);
+
+     if (nextLevel === 0) {
           obstacles.length = 0;
      }
 }
 
+// LEGACY BOOLEAN-STYLE OBSTACLE TOGGLE
+export function toggleObstaclesEnabled() {
+     if (obstaclesEnabled) {
+          setObstaclesLevel(0);
+          obstacles.length = 0;
+     } else {
+          setObstaclesLevel(maxOptionLevelIndex);
+     }
+}
+
 export function updateMenuUiBounds() {
-     // FULL-CANVAS MENU PANEL
-     // The menu now uses the entire canvas instead of a centered popup box.
      const panelX = 0;
      const panelY = 0;
      const panelWidth = miniGameWidth;
@@ -375,8 +402,6 @@ export function updateMenuUiBounds() {
      gameMenuUi.panel.width = panelWidth;
      gameMenuUi.panel.height = panelHeight;
 
-     // FULL-CANVAS MENU LAYOUT
-     // Buttons are centered inside the whole canvas now.
      const sidePadding = Math.max(24, panelWidth * 0.12);
      const buttonHeight = 35;
      const buttonX = panelX + sidePadding;
@@ -388,17 +413,18 @@ export function updateMenuUiBounds() {
           stackedButtons = [
                gameMenuUi.newGameButton,
                gameMenuUi.instructionsButton,
-               gameMenuUi.difficultyButton,
-               gameMenuUi.soundButton,
+               gameMenuUi.optionsButton,
                gameMenuUi.backButton
           ];
      } else if (gameMenuView === "instructions") {
           stackedButtons = [
                gameMenuUi.backButton
           ];
-     } else if (gameMenuView === "difficulty") {
+     } else if (gameMenuView === "options") {
           stackedButtons = [
                gameMenuUi.obstaclesToggleButton,
+               gameMenuUi.musicToggleButton,
+               gameMenuUi.soundEffectsToggleButton,
                gameMenuUi.backButton
           ];
      } else {
@@ -435,8 +461,6 @@ export function isPointInsideMenuPanel(x, y) {
      );
 }
 
-// NOTE: SHARED INSTRUCTIONS TEXT
-// Single source of truth for all instructions in the game.
 export function getInstructionLines() {
      return [
           "Collect sparkles, avoid obstacles.",
@@ -496,17 +520,12 @@ export function getGameOverlayAlpha() {
 
 export function syncPauseOverlay() {
      // NOTE: PAUSE OVERLAY REMOVED
-     // Pause now uses a marquee screen instead of the old centered text overlay.
 }
-
-// GAME UPDATE
 
 export function updateGame() {
      updatePauseButtonState();
      updateGameOverlayTimer();
 
-     // WELCOME GATE
-     // Gameplay updates are held here until welcome state is dismissed.
      if (gameWelcome) {
           updateWelcomeTitleColors(getCurrentWelcomeTitleLines());
           return;
@@ -516,8 +535,6 @@ export function updateGame() {
           return;
      }
 
-     // NOTE: FACE STATE SHOULD STILL UPDATE WHILE PAUSED
-     // This lets pause force the neutral face even though gameplay itself is frozen.
      updatePlayerFaceState();
 
      if (gamePaused || gameMenuOpen || gameOver || gameWon) {
@@ -525,7 +542,6 @@ export function updateGame() {
      }
 
      updatePlayer();
-
      updateSparkleSpawns();
 
      if (obstaclesEnabled) {
@@ -539,7 +555,6 @@ export function updateGame() {
      }
 
      updateCollisionBursts();
-
      collectSparkles();
 
      if (obstaclesEnabled) {
@@ -576,8 +591,6 @@ function gameLoop() {
      requestAnimationFrame(gameLoop);
 }
 
-// NOTE: STARTUP
-
 export function startSparkleSeeker() {
      resetGameState();
      resetTouchControls();
@@ -588,8 +601,6 @@ export function startSparkleSeeker() {
      updateTouchControlBounds();
      updateMenuUiBounds();
 
-     // WELCOME RESET
-     // Welcome state is restored here on page load.
      gameWelcome = true;
      gameWelcomeTimer = -1;
      gameWelcomeDuration = -1;
