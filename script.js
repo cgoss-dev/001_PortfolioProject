@@ -371,8 +371,9 @@ const marqueeItems = marqueeElements.map(function (element) {
 
 let headerColorCycleTimer = null;
 let marqueeColorEngine = null;
+let accentColorEngine = null;
 
-/* NOTE: MARQUEE FIT */
+/* MARQUEE FIT */
 /* Marquee size gets reduced until longest line fits available width. */
 /* Existing line structure is preserved here, so first name and last name stay stacked. */
 
@@ -474,45 +475,53 @@ function applyGlowToElement(element, color) {
 }
 
 function cycleMarqueeColors() {
-     if (!marqueeItems.length || !marqueeColorEngine) {
-          return;
+     if (marqueeItems.length && marqueeColorEngine) {
+          for (let i = 0; i < marqueeItems.length; i += 1) {
+               const marqueeItem = marqueeItems[i];
+
+               if (!marqueeItem.visibleSpans.length) {
+                    continue;
+               }
+
+               const nextColors = marqueeColorEngine.nextCycle(
+                    marqueeItem.visibleSpans.length,
+                    marqueeItem.previousColors
+               );
+
+               for (let j = 0; j < marqueeItem.visibleSpans.length; j += 1) {
+                    const span = marqueeItem.visibleSpans[j];
+                    const nextColor = nextColors[j];
+
+                    applyGlowToElement(span, nextColor);
+               }
+
+               marqueeItem.previousColors = nextColors;
+          }
      }
 
-     for (let i = 0; i < marqueeItems.length; i += 1) {
-          const marqueeItem = marqueeItems[i];
+     if (accentColorEngine) {
+          const nextAccentColor = accentColorEngine.next();
 
-          if (!marqueeItem.visibleSpans.length) {
-               continue;
+          if (nextAccentColor) {
+               document.documentElement.style.setProperty("--accent-color", nextAccentColor);
+               syncNavButtonGlow();
           }
-
-          const nextColors = marqueeColorEngine.nextCycle(
-               marqueeItem.visibleSpans.length,
-               marqueeItem.previousColors
-          );
-
-          for (let j = 0; j < marqueeItem.visibleSpans.length; j += 1) {
-               const span = marqueeItem.visibleSpans[j];
-               const nextColor = nextColors[j];
-
-               applyGlowToElement(span, nextColor);
-          }
-
-          marqueeItem.previousColors = nextColors;
      }
 }
 
 function startHeaderColorCycle() {
-     if (!marqueeItems.length) {
-          return;
+     accentColorEngine = createColorEngine(getRainbowPalette);
+
+     if (marqueeItems.length) {
+          marqueeColorEngine = createColorEngine(getRainbowPalette);
+
+          for (let i = 0; i < marqueeItems.length; i += 1) {
+               buildMarqueeSpans(marqueeItems[i]);
+          }
+
+          fitAllMarquees();
      }
 
-     marqueeColorEngine = createColorEngine(getRainbowPalette);
-
-     for (let i = 0; i < marqueeItems.length; i += 1) {
-          buildMarqueeSpans(marqueeItems[i]);
-     }
-
-     fitAllMarquees();
      cycleMarqueeColors();
 
      window.clearInterval(headerColorCycleTimer);

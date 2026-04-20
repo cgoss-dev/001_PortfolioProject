@@ -65,8 +65,8 @@
      /* JS TEXT COLOR CYCLE CONTROL */
      /* Core JS reads this exact variable name. */
 
-     --text-rainbow-cycle-speed: 900;
-     --text-rainbow-transition-speed: 0.2s;
+     --text-rainbow-cycle-speed: 1600;
+     --text-rainbow-transition-speed: 0.02s;
      --text-rainbow-transition-style: ease-in-out;
 
      /* GLOW */
@@ -99,9 +99,10 @@
 
      --canvasboard-radius: 1em;
      --canvasboard-border-width: 0.25em;
-     --canvasboard-border-color: white;
      --canvasboard-border: var(--canvasboard-border-width) solid var(--canvasboard-border-color);
-     --canvasboard-glow-color: white;
+     --canvasboard-border-color: white;
+     --canvasboard-glow-color: white
+     ;
 
      /* LAYERS */
 
@@ -275,7 +276,7 @@ h1 {
      height: 3rem;
      padding: 0;
      margin: 0;
-     background: rgba(0, 0, 0, 0.75);
+     /* background: rgba(0, 0, 0, 0.75); */
      border: var(--canvasboard-border);
      border-radius: 999px;
      outline: none;
@@ -395,7 +396,7 @@ h1 {
      min-width: 0;
      padding: var(--nav-pill-padding-y) var(--nav-pill-padding-x);
      color: var(--text-color-medium);
-     background: transparent;
+     background: none;
      border-radius: 999px;
      cursor: pointer;
      text-align: center;
@@ -413,7 +414,6 @@ h1 {
 .nav-link:focus-visible {
      color: var(--text-color);
      text-shadow: var(--glow-text);
-     background: rgba(255, 255, 255, 0.08);
 }
 
 /* NOTE: EMOJI ICON CONTROL */
@@ -467,14 +467,14 @@ h1 {
 .nav-desc {
      display: none;
      font-size: var(--text-size-small);
-     opacity: 0.78;
+     opacity: 0.75;
      white-space: normal;
      overflow-wrap: normal;
      word-break: keep-all;
      text-wrap: balance;
 }
 
-/* Dropdown trigger was removed here. */
+/* FIXME: cant remember why i needed this. Dropdown trigger was removed here. */
 .nav-button,
 .nav-button-open,
 .nav-button-close {

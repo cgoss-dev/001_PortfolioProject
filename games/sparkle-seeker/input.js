@@ -39,6 +39,7 @@ import {
      startNewGameRound,
      cycleDifficulty,
      toggleAllSound,
+     toggleObstaclesEnabled,
      isPointInsideMenuPanel,
      isGameWelcomeActive,
      getGameWelcomeUi,
@@ -148,6 +149,12 @@ function getMenuButtonAtPoint(x, y) {
 
           if (isPointInsideRect(x, y, gameMenuUi.soundButton)) {
                return gameMenuUi.soundButton;
+          }
+     }
+
+     if (gameMenuView === "difficulty") {
+          if (isPointInsideRect(x, y, gameMenuUi.obstaclesToggleButton)) {
+               return gameMenuUi.obstaclesToggleButton;
           }
      }
 
@@ -420,46 +427,59 @@ function handleMenuClick(x, y) {
                // NEW GAME - RETURN TO WELCOME SCREEN
                setGameMenuOpen(false);
                dismissGameWelcomeBackToMain();
+               updateMenuUiBounds();
                return true;
           }
 
           if (isPointInsideRect(x, y, gameMenuUi.instructionsButton)) {
                setGameMenuView("instructions");
+               updateMenuUiBounds();
                return true;
           }
 
           if (isPointInsideRect(x, y, gameMenuUi.difficultyButton)) {
-               cycleDifficulty();
+               setGameMenuView("difficulty");
+               updateMenuUiBounds();
                return true;
           }
 
           if (isPointInsideRect(x, y, gameMenuUi.soundButton)) {
                toggleAllSound();
+               updateMenuUiBounds();
+               return true;
+          }
+     }
+
+     if (gameMenuView === "difficulty") {
+          if (isPointInsideRect(x, y, gameMenuUi.obstaclesToggleButton)) {
+               toggleObstaclesEnabled();
+               updateMenuUiBounds();
                return true;
           }
      }
 
      if (isPointInsideRect(x, y, gameMenuUi.backButton)) {
-          // BACK FROM INSTRUCTIONS - WELCOME SCREEN
           if (gameMenuView === "instructions") {
-               setGameMenuOpen(false);
-               dismissGameWelcomeBackToMain();
+               setGameMenuView("main");
+               updateMenuUiBounds();
                return true;
           }
 
-          // Normal behavior for other cases
-          if (gameMenuView !== "main") {
+          if (gameMenuView === "difficulty") {
                setGameMenuView("main");
-          } else {
-               // BACK SHOULD NOT UNPAUSE
-               closeMenuAndResetView(false);
+               updateMenuUiBounds();
+               return true;
           }
 
+          // BACK SHOULD NOT UNPAUSE
+          closeMenuAndResetView(false);
+          updateMenuUiBounds();
           return true;
      }
 
      return true;
 }
+
 
 // KEYBOARD INPUT
 

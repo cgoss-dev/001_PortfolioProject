@@ -53,8 +53,8 @@ import {
      getCurrentWelcomeActionTexts,
      getGameWelcomeAlpha,
      getInstructionLines,
-     getCurrentDifficultyLabel,
      getCurrentSoundLabel,
+     getObstaclesToggleLabel,
      getGameOverlayAlpha
 } from "./ui_mode.js";
 
@@ -141,7 +141,7 @@ function getUiTheme() {
                heartGlow: "#ffffff"
           },
 
-          sizes: {//REVIEW - NAV MENU OPTION SIZES (8, 16, 32)
+          sizes: {
                scoreFont: 24,
                scoreX: 8,
                scoreY: 8,
@@ -158,7 +158,7 @@ function getUiTheme() {
                // Title is allowed to scale from canvas size here.
                welcomeSubFont: getCssPixelSize("--text-size-small", 8),
 
-               menuButtonFont: getCssPixelSize("--text-size-small", 8), 
+               menuButtonFont: getCssPixelSize("--text-size-small", 8),
                menuSmallFont: getCssPixelSize("--text-size-small", 8),
 
                controlRadius: getCssNumber("--canvasboard-radius", 15)
@@ -330,8 +330,8 @@ function drawMenuButton(button, label, theme) {
      }
 
      const { colors, sizes, fonts, glow } = theme;
-     const centerX = button.x + (button.width / 2); // label text width
-     const centerY = button.y + (button.height / 2); // label text height
+     const centerX = button.x + (button.width / 2);
+     const centerY = button.y + (button.height / 2);
 
      miniGameCtx.save();
      miniGameCtx.fillStyle = colors.buttonFill;
@@ -366,7 +366,7 @@ function drawControlButton(button, isPressed, theme) {
      const { colors, glow } = theme;
      const centerX = button.x + (button.width / 2);
      const centerY = button.y + (button.height / 2);
-     const radius = button.width / 3; // BUTTON SIZE RADIUS
+     const radius = button.width / 3;
 
      miniGameCtx.save();
      miniGameCtx.shadowColor = colors.controlGlow;
@@ -408,9 +408,6 @@ function drawScore(theme) {
      const formattedScore = String(sparkleScore).padStart(3, "0");
      const currentLevel = Math.max(1, Math.min(5, getCurrentLevelNumber()));
 
-     // REVIEW - LEVEL STARS
-     // Filled stars show unlocked levels.
-     // Empty stars show remaining level slots up to 5.
      let starRow = "";
 
      for (let i = 1; i <= 5; i += 1) {
@@ -424,13 +421,9 @@ function drawScore(theme) {
      miniGameCtx.shadowColor = colors.scoreGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
 
-     // STAR ROW
-     // This sits above the score, similar to how hearts are grouped in rows.
      miniGameCtx.font = `${Math.max(18, sizes.scoreFont * 0.7)}px ${fonts.symbol}`;
      miniGameCtx.fillText(starRow, sizes.scoreX, Math.max(2, sizes.scoreY - 2));
 
-     // SCORE ROW
-     // Score is pushed down a bit so the stars have their own line above it.
      miniGameCtx.font = `${sizes.scoreFont}px ${fonts.display}`;
      miniGameCtx.fillText(formattedScore, sizes.scoreX, sizes.scoreY + 20);
 
@@ -454,7 +447,6 @@ function drawHealth(theme) {
           bottomRow += (i < playerHealth) ? filledHeart : emptyHeart;
      }
 
-     //SWAPPED TOP/BOTTOM ROWS FOR TESTING
      for (let i = heartsPerRow - 1; i >= 0; i -= 1) {
           topRow += (i < playerHealth) ? filledHeart : emptyHeart;
      }
@@ -490,8 +482,6 @@ function drawTouchButtons(theme) {
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
-
-     //FIXME: LEFT/RIGHT BUTTON LABELS
 
      miniGameCtx.font = `${leftButton.height * 0.5}px ${fonts.symbol}`;
      miniGameCtx.fillText(
@@ -536,7 +526,7 @@ function drawMenuOverlay(theme) {
      if (gameMenuView === "main") {
           drawMenuButton(gameMenuUi.newGameButton, "New Game", theme);
           drawMenuButton(gameMenuUi.instructionsButton, "Instructions", theme);
-          drawMenuButton(gameMenuUi.difficultyButton, `Difficulty: ${getCurrentDifficultyLabel()}`, theme);
+          drawMenuButton(gameMenuUi.difficultyButton, "Difficulty", theme);
           drawMenuButton(gameMenuUi.soundButton, `Sound: ${getCurrentSoundLabel()}`, theme);
 
      } else if (gameMenuView === "instructions") {
@@ -568,6 +558,23 @@ function drawMenuOverlay(theme) {
                     ) * lineHeight
                ) + sectionGap;
           });
+
+     } else if (gameMenuView === "difficulty") {
+          miniGameCtx.shadowBlur = 0;
+          miniGameCtx.fillStyle = colors.softWhite;
+          miniGameCtx.textAlign = "center";
+          miniGameCtx.textBaseline = "top";
+
+          const titleY = Math.max(28, miniGameHeight * 0.12);
+
+          miniGameCtx.font = `400 ${sizes.menuSmallFont}px ${fonts.body}`;
+          miniGameCtx.fillText("Customize challenge options.", miniGameWidth / 2, titleY);
+
+          drawMenuButton(
+               gameMenuUi.obstaclesToggleButton,
+               `Obstacles: ${getObstaclesToggleLabel()}`,
+               theme
+          );
      }
 
      drawMenuButton(gameMenuUi.backButton, "Back", theme);

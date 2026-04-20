@@ -28,14 +28,14 @@ export const player = {
      size: 64,
      speed: 2,
      radius: 32,
-     
+
      baseSize: 54,
      baseRadius: 30,
 
      // Temporary face-expression timer.
      // Example: sparkle pickup changes the face briefly, then it returns.
      sparkleFaceTimer: 0,
-     
+
      hitScale: 1,
      lowHealthPulseTime: 0,
 };
@@ -73,7 +73,10 @@ export let gameMenuView = "main";
 export let musicEnabled = true;
 export let soundEffectsEnabled = true;
 
+// NOTE: DIFFICULTY / CUSTOM TOGGLES
+// Keeping these in shared state lets UI + gameplay read the same values.
 export let difficultyIndex = 1;
+export let obstaclesEnabled = true;
 
 export let gameOver = false;
 export let gameWon = false;
@@ -99,6 +102,7 @@ export const gameMenuUi = {
      newGameButton: { x: 0, y: 0, width: 0, height: 0 },
      instructionsButton: { x: 0, y: 0, width: 0, height: 0 },
      difficultyButton: { x: 0, y: 0, width: 0, height: 0 },
+     obstaclesToggleButton: { x: 0, y: 0, width: 0, height: 0 },
      soundButton: { x: 0, y: 0, width: 0, height: 0 },
      backButton: { x: 0, y: 0, width: 0, height: 0 }
 };
@@ -264,6 +268,10 @@ export function setDifficultyIndex(value) {
      difficultyIndex = value;
 }
 
+export function setObstaclesEnabled(value) {
+     obstaclesEnabled = value;
+}
+
 export function setGameOver(value) {
      gameOver = value;
 }
@@ -333,6 +341,7 @@ export function resetGameState() {
      musicEnabled = true;
      soundEffectsEnabled = true;
      difficultyIndex = 1;
+     obstaclesEnabled = true;
 
      gameOver = false;
      gameWon = false;

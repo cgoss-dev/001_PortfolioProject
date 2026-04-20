@@ -36,6 +36,9 @@ import {
      musicEnabled,
      soundEffectsEnabled,
      difficultyIndex,
+     obstaclesEnabled,
+     sparkles,
+     obstacles,
      sparkleScore,
      playerHealth,
 
@@ -52,6 +55,7 @@ import {
      setMusicEnabled,
      setSoundEffectsEnabled,
      setDifficultyIndex,
+     setObstaclesEnabled,
      setMiniGameSize,
 
      resetGameState
@@ -335,6 +339,10 @@ export function getCurrentSoundLabel() {
      return (musicEnabled && soundEffectsEnabled) ? "On" : "Off";
 }
 
+export function getObstaclesToggleLabel() {
+     return obstaclesEnabled ? "On" : "Off";
+}
+
 export function cycleDifficulty() {
      setDifficultyIndex((difficultyIndex + 1) % difficultyOptions.length);
 }
@@ -343,6 +351,15 @@ export function toggleAllSound() {
      const next = !(musicEnabled && soundEffectsEnabled);
      setMusicEnabled(next);
      setSoundEffectsEnabled(next);
+}
+
+export function toggleObstaclesEnabled() {
+     const nextValue = !obstaclesEnabled;
+     setObstaclesEnabled(nextValue);
+
+     if (!nextValue) {
+          obstacles.length = 0;
+     }
 }
 
 export function updateMenuUiBounds() {
@@ -365,20 +382,43 @@ export function updateMenuUiBounds() {
      const buttonX = panelX + sidePadding;
      const buttonWidth = panelWidth - (sidePadding * 2);
 
-     const stackedButtons = [
-          gameMenuUi.newGameButton,
-          gameMenuUi.instructionsButton,
-          gameMenuUi.difficultyButton,
-          gameMenuUi.soundButton,
-          gameMenuUi.backButton
-     ];
+     let stackedButtons = [];
 
-     const buttonCount = stackedButtons.length;
+     if (gameMenuView === "main") {
+          stackedButtons = [
+               gameMenuUi.newGameButton,
+               gameMenuUi.instructionsButton,
+               gameMenuUi.difficultyButton,
+               gameMenuUi.soundButton,
+               gameMenuUi.backButton
+          ];
+     } else if (gameMenuView === "instructions") {
+          stackedButtons = [
+               gameMenuUi.backButton
+          ];
+     } else if (gameMenuView === "difficulty") {
+          stackedButtons = [
+               gameMenuUi.obstaclesToggleButton,
+               gameMenuUi.backButton
+          ];
+     } else {
+          stackedButtons = [
+               gameMenuUi.backButton
+          ];
+     }
+
+     const visibleButtons = stackedButtons.filter(Boolean);
+     const buttonCount = visibleButtons.length;
+
+     if (buttonCount === 0) {
+          return;
+     }
+
      const totalButtonHeight = buttonCount * buttonHeight;
      const availableHeight = panelHeight - totalButtonHeight;
      const gap = Math.max(18, availableHeight / (buttonCount + 1));
 
-     stackedButtons.forEach((button, index) => {
+     visibleButtons.forEach((button, index) => {
           button.x = buttonX;
           button.y = panelY + gap + (index * (buttonHeight + gap));
           button.width = buttonWidth;
@@ -487,14 +527,24 @@ export function updateGame() {
      updatePlayer();
 
      updateSparkleSpawns();
-     updateObstacleSpawns();
+
+     if (obstaclesEnabled) {
+          updateObstacleSpawns();
+     }
 
      updateSparkles();
-     updateObstacles();
+
+     if (obstaclesEnabled) {
+          updateObstacles();
+     }
+
      updateCollisionBursts();
 
      collectSparkles();
-     hitObstacles();
+
+     if (obstaclesEnabled) {
+          hitObstacles();
+     }
 
      if (playerHealth <= 0) {
           setGameOver(true);
@@ -508,7 +558,6 @@ export function updateGame() {
           return;
      }
 
-     // REVIEW: WIN CONDITIONS
      if (sparkleScore >= 1000) {
           setGameWon(true);
           setGameOver(false);
