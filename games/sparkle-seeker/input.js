@@ -49,16 +49,16 @@ import {
      dismissGameWelcomeBackToMain
 } from "./ui_mode.js";
 
-// NOTE: EDGE CONTROLS
+// EDGE CONTROLS
 // Fixed edge spacing is defined here. Resize drift is prevented by anchoring from canvas edges here.
 const touchControlLayout = {
      buttonEdgePaddingX: 5,
      buttonEdgePaddingY: 5,
 
-     buttonGap: 5,
+     buttonGap: 10, // NOTE: BUTTON GAP
 
      // VISUAL EDGE BUFFER - Extra room is added here because drawn circles extend past raw rect size.
-     buttonVisualScale: 1.25
+     buttonVisualScale: 1
 };
 
 // KEY HELPERS
@@ -182,7 +182,7 @@ function getWelcomeButtonAtPoint(x, y) {
      return null;
 }
 
-// NOTE: PAUSED BUTTON LOOKUP
+// PAUSED BUTTON LOOKUP
 // Pause marquee action word bounds are read from ui_mode state here.
 function getPausedButtonAtPoint(x, y) {
      if (!gamePaused || gameMenuOpen || gameOver || gameWon) {
@@ -267,7 +267,7 @@ function updateTouchMovementFromPointer(event) {
      setTouchMoveTarget(clampedX, clampedY, event.pointerId);
 }
 
-// NOTE: TOUCH RELEASE
+// TOUCH RELEASE
 // Releasing clears the movement target for the pointer that was controlling movement.
 function clearTouchMovement(pointerId) {
      clearTouchMoveTarget(pointerId);
@@ -317,7 +317,7 @@ export function resetTouchControls() {
           rightButton.pointerId = null;
      }
 
-     // NOTE: MOVEMENT RESET
+     // MOVEMENT RESET
      // When a round/menu/welcome reset happens, touch movement should stop too.
      clearTouchMoveTarget(touchControls.touchMoveTarget.pointerId);
 
@@ -417,7 +417,7 @@ function handleMenuClick(x, y) {
 
      if (gameMenuView === "main") {
           if (isPointInsideRect(x, y, gameMenuUi.newGameButton)) {
-               // NOTE: NEW GAME - RETURN TO WELCOME SCREEN
+               // NEW GAME - RETURN TO WELCOME SCREEN
                setGameMenuOpen(false);
                dismissGameWelcomeBackToMain();
                return true;
@@ -440,7 +440,7 @@ function handleMenuClick(x, y) {
      }
 
      if (isPointInsideRect(x, y, gameMenuUi.backButton)) {
-          // NOTE: BACK FROM INSTRUCTIONS - WELCOME SCREEN
+          // BACK FROM INSTRUCTIONS - WELCOME SCREEN
           if (gameMenuView === "instructions") {
                setGameMenuOpen(false);
                dismissGameWelcomeBackToMain();
@@ -451,8 +451,7 @@ function handleMenuClick(x, y) {
           if (gameMenuView !== "main") {
                setGameMenuView("main");
           } else {
-               // NOTE: BACK SHOULD NOT UNPAUSE
-               // Closing from the Back button leaves the game paused.
+               // BACK SHOULD NOT UNPAUSE
                closeMenuAndResetView(false);
           }
 
@@ -675,7 +674,7 @@ function onPointerMove(event) {
           return;
      }
 
-     // NOTE: ACTIVE POINTER CHECK
+     // ACTIVE POINTER CHECK
      // Only the pointer that started movement is allowed to keep updating it.
      // This matters more on touchscreens, where multiple fingers can exist at once.
      if (
@@ -729,7 +728,7 @@ export function bindPointerInput() {
      setPointerInputBound(true);
 }
 
-// NOTE: RESIZE
+// RESIZE
 
 function handleWindowResize() {
      // Canvas sizing itself is handled by ui_mode.js.

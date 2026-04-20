@@ -8,7 +8,7 @@
 
      --bg-color: #000000;
      --text-color: #ffffff;
-     --accent-color: white;
+     --accent-color: #ea76cb;
      --content-width: min(100%, 40rem);
 
      /* SHARED RAINBOW COLOR ENGINE PALETTE */
@@ -36,7 +36,7 @@
 
      --menu-button-color: var(--text-color);
      --menu-canvasboard-width-min: 10em;
-     --menu-item-padding: 0.5em;
+     --menu-item-padding: 0.25em;
 
      /* TEXT */
 
@@ -99,9 +99,9 @@
 
      --canvasboard-radius: 1em;
      --canvasboard-border-width: 0.25em;
-     --canvasboard-border-color: var(--accent-color);
+     --canvasboard-border-color: white;
      --canvasboard-border: var(--canvasboard-border-width) solid var(--canvasboard-border-color);
-     --canvasboard-glow-color: var(--accent-color);
+     --canvasboard-glow-color: white;
 
      /* LAYERS */
 

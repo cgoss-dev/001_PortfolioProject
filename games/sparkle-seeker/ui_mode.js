@@ -81,7 +81,7 @@ import {
      hitObstacles
 } from "./entities.js";
 
-// NOTE: DRAW IMPORTS
+// DRAW IMPORTS
 // These will come from ui_draw.js after the second half of the split.
 // This keeps state/update logic separate from canvas rendering.
 import {
@@ -89,7 +89,7 @@ import {
      updateWelcomeTitleColors
 } from "./ui_draw.js";
 
-// UI CONSTANTS
+// NOTE - 🛑 DIFFICULTY OPTIONS
 
 export const difficultyOptions = ["Easy", "Normal", "Hard"];
 export const startOverlayDuration = 120;

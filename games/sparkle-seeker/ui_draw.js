@@ -114,28 +114,28 @@ function getUiTheme() {
           },
 
           colors: {
-               white: getCssColor("--text-color", "#ffffff"),
-               softWhite: getCssColor("--text-color-medium", "rgba(255, 255, 255, 0.75)"),
+               white: getCssColor("--white", "#ffffff"),
+               softWhite: getCssColor("rgba(255, 255, 255, 0.75)"),
 
                panelFill: "rgba(0, 0, 0, 0.9)",
 
                // OUTLINE GROUP A: Menu popup outline + touch button outline.
-               outlineStrong: getCssColor("--accent-color", "#ffffff"),
+               outlineStrong: getCssColor("--white", "#ffffff"),
 
                // OUTLINE GROUP B: Menu option button outline.
                outlineSoft: "rgba(255, 255, 255, 0.25)",
 
                buttonFill: "rgba(255, 255, 255, 0.15)", // MENU OPTIONS BUTTONS
-               buttonText: getCssColor("--text-color-medium", "#ffffff"),
+               buttonText: getCssColor("--white", "#ffffff"),
 
                controlFill: "rgba(255, 255, 255, 0.1)", // START/MENU BUTTONS
                controlFillPressed: "rgba(255, 255, 255, 0.25)",
                controlText: getCssColor("--text-color", "#ffffff"),
 
-               controlGlow: getCssColor("--accent-color", "#ffffff"),
+               controlGlow: getCssColor("--white", "#ffffff"),
 
-               overlayGlow: getCssColor("--accent-color", "#ffffff"),
-               scoreGlow: getCssColor("--accent-color", "#ffffff"),
+               overlayGlow: getCssColor("--white", "#ffffff"),
+               scoreGlow: getCssColor("--white", "#ffffff"),
 
                heartFull: "#ffffff",
                heartGlow: "#ffffff"
@@ -322,7 +322,7 @@ function getWelcomeTitleFontSize(theme, titleLines = getCurrentWelcomeTitleLines
      return fontSize;
 }
 
-// NOTE: MENU BUTTON SHAPES
+// MENU BUTTON SHAPES
 
 function drawMenuButton(button, label, theme) {
      if (!miniGameCtx) {
@@ -330,8 +330,8 @@ function drawMenuButton(button, label, theme) {
      }
 
      const { colors, sizes, fonts, glow } = theme;
-     const centerX = button.x + (button.width / 2);
-     const centerY = button.y + (button.height / 2);
+     const centerX = button.x + (button.width / 2); // label text width
+     const centerY = button.y + (button.height / 2); // label text height
 
      miniGameCtx.save();
      miniGameCtx.fillStyle = colors.buttonFill;
@@ -356,7 +356,7 @@ function drawMenuButton(button, label, theme) {
      miniGameCtx.restore();
 }
 
-// NOTE: START/STOP BUTTON SHAPE
+// NOTE: LEFT/RIGHT BUTTON SHAPE
 
 function drawControlButton(button, isPressed, theme) {
      if (!miniGameCtx) {
@@ -491,7 +491,7 @@ function drawTouchButtons(theme) {
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
 
-     //FIXME: REVISIT BUTTON LABELS
+     //FIXME: LEFT/RIGHT BUTTON LABELS
 
      miniGameCtx.font = `${leftButton.height * 0.5}px ${fonts.symbol}`;
      miniGameCtx.fillText(
@@ -522,7 +522,7 @@ function drawMenuOverlay(theme) {
      miniGameCtx.save();
      miniGameCtx.globalAlpha = 1;
 
-     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.85)";
+     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.75)";
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
      drawPanelBox(
