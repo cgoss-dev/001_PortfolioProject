@@ -101,6 +101,7 @@ function getCssPixelSize(variableName, fallback = 16) {
 
 function getUiTheme() {
      const fontColor = getCssColor("--font-color", getCssColor("--color-text", "#ffffff"));
+     const hudScale = Math.max(0.7, Math.min(1, miniGameWidth / 360));
 
      return {
           fonts: {
@@ -143,7 +144,7 @@ function getUiTheme() {
                statusFontSize: getCssPixelSize("--font-size-small", 8),
                statusFontY: 20,
 
-               starSize: 16 * hudScale, //Req to adjust size within canvas on small screens.
+               starSize: 16 * hudScale,
                heartSize: 22 * hudScale,
 
                starIconY: 4,
@@ -165,6 +166,7 @@ function getUiTheme() {
           }
      };
 }
+
 
 // SHARED DRAW HELPERS
 
