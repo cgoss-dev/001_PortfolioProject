@@ -739,11 +739,13 @@ h1 {
 
 .game-container {
      /* Allow canvas height to vary from 75% to 125% of its width. */
-     width: min(100%, 40rem);
+     --game-canvas-width: min(100%, 40rem);
+
+     width: var(--game-canvas-width);
      height: clamp(
-          calc(min(100vw, 40rem) * 0.75),
+          calc(var(--game-canvas-width) * 0.75),
           70dvh,
-          calc(min(100vw, 40rem) * 1.25)
+          calc(var(--game-canvas-width) * 1.25)
      );
 
      margin: 0 auto;
@@ -755,26 +757,19 @@ h1 {
      display: flex;
      align-items: stretch;
      justify-content: stretch;
+     touch-action: none;
 }
-
 
 #miniGameCanvas {
      width: 100%;
      height: 100%;
      display: block;
      border-radius: inherit;
+     background: var(--translucent-medium);
+     touch-action: none;
 }
 
 /* REQ TO PREVENT HOLD/FAST CLICK FROM HIGHLIGHTING ON MOBILE */
-
-.game-container,
-#miniGameCanvas {
-     touch-action: none;
-     user-select: none;
-     -webkit-user-select: none;
-     -webkit-touch-callout: none;
-     -webkit-tap-highlight-color: transparent;
-}
 
 html,
 body,
@@ -787,11 +782,6 @@ body,
      user-select: none;
      -webkit-touch-callout: none;
      -webkit-tap-highlight-color: transparent;
-}
-
-.game-container,
-#miniGameCanvas {
-     touch-action: none;
 }
 
 body {

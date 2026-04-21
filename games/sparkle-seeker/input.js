@@ -23,7 +23,6 @@ import {
      setGamePaused,
      setGameMenuOpen,
      setGameMenuView,
-     clearTouchMoveTarget,
      setLeftButtonPressed,
      setLeftButtonPointerId,
      setPauseButtonPressed,
@@ -51,9 +50,9 @@ import {
 
 // EDGE CONTROLS
 const touchControlLayout = {
+     buttonSize: 60,
      buttonEdgePaddingX: 10,
      buttonEdgePaddingY: 10,
-     buttonGap: 10,
      buttonVisualScale: 1
 };
 
@@ -122,6 +121,22 @@ function isPointInsideControlButton(x, y, button) {
      const hitRadius = (button.width / 2) * touchControlLayout.buttonVisualScale;
 
      return isPointInsideCircle(x, y, centerX, centerY, hitRadius);
+}
+
+function capturePointer(pointerId) {
+     if (!miniGameCanvas?.setPointerCapture) {
+          return;
+     }
+
+     miniGameCanvas.setPointerCapture(pointerId);
+}
+
+function releasePointer(pointerId) {
+     if (!miniGameCanvas?.hasPointerCapture?.(pointerId)) {
+          return;
+     }
+
+     miniGameCanvas.releasePointerCapture(pointerId);
 }
 
 function getCanvasPointerPosition(event) {
@@ -255,16 +270,6 @@ function resetCanvasCursor() {
      miniGameCanvas.style.cursor = "default";
 }
 
-// MOVEMENT
-
-function clearTouchMovement(pointerId) {
-     clearTouchMoveTarget(pointerId);
-
-     if (miniGameCanvas?.hasPointerCapture(pointerId)) {
-          miniGameCanvas.releasePointerCapture(pointerId);
-     }
-}
-
 // TOUCH CONTROL LAYOUT
 
 export function updateTouchControlBounds() {
@@ -276,7 +281,7 @@ export function updateTouchControlBounds() {
           return;
      }
 
-     const buttonDiameter = pauseButton.width * touchControlLayout.buttonVisualScale;
+     const buttonDiameter = touchControlLayout.buttonSize * touchControlLayout.buttonVisualScale;
      const buttonY =
           miniGameHeight -
           touchControlLayout.buttonEdgePaddingY -
@@ -284,15 +289,21 @@ export function updateTouchControlBounds() {
 
      leftButton.x = touchControlLayout.buttonEdgePaddingX;
      leftButton.y = buttonY;
+     leftButton.width = buttonDiameter;
+     leftButton.height = buttonDiameter;
 
      pauseButton.x = (miniGameWidth / 2) - (buttonDiameter / 2);
      pauseButton.y = buttonY;
+     pauseButton.width = buttonDiameter;
+     pauseButton.height = buttonDiameter;
 
      rightButton.x =
           miniGameWidth -
           touchControlLayout.buttonEdgePaddingX -
           buttonDiameter;
      rightButton.y = buttonY;
+     rightButton.width = buttonDiameter;
+     rightButton.height = buttonDiameter;
 }
 
 // TOUCH RESET
@@ -316,8 +327,6 @@ export function resetTouchControls() {
           rightButton.isPressed = false;
           rightButton.pointerId = null;
      }
-
-     clearTouchMoveTarget(touchControls.touchMoveTarget.pointerId);
 
      resetCanvasCursor();
      updateTouchControlBounds();
@@ -488,6 +497,8 @@ function onPointerDown(event) {
           return;
      }
 
+     event.preventDefault();
+
      const pos = getCanvasPointerPosition(event);
 
      updateCanvasCursor(pos.x, pos.y);
@@ -497,19 +508,16 @@ function onPointerDown(event) {
 
           if (screenTarget === "start") {
                dismissScreenWelcomeToStart();
-               event.preventDefault();
                return;
           }
 
           if (screenTarget === "instructions") {
                dismissScreenWelcomeToInstructionsMenu();
-               event.preventDefault();
                return;
           }
 
           if (screenTarget === "options") {
                dismissScreenWelcomeToOptionsMenu();
-               event.preventDefault();
                return;
           }
 
@@ -521,19 +529,16 @@ function onPointerDown(event) {
 
           if (pausedTarget === "resume") {
                setGamePaused(false);
-               event.preventDefault();
                return;
           }
 
           if (pausedTarget === "instructions") {
                openScreenView("instructions", false);
-               event.preventDefault();
                return;
           }
 
           if (pausedTarget === "options") {
                openScreenView("options", false);
-               event.preventDefault();
                return;
           }
 
@@ -541,59 +546,44 @@ function onPointerDown(event) {
      }
 
      if (handleMenuClick(pos.x, pos.y)) {
-          event.preventDefault();
           return;
      }
 
      if (isPointInsideControlButton(pos.x, pos.y, touchControls.leftButton)) {
           setLeftButtonPressed(true);
           setLeftButtonPointerId(event.pointerId);
-          event.preventDefault();
+          capturePointer(event.pointerId);
           return;
      }
 
      if (isPointInsideControlButton(pos.x, pos.y, touchControls.pauseButton)) {
           setPauseButtonPressed(true);
           setPauseButtonPointerId(event.pointerId);
+          capturePointer(event.pointerId);
           triggerPauseAction();
-          event.preventDefault();
           return;
      }
 
      if (isPointInsideControlButton(pos.x, pos.y, touchControls.rightButton)) {
           setRightButtonPressed(true);
           setRightButtonPointerId(event.pointerId);
-          event.preventDefault();
+          capturePointer(event.pointerId);
           return;
      }
 }
 
 function onPointerMove(event) {
-     const pos = getCanvasPointerPosition(event);
-
-     updateCanvasCursor(pos.x, pos.y);
-
-     if (isAnyScreenActive()) {
-          return;
-     }
-
      event.preventDefault();
+
+     const pos = getCanvasPointerPosition(event);
+     updateCanvasCursor(pos.x, pos.y);
 }
 
 function onPointerUp(event) {
-     event.preventDefault(); // REQ TO PREVENT HOLD/FAST CLICK ON MOBILE DEVICES.
+     event.preventDefault();
 
-     if (isAnyScreenActive()) {
-          if (miniGameCanvas) {
-               const pos = getCanvasPointerPosition(event);
-               updateCanvasCursor(pos.x, pos.y);
-          }
-
-          return;
-     }
-
-     clearTouchMovement(event.pointerId);
      clearButtons(event.pointerId);
+     releasePointer(event.pointerId);
 
      if (miniGameCanvas) {
           const pos = getCanvasPointerPosition(event);
@@ -622,11 +612,14 @@ export function bindPointerInput() {
      setPointerInputBound(true);
 }
 
-// RESIZE
+// NOTE: RESIZE
 
 let resizeLayoutCallback = null;
+let resizeFrameId = 0;
 
-function handleWindowResize() {
+function runResizeLayout() {
+     resizeFrameId = 0;
+
      if (resizeLayoutCallback) {
           resizeLayoutCallback();
      } else {
@@ -635,6 +628,14 @@ function handleWindowResize() {
      }
 
      resetCanvasCursor();
+}
+
+function handleWindowResize() {
+     if (resizeFrameId) {
+          cancelAnimationFrame(resizeFrameId);
+     }
+
+     resizeFrameId = requestAnimationFrame(runResizeLayout);
 }
 
 export function bindResizeHandler(callback = null) {
@@ -647,5 +648,8 @@ export function bindResizeHandler(callback = null) {
      }
 
      window.addEventListener("resize", handleWindowResize);
+     window.addEventListener("orientationchange", handleWindowResize);
+     window.visualViewport?.addEventListener("resize", handleWindowResize);
+
      setResizeHandlerBound(true);
 }

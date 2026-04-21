@@ -38,7 +38,8 @@ import {
      drawSparkles,
      drawObstacles,
      drawCollisionBursts,
-     getCurrentLevelNumber
+     getCurrentLevelProgressStars,
+     playerBaseHealth
 } from "./entities.js";
 
 import {
@@ -101,7 +102,6 @@ function getCssPixelSize(variableName, fallback = 16) {
 
 function getUiTheme() {
      const fontColor = getCssColor("--font-color", getCssColor("--color-text", "#ffffff"));
-     const hudScale = Math.max(0.7, Math.min(1, miniGameWidth / 360));
 
      return {
           fonts: {
@@ -394,12 +394,12 @@ function drawScore(theme) {
 
      const { colors, sizes, fonts, glow } = theme;
      const formattedScore = String(sparkleScore).padStart(3, "0");
-     const currentLevel = Math.max(1, Math.min(5, getCurrentLevelNumber()));
+     const filledStars = getCurrentLevelProgressStars();
 
      let starRow = "";
 
      for (let i = 1; i <= 5; i += 1) {
-          starRow += (i <= currentLevel) ? "\u2605\uFE0E" : "\u2606\uFE0E";
+          starRow += (i <= filledStars) ? "\u2605\uFE0E" : "\u2606\uFE0E";
      }
 
      miniGameCtx.save();
@@ -451,16 +451,13 @@ function drawHealthStatus(theme) {
      }
 
      const { colors, sizes, fonts, glow } = theme;
+     const speedDelta = playerHealth - playerBaseHealth;
      let statusText = "";
 
-     if (playerHealth >= 5) {
-          statusText = "Points x2!";
-     } else if (playerHealth === 4) {
-          statusText = "Speed +1";
-     } else if (playerHealth === 2) {
-          statusText = "Speed -1";
-     } else if (playerHealth === 1) {
-          statusText = "Speed -2";
+     if (speedDelta > 0) {
+          statusText = `Speed +${speedDelta}`;
+     } else if (speedDelta < 0) {
+          statusText = `Speed ${speedDelta}`;
      }
 
      miniGameCtx.save();
@@ -944,7 +941,7 @@ function drawGameStatusOverlay(theme) {
      miniGameCtx.restore();
 }
 
-// MASTER DRAW ENTRY
+// NOTE: MASTER DRAW ENTRY
 
 export function drawGame() {
      const theme = getUiTheme();

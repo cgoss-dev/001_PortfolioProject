@@ -349,7 +349,18 @@ export function getCurrentLevelData() {
      };
 }
 
-// REVIEW: HUD LVL
+// NOTE: LEVEL PROGRESS
+// Stars represent progress through the current level, not the current level number.
+export function getCurrentLevelProgressStars() {
+     const levelData = getCurrentLevelData();
+     const levelScoreRange = levelData.maxScore - levelData.minScore + 1;
+     const scoreIntoLevel = sparkleScore - levelData.minScore + 1;
+     const progressRatio = Math.max(0, Math.min(1, scoreIntoLevel / levelScoreRange));
+
+     return Math.max(0, Math.min(5, Math.ceil(progressRatio * 5)));
+}
+
+// NOTE: LEVEL NUMBER
 // Handy if you want to draw "LVL 3" in the HUD later.
 export function getCurrentLevelNumber() {
      return getCurrentLevelData().level;

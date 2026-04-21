@@ -12,7 +12,7 @@ export const miniGameCanvas = document.getElementById("miniGameCanvas");
 export const miniGameCtx = miniGameCanvas ? miniGameCanvas.getContext("2d") : null;
 
 // These track the CSS-sized play area used by gameplay logic.
-// The real canvas pixel size can still be scaled elsewhere for DPR.
+// Width and height stay separate so the canvas can be rectangular without stretching gameplay.
 export let miniGameWidth = 0;
 export let miniGameHeight = 0;
 
@@ -27,9 +27,9 @@ export const player = {
      char: "😐",
      size: 64,
      speed: 2,
-     radius: 32,
+     radius: 30,
 
-     baseSize: 54,
+     baseSize: 64,
      baseRadius: 30,
 
      // Temporary face-expression timer.
@@ -56,16 +56,17 @@ export const collisionBursts = [];
 
 export let sparkleScore = 0;
 export let sparkleHealProgress = 0;
+export let scoreMultiplier = 1;
 
 export let playerHealth = 3;
 export const maxPlayerHealth = 5;
 
 // ==================================================
-// OPTIONS LEVELS
+// NOTE: OPTIONS LEVELS
 // Shared scale for Options submenu items.
 // ==================================================
 
-export const optionLevelLabels = ["Off", "Low", "Med", "High", "Max"];
+export const optionLevelLabels = ["Off", "Min", "Low", "Med", "Max"];
 export const optionLevelValues = [0, 0.25, 0.5, 0.75, 1];
 export const maxOptionLevelIndex = optionLevelLabels.length - 1;
 export const defaultOptionLevelIndex = 1;
@@ -131,13 +132,6 @@ export const gameMenuUi = {
 // ==================================================
 
 export const touchControls = {
-     touchMoveTarget: {
-          x: 0.5,
-          y: 0.5,
-          pointerId: null,
-          isActive: false
-     },
-
      leftButton: {
           x: 0,
           y: 0,
@@ -168,26 +162,6 @@ export const touchControls = {
           label: "R"
      }
 };
-
-// ==================================================
-// TOUCH TARGET HELPERS
-// ==================================================
-
-export function setTouchMoveTarget(x, y, pointerId) {
-     touchControls.touchMoveTarget.x = x;
-     touchControls.touchMoveTarget.y = y;
-     touchControls.touchMoveTarget.pointerId = pointerId;
-     touchControls.touchMoveTarget.isActive = true;
-}
-
-export function clearTouchMoveTarget(pointerId) {
-     if (touchControls.touchMoveTarget.pointerId !== pointerId) {
-          return;
-     }
-
-     touchControls.touchMoveTarget.isActive = false;
-     touchControls.touchMoveTarget.pointerId = null;
-}
 
 // ==================================================
 // ONE-TIME BIND FLAGS
@@ -242,12 +216,16 @@ export function setSparkleScore(value) {
      sparkleScore = Math.max(0, value);
 }
 
-// NOTE: SCORE MULTIPLIER
-// When player is at max health, all score gains are doubled.
-export function addSparkleScore(value) {
-     const multiplier = (playerHealth >= maxPlayerHealth) ? 2 : 1;
+export function setScoreMultiplier(value) {
+     scoreMultiplier = Math.max(1, value);
+}
 
-     sparkleScore = Math.max(0, sparkleScore + (value * multiplier));
+export function resetScoreMultiplier() {
+     scoreMultiplier = 1;
+}
+
+export function addSparkleScore(value) {
+     sparkleScore = Math.max(0, sparkleScore + (value * scoreMultiplier));
 }
 
 export function setSparkleHealProgress(value) {
@@ -417,6 +395,7 @@ export function setRightButtonPointerId(value) {
 export function resetGameState() {
      sparkleScore = 0;
      sparkleHealProgress = 0;
+     scoreMultiplier = 1;
 
      playerHealth = 3;
 
@@ -447,7 +426,7 @@ export function resetGameState() {
 }
 
 // ==================================================
-// SMALL SHARED HELPERS
+// NOTE: SMALL SHARED HELPERS
 // ==================================================
 
 export function randomItem(array) {

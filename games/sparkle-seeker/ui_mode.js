@@ -82,7 +82,8 @@ import {
      updateObstacles,
      updateCollisionBursts,
      collectSparkles,
-     hitObstacles
+     hitObstacles,
+     winScore
 } from "./entities.js";
 
 import {
@@ -513,7 +514,6 @@ export function updateMenuUiBounds() {
      });
 }
 
-
 export function isPointInsideMenuPanel(x, y) {
      return (
           x >= gameMenuUi.panel.x &&
@@ -527,9 +527,9 @@ export function getInstructionLines() {
      return [
           "Collect sparkles, avoid obstacles.",
           "Use L/R buttons or left/right keys to move.",
-          "Speed scales with health.",
-          "Fall rate scales with level.",
-          "Max health = double points."
+          "Health changes movement speed.",
+          "Stars show progress toward next level.",
+          "Reach the win score to clear the run."
      ];
 }
 
@@ -646,7 +646,7 @@ export function updateGame() {
           return;
      }
 
-     if (sparkleScore >= 1000) {
+     if (sparkleScore >= winScore) {
           setGameWon(true);
           setGameOver(false);
           setGamePaused(true);
