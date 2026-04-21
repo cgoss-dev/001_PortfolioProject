@@ -89,11 +89,37 @@ export const playerBaseHealth = 3;
 export const playerBaseSpeed = 3;
 export const playerSpeedPerHeart = 1;
 
-// NOTE: PLAYER BASE SIZE
+// PLAYER BASE SIZE
 // These are the player's normal visual/collision values.
 // We keep them separate so level-based scaling can always return to the original size cleanly.
 export const playerBaseSize = 64;
 export const playerBaseRadius = 30;
+
+// ==================================================
+// NOTE: PLAYER TRAIL
+// Short rainbow ribbon segments that follow actual movement.
+// This works for x-only movement now and will still work if y movement returns later.
+// ==================================================
+
+export const playerTrailCountMax = 2;
+export const playerTrailCountMin = 0;
+
+export const playerTrailLifeMax = 64;
+export const playerTrailLifeMin = 8;
+
+export const playerTrailWidthMax = 10;
+export const playerTrailWidthMin = 2;
+
+export const playerTrailOffsetMax = 25;
+export const playerTrailOffsetMin = -25;
+
+export const playerTrailLengthMax = 32;
+export const playerTrailLengthMin = 2;
+
+// Negative raises the ribbon anchor above the player center; positive lowers it.
+export const playerTrailAnchorYOffset = -4;
+
+const playerTrail = [];
 
 // ==================================================
 // SHARED VISUAL HELPERS
@@ -163,6 +189,87 @@ export function resetEntityColorCycle() {
      }
 
      sparkleColorEngine.engine = null;
+}
+
+// ==================================================
+// PLAYER TRAIL HELPERS
+// ==================================================
+
+function createPlayerTrail(fromX, fromY, toX, toY) {
+     const dx = toX - fromX;
+     const dy = toY - fromY;
+     const distance = Math.hypot(dx, dy);
+
+     if (distance < 0.5) {
+          return;
+     }
+
+     const directionX = dx / distance;
+     const directionY = dy / distance;
+     const normalX = -directionY;
+     const normalY = directionX;
+     const trailCount = Math.floor(randomNumber(playerTrailCountMin, playerTrailCountMax + 1));
+
+     for (let i = 0; i < trailCount; i += 1) {
+          const life = Math.floor(randomNumber(playerTrailLifeMin, playerTrailLifeMax + 1));
+          const width = randomNumber(playerTrailWidthMin, playerTrailWidthMax);
+          const offset = randomNumber(playerTrailOffsetMin, playerTrailOffsetMax);
+          const length = randomNumber(playerTrailLengthMin, playerTrailLengthMax);
+
+          const trailFromX = toX - (directionX * length);
+          const trailFromY = toY - (directionY * length);
+
+          playerTrail.push({
+               fromX: trailFromX + (normalX * offset),
+               fromY: trailFromY + (normalY * offset),
+               toX: toX + (normalX * offset),
+               toY: toY + (normalY * offset),
+               color: getNextSparkleColor(),
+               life,
+               maxLife: life,
+               width
+          });
+     }
+}
+
+export function updatePlayerTrail() {
+     for (let i = playerTrail.length - 1; i >= 0; i -= 1) {
+          const trail = playerTrail[i];
+
+          trail.life -= 1;
+
+          if (trail.life <= 0) {
+               playerTrail.splice(i, 1);
+          }
+     }
+}
+
+export function drawPlayerTrail() {
+     if (!miniGameCtx) {
+          return;
+     }
+
+     const glowBlur = getGameGlowBlur();
+
+     for (let i = playerTrail.length - 1; i >= 0; i -= 1) {
+          const trail = playerTrail[i];
+          const lifeRatio = trail.life / trail.maxLife;
+
+          miniGameCtx.save();
+          miniGameCtx.globalAlpha = Math.max(0, lifeRatio * 0.75);
+          miniGameCtx.strokeStyle = trail.color;
+          miniGameCtx.shadowColor = trail.color;
+          miniGameCtx.shadowBlur = glowBlur;
+          miniGameCtx.lineWidth = trail.width * lifeRatio;
+          miniGameCtx.lineCap = "round";
+
+          miniGameCtx.beginPath();
+          miniGameCtx.moveTo(trail.fromX, trail.fromY);
+          miniGameCtx.lineTo(trail.toX, trail.toY);
+          miniGameCtx.stroke();
+
+          miniGameCtx.restore();
+     }
 }
 
 // ==================================================
@@ -282,12 +389,13 @@ export function applyPlayerLevelScale() {
 
 export function resetPlayerPosition() {
      player.x = miniGameWidth / 2;
-     player.y = miniGameHeight / 2;
+     player.y = miniGameHeight * 0.75;
      player.size = playerBaseSize;
      player.radius = playerBaseRadius;
      player.sparkleFaceTimer = 0;
      player.hitScale = 1;
      player.lowHealthPulseTime = 0;
+     playerTrail.length = 0;
      syncPlayerHealthState();
 }
 
@@ -307,60 +415,38 @@ export function clampPlayerToCanvas() {
 
 export function updatePlayer() {
      let dx = 0;
-     let dy = 0;
 
-     if (keys["w"] || keys["arrowup"]) {
-          dy -= 1;
-     }
-
-     if (keys["s"] || keys["arrowdown"]) {
-          dy += 1;
-     }
-
-     if (keys["a"] || keys["arrowleft"]) {
+     if (
+          keys["a"] ||
+          keys["arrowleft"] ||
+          touchControls.leftButton?.isPressed
+     ) {
           dx -= 1;
      }
 
-     if (keys["d"] || keys["arrowright"]) {
+     if (
+          keys["d"] ||
+          keys["arrowright"] ||
+          touchControls.rightButton?.isPressed
+     ) {
           dx += 1;
      }
 
-     // ==================================================
-     // TOUCH INPUT (FULL CANVAS MOVEMENT)
-     // ==================================================
-
-     if (touchControls.touchMoveTarget.isActive) {
-          const targetX = touchControls.touchMoveTarget.x * miniGameWidth;
-          const targetY = touchControls.touchMoveTarget.y * miniGameHeight;
-
-          const tdx = targetX - player.x;
-          const tdy = targetY - player.y;
-          const distance = Math.hypot(tdx, tdy);
-
-          if (distance > 4) {
-               const dirX = tdx / distance;
-               const dirY = tdy / distance;
-
-               dx += dirX;
-               dy += dirY;
-          }
-     }
-
-     // ==================================================
-     // NORMALIZE COMBINED INPUT (KEYBOARD + TOUCH)
-     // ==================================================
-
-     const magnitude = Math.hypot(dx, dy);
-
-     if (magnitude > 0) {
-          dx /= magnitude;
-          dy /= magnitude;
-     }
+     const previousX = player.x;
+     const previousY = player.y;
 
      player.x += dx * player.speed;
-     player.y += dy * player.speed;
 
      clampPlayerToCanvas();
+
+     if (player.x !== previousX || player.y !== previousY) {
+          createPlayerTrail(
+               previousX,
+               previousY + playerTrailAnchorYOffset,
+               player.x,
+               player.y + playerTrailAnchorYOffset
+          );
+     }
 }
 
 export function updatePlayerFaceState() {

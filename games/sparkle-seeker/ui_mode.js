@@ -75,6 +75,7 @@ import {
      resetEntityColorCycle,
      updatePlayer,
      updatePlayerFaceState,
+     updatePlayerTrail,
      updateSparkleSpawns,
      updateObstacleSpawns,
      updateSparkles,
@@ -518,7 +519,7 @@ export function isPointInsideMenuPanel(x, y) {
 export function getInstructionLines() {
      return [
           "Collect sparkles, avoid obstacles.",
-          "Hold WASD/arrows or pointer/touch to move.",
+          "Use L/R buttons or left/right keys to move.",
           "Speed scales with health.",
           "Fall rate scales with level.",
           "Max health = double points."
@@ -619,6 +620,7 @@ export function updateGame() {
      }
 
      updateCollisionBursts();
+     updatePlayerTrail();
      collectSparkles();
 
      if (obstaclesEnabled) {

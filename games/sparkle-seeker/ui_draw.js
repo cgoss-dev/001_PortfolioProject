@@ -34,6 +34,7 @@ import {
 
 import {
      drawPlayer,
+     drawPlayerTrail,
      drawSparkles,
      drawObstacles,
      drawCollisionBursts,
@@ -99,6 +100,8 @@ function getCssPixelSize(variableName, fallback = 16) {
 // NOTE: SHARED UI THEME
 
 function getUiTheme() {
+     const fontColor = getCssColor("--font-color", getCssColor("--color-text", "#ffffff"));
+
      return {
           fonts: {
                display: getCssString("--font-display", '"Bungee Shade", cursive'),
@@ -107,43 +110,43 @@ function getUiTheme() {
           },
 
           colors: {
-               fontColor: getCssColor("--color-text", "#ffffff"),
+               fontColor,
 
                fillColorNone: getCssColor("--overlay-none", "rgba(0, 0, 0, 0)"),
                fillColorSoft: getCssColor("--overlay-soft", "rgba(0, 0, 0, 0.25)"),
                fillColorMed: getCssColor("--overlay-medium", "rgba(0, 0, 0, 0.5)"),
                fillColorHard: getCssColor("--overlay-strong", "rgba(0, 0, 0, 0.75)"),
 
-               outlineStrong: getCssColor("--color-text", "#ffffff"),
+               outlineStrong: fontColor,
                outlineSoft: "rgba(255, 255, 255, 0.25)",
 
                controlFill: "rgba(255, 255, 255, 0.25)",
                controlFillPressed: "rgba(255, 255, 255, 0.75)",
-               controlText: getCssColor("--font-color", getCssColor("--color-text", "#ffffff")),
-               controlGlow: getCssColor("--font-color", getCssColor("--color-text", "#ffffff")),
+               controlText: fontColor,
+               controlGlow: fontColor,
 
-               overlayGlow: getCssColor("--font-color", getCssColor("--color-text", "#ffffff")),
-               scoreGlow: getCssColor("--font-color", getCssColor("--color-text", "#ffffff")),
+               overlayGlow: fontColor,
+               scoreGlow: fontColor,
 
-               starFull: getCssColor("--font-color", getCssColor("--color-text", "#ffffff")),
-               starGlow: getCssColor("--font-color", getCssColor("--color-text", "#ffffff")),
-               scoreText: getCssColor("--font-color", getCssColor("--color-text", "#ffffff")),
-               scoreTextGlow: getCssColor("--font-color", getCssColor("--color-text", "#ffffff")),
+               starFull: fontColor,
+               starGlow: fontColor,
+               scoreText: fontColor,
+               scoreTextGlow: fontColor,
 
-               heartFull: getCssColor("--font-color", getCssColor("--color-text", "#ffffff")),
-               heartGlow: getCssColor("--font-color", getCssColor("--color-text", "#ffffff")),
-               statusText: getCssColor("--font-color", getCssColor("--color-text", "#ffffff")),
-               statusTextGlow: getCssColor("--font-color", getCssColor("--color-text", "#ffffff"))
+               heartFull: fontColor,
+               heartGlow: fontColor,
+               statusText: fontColor,
+               statusTextGlow: fontColor
           },
 
           sizes: {
-               statusFontSize: getCssPixelSize("--font-size-medium", 16),
+               statusFontSize: getCssPixelSize("--font-size-small", 8),
                statusFontY: 20,
 
                starSize: 16,
                heartSize: 22,
 
-               starIconY: 3,
+               starIconY: 4,
                heartIconY: 2,
 
                scoreX: 5,
@@ -446,7 +449,7 @@ function drawHealthStatus(theme) {
      }
 
      const { colors, sizes, fonts, glow } = theme;
-     let statusText = "Ok!";
+     let statusText = "";
 
      if (playerHealth >= 5) {
           statusText = "Points x2!";
@@ -481,29 +484,35 @@ function drawTouchButtons(theme) {
      }
 
      const { colors, fonts, glow } = theme;
-     const pauseButton = touchControls.pauseButton;
+     const buttons = [
+          touchControls.leftButton,
+          touchControls.pauseButton,
+          touchControls.rightButton
+     ];
 
-     if (!pauseButton) {
-          return;
-     }
+     buttons.forEach((button) => {
+          if (!button) {
+               return;
+          }
 
-     drawControlButton(pauseButton, pauseButton.isPressed, theme);
+          drawControlButton(button, button.isPressed, theme);
 
-     miniGameCtx.save();
-     miniGameCtx.fillStyle = colors.fontColor;
-     miniGameCtx.textAlign = "center";
-     miniGameCtx.textBaseline = "middle";
-     miniGameCtx.shadowColor = colors.controlGlow;
-     miniGameCtx.shadowBlur = glow.uiSoftGlow;
+          miniGameCtx.save();
+          miniGameCtx.fillStyle = colors.fontColor;
+          miniGameCtx.textAlign = "center";
+          miniGameCtx.textBaseline = "middle";
+          miniGameCtx.shadowColor = colors.controlGlow;
+          miniGameCtx.shadowBlur = glow.uiSoftGlow;
 
-     miniGameCtx.font = `${pauseButton.height * 0.5}px ${fonts.symbol}`;
-     miniGameCtx.fillText(
-          pauseButton.label,
-          pauseButton.x + (pauseButton.width / 2),
-          pauseButton.y + (pauseButton.height / 2) + 1
-     );
+          miniGameCtx.font = `400 ${button.height * 0.42}px ${fonts.body}`;
+          miniGameCtx.fillText(
+               button.label,
+               button.x + (button.width / 2),
+               button.y + (button.height / 2) + 1
+          );
 
-     miniGameCtx.restore();
+          miniGameCtx.restore();
+     });
 }
 
 // FULL-SCREEN SCREENS
@@ -949,6 +958,7 @@ export function drawGame() {
           drawSparkles();
           drawObstacles();
           drawCollisionBursts();
+          drawPlayerTrail();
           drawPlayer();
 
           drawScore(theme);

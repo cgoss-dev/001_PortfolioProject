@@ -138,6 +138,16 @@ export const touchControls = {
           isActive: false
      },
 
+     leftButton: {
+          x: 0,
+          y: 0,
+          width: 60,
+          height: 60,
+          isPressed: false,
+          pointerId: null,
+          label: "L"
+     },
+
      pauseButton: {
           x: 0,
           y: 0,
@@ -146,6 +156,16 @@ export const touchControls = {
           isPressed: false,
           pointerId: null,
           label: "\u23EF\uFE0E"
+     },
+
+     rightButton: {
+          x: 0,
+          y: 0,
+          width: 60,
+          height: 60,
+          isPressed: false,
+          pointerId: null,
+          label: "R"
      }
 };
 
@@ -364,6 +384,14 @@ export function setGameOverlayDuration(value) {
 // TOUCH BUTTON SETTERS
 // ==================================================
 
+export function setLeftButtonPressed(value) {
+     touchControls.leftButton.isPressed = value;
+}
+
+export function setLeftButtonPointerId(value) {
+     touchControls.leftButton.pointerId = value;
+}
+
 export function setPauseButtonPressed(value) {
      touchControls.pauseButton.isPressed = value;
 }
@@ -372,13 +400,12 @@ export function setPauseButtonPointerId(value) {
      touchControls.pauseButton.pointerId = value;
 }
 
-// Compatibility aliases for older imports.
-export function setpauseButtonPressed(value) {
-     setPauseButtonPressed(value);
+export function setRightButtonPressed(value) {
+     touchControls.rightButton.isPressed = value;
 }
 
-export function setpauseButtonPointerId(value) {
-     setPauseButtonPointerId(value);
+export function setRightButtonPointerId(value) {
+     touchControls.rightButton.pointerId = value;
 }
 
 // ==================================================
