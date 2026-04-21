@@ -77,23 +77,20 @@ export const defaultOptionLevelIndex = 1;
 export let gameStarted = false;
 export let gamePaused = true;
 
+// Transitional screen-routing state.
+// These can be removed later once the menu layer is fully collapsed.
 export let gameMenuOpen = false;
 export let gameMenuView = "main";
 
-// NOTE: TRANSITIONAL BOOLEAN FLAGS
-// These stay for compatibility while the rest of the files are updated.
+// Compatibility booleans for gameplay/audio systems that still expect simple flags.
 export let musicEnabled = true;
 export let soundEffectsEnabled = true;
 export let obstaclesEnabled = true;
 
-// NOTE: NEW OPTIONS LEVEL STATE
-// These persist across rounds and only change when the player changes them.
+// Persistent option levels.
 export let musicLevel = defaultOptionLevelIndex;
 export let soundEffectsLevel = defaultOptionLevelIndex;
 export let obstaclesLevel = defaultOptionLevelIndex;
-
-// Old difficulty model can stay for now while Options is being rebuilt.
-export let difficultyIndex = 1;
 
 export let gameOver = false;
 export let gameWon = false;
@@ -109,9 +106,8 @@ export let gameOverlayTimer = 0;
 export let gameOverlayDuration = 0;
 
 // ==================================================
-// NOTE: MENU UI HIT BOXES
+// NOTE: SCREEN UI HIT BOXES
 // These are layout bounds used by pointer/touch input.
-// UI code can update them after canvas resize or redraw.
 // ==================================================
 
 export const gameMenuUi = {
@@ -119,17 +115,8 @@ export const gameMenuUi = {
 
      newGameButton: { x: 0, y: 0, width: 0, height: 0 },
      instructionsButton: { x: 0, y: 0, width: 0, height: 0 },
-
-     // Transitional: keep difficultyButton for current code until ui files are updated.
-     difficultyButton: { x: 0, y: 0, width: 0, height: 0 },
-
-     // New main-menu entry for the rebuilt submenu.
      optionsButton: { x: 0, y: 0, width: 0, height: 0 },
 
-     // Transitional: keep soundButton for current code until ui files are updated.
-     soundButton: { x: 0, y: 0, width: 0, height: 0 },
-
-     // New Options submenu controls.
      obstaclesToggleButton: { x: 0, y: 0, width: 0, height: 0 },
      musicToggleButton: { x: 0, y: 0, width: 0, height: 0 },
      soundEffectsToggleButton: { x: 0, y: 0, width: 0, height: 0 },
@@ -151,7 +138,7 @@ export const touchControls = {
           isActive: false
      },
 
-     leftButton: {
+     pauseButton: {
           x: 0,
           y: 0,
           width: 60,
@@ -160,16 +147,6 @@ export const touchControls = {
           pointerId: null,
           label: "\u23EF\uFE0E"
      },
-
-     rightButton: {
-          x: 0,
-          y: 0,
-          width: 60,
-          height: 60,
-          isPressed: false,
-          pointerId: null,
-          label: "\u2630\uFE0E"
-     }
 };
 
 // REVIEW - TOUCHSCREEN FUNCTIONALITY
@@ -320,7 +297,7 @@ export function setGameMenuView(value) {
      gameMenuView = value;
 }
 
-// Transitional boolean setters: keep old callers working by syncing level state too.
+// Compatibility boolean setters.
 export function setMusicEnabled(value) {
      musicEnabled = value;
      musicLevel = value ? maxOptionLevelIndex : 0;
@@ -331,16 +308,12 @@ export function setSoundEffectsEnabled(value) {
      soundEffectsLevel = value ? maxOptionLevelIndex : 0;
 }
 
-export function setDifficultyIndex(value) {
-     difficultyIndex = value;
-}
-
 export function setObstaclesEnabled(value) {
      obstaclesEnabled = value;
      obstaclesLevel = value ? maxOptionLevelIndex : 0;
 }
 
-// New level setters: these are what the rebuilt Options menu should use.
+// Level setters for Options UI.
 export function setMusicLevel(value) {
      musicLevel = clampOptionLevelIndex(value);
      syncMusicEnabledFromLevel();
@@ -388,20 +361,12 @@ export function setGameOverlayDuration(value) {
 // TOUCH BUTTON SETTERS
 // ==================================================
 
-export function setLeftButtonPressed(value) {
-     touchControls.leftButton.isPressed = value;
+export function setpauseButtonPressed(value) {
+     touchControls.pauseButton.isPressed = value;
 }
 
-export function setLeftButtonPointerId(value) {
-     touchControls.leftButton.pointerId = value;
-}
-
-export function setRightButtonPressed(value) {
-     touchControls.rightButton.isPressed = value;
-}
-
-export function setRightButtonPointerId(value) {
-     touchControls.rightButton.pointerId = value;
+export function setpauseButtonPointerId(value) {
+     touchControls.pauseButton.pointerId = value;
 }
 
 // ==================================================
@@ -421,8 +386,6 @@ export function resetGameState() {
 
      gameMenuOpen = false;
      gameMenuView = "main";
-
-     difficultyIndex = 1;
 
      // Options are intentionally NOT reset here.
      // They persist across rounds until the player changes them.

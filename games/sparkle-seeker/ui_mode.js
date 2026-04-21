@@ -1,4 +1,4 @@
-// NOTE: UI MODE / MENU / OVERLAY / STARTUP
+// NOTE: UI MODE / SCREEN FLOW / OVERLAY / STARTUP
 // Game entry file loaded by page.
 //
 // Owned here:
@@ -11,11 +11,10 @@
 // - canvas drawing
 // - theme/color/font helpers
 // - welcome screen rendering
-// - menu rendering
 //
 // Beginner note:
 // Think of this file as the "brain" for UI state.
-// A future ui_draw.js will be the "paintbrush."
+// ui_draw.js is the "paintbrush."
 
 import {
      miniGameCanvas,
@@ -33,12 +32,9 @@ import {
      gameOverlayTimer,
      gameOverlayDuration,
      gameMenuUi,
-     musicEnabled,
-     soundEffectsEnabled,
      musicLevel,
      soundEffectsLevel,
      obstaclesLevel,
-     difficultyIndex,
      obstaclesEnabled,
      optionLevelLabels,
      optionLevelValues,
@@ -57,13 +53,9 @@ import {
      setGameOverlaySubtext,
      setGameOverlayTimer,
      setGameOverlayDuration,
-     setMusicEnabled,
-     setSoundEffectsEnabled,
      setMusicLevel,
      setSoundEffectsLevel,
      setObstaclesLevel,
-     setDifficultyIndex,
-     setObstaclesEnabled,
      setMiniGameSize,
 
      resetGameState
@@ -81,7 +73,6 @@ import {
 import {
      resetPlayerPosition,
      resetEntityColorCycle,
-
      updatePlayer,
      updatePlayerFaceState,
      updateSparkleSpawns,
@@ -98,28 +89,27 @@ import {
      updateWelcomeTitleColors
 } from "./ui_draw.js";
 
-// NOTE - LEGACY DIFFICULTY OPTIONS
-// Kept temporarily so older menu code does not break while Options menu is rebuilt.
-export const difficultyOptions = ["Easy", "Normal", "Hard"];
 export const startOverlayDuration = 120;
 export const overlayFadeFrames = 30;
 
-// WELCOME STATE
-let gameWelcome = true;
-let gameWelcomeTimer = -1;
-let gameWelcomeDuration = -1;
+// SCREEN STATE
+let screenWelcome = true;
+let screenWelcomeTimer = -1;
+let screenWelcomeDuration = -1;
 
-// NOTE: WELCOME MODE
-let gameWelcomeMode = "welcome";
+// SCREEN MODE
+// `screenWelcome` is the only screen that hides the board.
+// `screenPaused`, `screenTryAgain`, and `screenYouWin` are overlays.
+let gameScreenMode = "screenWelcome";
 
-// WELCOME ACTION TARGETS
+// SCREEN ACTION TARGETS
+
 const gameWelcomeUi = {
      startButton: { x: 0, y: 0, width: 0, height: 0 },
      instructionsButton: { x: 0, y: 0, width: 0, height: 0 },
      menuButton: { x: 0, y: 0, width: 0, height: 0 }
 };
 
-// PAUSE ACTION TARGETS
 const gamePausedUi = {
      resumeButton: { x: 0, y: 0, width: 0, height: 0 },
      instructionsButton: { x: 0, y: 0, width: 0, height: 0 },
@@ -134,8 +124,20 @@ function setMenuViewAndRefresh(view) {
      updateMenuUiBounds();
 }
 
+export function isScreenWelcomeActive() {
+     return screenWelcome && gameScreenMode === "screenWelcome";
+}
+
+export function isOverlayScreenActive() {
+     return screenWelcome && (
+          gameScreenMode === "screenTryAgain" ||
+          gameScreenMode === "screenYouWin"
+     );
+}
+
+// Compatibility alias for older imports.
 export function isGameWelcomeActive() {
-     return gameWelcome;
+     return screenWelcome;
 }
 
 export function getGameWelcomeUi() {
@@ -146,55 +148,67 @@ export function getGamePausedUi() {
      return gamePausedUi;
 }
 
+export function getGameScreenMode() {
+     return gameScreenMode;
+}
+
+// Compatibility alias for older imports.
 export function getGameWelcomeMode() {
-     return gameWelcomeMode;
+     return gameScreenMode;
 }
 
 export function getWelcomeTitleLines() {
      return welcomeTitleLines;
 }
 
-export function getCurrentWelcomeTitleLines() {
-     if (gameWelcomeMode === "win") {
+export function getCurrentScreenTitleLines() {
+     if (gameScreenMode === "screenYouWin") {
           return ["YOU", "WIN"];
      }
 
-     if (gameWelcomeMode === "lose") {
+     if (gameScreenMode === "screenTryAgain") {
           return ["TRY", "AGAIN"];
      }
 
      return welcomeTitleLines;
 }
 
-export function getCurrentWelcomeActionTexts() {
-     if (gameWelcomeMode === "welcome") {
-          return ["START", "TIPS", "MENU"];
-     }
-
-     if (gameWelcomeMode === "win") {
-          return ["START", "TIPS", "MENU"];
-     }
-
-     if (gameWelcomeMode === "lose") {
-          return ["START", "TIPS", "MENU"];
-     }
-
-     return ["START", "TIPS", "MENU"];
+// Compatibility alias for older imports.
+export function getCurrentWelcomeTitleLines() {
+     return getCurrentScreenTitleLines();
 }
 
-export function dismissGameWelcomeToStart() {
-     gameWelcome = false;
-     gameWelcomeMode = "welcome";
-     gameWelcomeTimer = 0;
-     gameWelcomeDuration = 0;
+export function getCurrentScreenActionTexts() {
+     return ["NEW GAME", "TIPS", "OPTIONS"];
+}
+
+// Compatibility alias for older imports.
+export function getCurrentWelcomeActionTexts() {
+     return getCurrentScreenActionTexts();
+}
+
+export function getCurrentPausedActionTexts() {
+     return ["RESUME", "TIPS", "OPTIONS"];
+}
+
+export function dismissScreenWelcomeToStart() {
+     screenWelcome = false;
+     gameScreenMode = "screenWelcome";
+     screenWelcomeTimer = 0;
+     screenWelcomeDuration = 0;
      startNewGameRound();
 }
 
-export function dismissGameWelcomeToInstructionsMenu() {
-     gameWelcome = false;
-     gameWelcomeMode = "welcome";
-     gameWelcomeTimer = 0;
-     gameWelcomeDuration = 0;
+// Compatibility alias for older imports.
+export function dismissGameWelcomeToStart() {
+     dismissScreenWelcomeToStart();
+}
+
+export function dismissScreenWelcomeToInstructionsMenu() {
+     screenWelcome = false;
+     gameScreenMode = "screenWelcome";
+     screenWelcomeTimer = 0;
+     screenWelcomeDuration = 0;
 
      resetGameState();
      resetTouchControls();
@@ -214,11 +228,16 @@ export function dismissGameWelcomeToInstructionsMenu() {
      clearGameOverlay();
 }
 
-export function dismissGameWelcomeToMenu() {
-     gameWelcome = false;
-     gameWelcomeMode = "welcome";
-     gameWelcomeTimer = 0;
-     gameWelcomeDuration = 0;
+// Compatibility alias for older imports.
+export function dismissGameWelcomeToInstructionsMenu() {
+     dismissScreenWelcomeToInstructionsMenu();
+}
+
+export function dismissScreenWelcomeToOptionsMenu() {
+     screenWelcome = false;
+     gameScreenMode = "screenWelcome";
+     screenWelcomeTimer = 0;
+     screenWelcomeDuration = 0;
 
      resetGameState();
      resetTouchControls();
@@ -231,39 +250,109 @@ export function dismissGameWelcomeToMenu() {
      setGameStarted(false);
      setGamePaused(false);
      setGameMenuOpen(true);
-     setMenuViewAndRefresh("main");
+     setMenuViewAndRefresh("options");
      setGameOver(false);
      setGameWon(false);
 
      clearGameOverlay();
 }
 
-export function showGameWelcomeScreen(mode = "welcome") {
-     gameWelcome = true;
-     gameWelcomeMode = mode;
-     gameWelcomeTimer = -1;
-     gameWelcomeDuration = -1;
+// Compatibility alias for older imports.
+export function dismissGameWelcomeToOptionsMenu() {
+     dismissScreenWelcomeToOptionsMenu();
 }
 
+// Compatibility alias in case older input code still imports the old name.
+export function dismissGameWelcomeToMenu() {
+     dismissScreenWelcomeToOptionsMenu();
+}
+
+export function dismissPausedToInstructionsMenu() {
+     setGamePaused(true);
+     setGameMenuOpen(true);
+     setMenuViewAndRefresh("instructions");
+}
+
+export function dismissPausedToOptionsMenu() {
+     setGamePaused(true);
+     setGameMenuOpen(true);
+     setMenuViewAndRefresh("options");
+}
+
+export function dismissMenuBackToPreviousScreen() {
+     setGameMenuOpen(false);
+     setGameMenuView("");
+
+     if (!gameStarted) {
+          showScreenWelcome();
+          setGamePaused(false);
+          setGameOver(false);
+          setGameWon(false);
+          clearGameOverlay();
+          updateMenuUiBounds();
+          updateTouchControlBounds();
+          return;
+     }
+
+     setGamePaused(true);
+     gameScreenMode = "screenPaused";
+     updateMenuUiBounds();
+     updateTouchControlBounds();
+}
+
+export function showScreenWelcome() {
+     screenWelcome = true;
+     gameScreenMode = "screenWelcome";
+     screenWelcomeTimer = -1;
+     screenWelcomeDuration = -1;
+}
+
+export function showScreenTryAgain() {
+     screenWelcome = true;
+     gameScreenMode = "screenTryAgain";
+     screenWelcomeTimer = -1;
+     screenWelcomeDuration = -1;
+}
+
+export function showScreenYouWin() {
+     screenWelcome = true;
+     gameScreenMode = "screenYouWin";
+     screenWelcomeTimer = -1;
+     screenWelcomeDuration = -1;
+}
+
+// Compatibility wrapper for older calls.
+export function showGameWelcomeScreen(mode = "welcome") {
+     if (mode === "win") {
+          showScreenYouWin();
+          return;
+     }
+
+     if (mode === "lose") {
+          showScreenTryAgain();
+          return;
+     }
+
+     showScreenWelcome();
+}
+
+// Compatibility wrapper for older calls.
 export function dismissGameWelcomeBackToMain() {
-     gameWelcome = true;
-     gameWelcomeMode = "welcome";
-     gameWelcomeTimer = -1;
-     gameWelcomeDuration = -1;
+     showScreenWelcome();
 }
 
 export function getGameWelcomeAlpha() {
-     if (!gameWelcome) {
+     if (!screenWelcome) {
           return 0;
      }
 
-     if (gameWelcomeTimer < 0 || gameWelcomeDuration < 0) {
+     if (screenWelcomeTimer < 0 || screenWelcomeDuration < 0) {
           return 1;
      }
 
-     const elapsed = gameWelcomeDuration - gameWelcomeTimer;
+     const elapsed = screenWelcomeDuration - screenWelcomeTimer;
      const fadeIn = Math.min(1, elapsed / overlayFadeFrames);
-     const fadeOut = Math.min(1, gameWelcomeTimer / overlayFadeFrames);
+     const fadeOut = Math.min(1, screenWelcomeTimer / overlayFadeFrames);
 
      return Math.max(0, Math.min(1, Math.min(fadeIn, fadeOut)));
 }
@@ -303,15 +392,17 @@ export function startNewGameRound() {
      updateTouchControlBounds();
      updateMenuUiBounds();
 
+     screenWelcome = false;
+
      setGameStarted(true);
      setGamePaused(false);
      setGameMenuOpen(false);
-     setMenuViewAndRefresh("main");
+     setGameMenuView("");
      setGameOver(false);
      setGameWon(false);
 }
 
-// MENU
+// OPTIONS
 
 export function getOptionLevelLabel(levelIndex) {
      return optionLevelLabels[levelIndex] || optionLevelLabels[0];
@@ -325,16 +416,6 @@ function getNextOptionLevelIndex(levelIndex) {
      return (levelIndex + 1) % (maxOptionLevelIndex + 1);
 }
 
-// LEGACY HELPERS
-export function getCurrentDifficultyLabel() {
-     return difficultyOptions[difficultyIndex] || "Normal";
-}
-
-export function getCurrentSoundLabel() {
-     return (musicEnabled && soundEffectsEnabled) ? "On" : "Off";
-}
-
-// NEW OPTIONS LABELS
 export function getObstaclesToggleLabel() {
      return getOptionLevelLabel(obstaclesLevel);
 }
@@ -347,23 +428,6 @@ export function getSoundEffectsToggleLabel() {
      return getOptionLevelLabel(soundEffectsLevel);
 }
 
-// LEGACY DIFFICULTY CYCLE
-export function cycleDifficulty() {
-     setDifficultyIndex((difficultyIndex + 1) % difficultyOptions.length);
-}
-
-// LEGACY COMBINED SOUND TOGGLE
-export function toggleAllSound() {
-     if (musicEnabled || soundEffectsEnabled) {
-          setMusicLevel(0);
-          setSoundEffectsLevel(0);
-     } else {
-          setMusicLevel(maxOptionLevelIndex);
-          setSoundEffectsLevel(maxOptionLevelIndex);
-     }
-}
-
-// NEW OPTIONS CYCLES
 export function cycleMusicLevel() {
      setMusicLevel(getNextOptionLevelIndex(musicLevel));
 }
@@ -381,15 +445,8 @@ export function cycleObstaclesLevel() {
      }
 }
 
-// LEGACY BOOLEAN-STYLE OBSTACLE TOGGLE
-export function toggleObstaclesEnabled() {
-     if (obstaclesEnabled) {
-          setObstaclesLevel(0);
-          obstacles.length = 0;
-     } else {
-          setObstaclesLevel(maxOptionLevelIndex);
-     }
-}
+// TEMPORARY SCREEN LAYOUT
+// This layer only feeds instructions + options bounds to input + draw code.
 
 export function updateMenuUiBounds() {
      const panelX = 0;
@@ -409,26 +466,13 @@ export function updateMenuUiBounds() {
 
      let stackedButtons = [];
 
-     if (gameMenuView === "main") {
-          stackedButtons = [
-               gameMenuUi.newGameButton,
-               gameMenuUi.instructionsButton,
-               gameMenuUi.optionsButton,
-               gameMenuUi.backButton
-          ];
-     } else if (gameMenuView === "instructions") {
-          stackedButtons = [
-               gameMenuUi.backButton
-          ];
+     if (gameMenuView === "instructions") {
+          stackedButtons = [gameMenuUi.backButton];
      } else if (gameMenuView === "options") {
           stackedButtons = [
                gameMenuUi.obstaclesToggleButton,
                gameMenuUi.musicToggleButton,
                gameMenuUi.soundEffectsToggleButton,
-               gameMenuUi.backButton
-          ];
-     } else {
-          stackedButtons = [
                gameMenuUi.backButton
           ];
      }
@@ -519,15 +563,20 @@ export function getGameOverlayAlpha() {
 // PAUSE SYNC
 
 export function syncPauseOverlay() {
-     // NOTE: PAUSE OVERLAY REMOVED
+     // NOTE: Pause uses the dedicated full-screen paused overlay.
 }
+
+// GAME UPDATE
 
 export function updateGame() {
      updatePauseButtonState();
      updateGameOverlayTimer();
 
-     if (gameWelcome) {
-          updateWelcomeTitleColors(getCurrentWelcomeTitleLines());
+     if (screenWelcome) {
+          updateWelcomeTitleColors(getCurrentScreenTitleLines());
+     }
+
+     if (isScreenWelcomeActive()) {
           return;
      }
 
@@ -566,10 +615,10 @@ export function updateGame() {
           setGameWon(false);
           setGamePaused(true);
           setGameMenuOpen(false);
-          setGameMenuView("main");
+          setGameMenuView("");
           resetTouchControls();
           clearGameOverlay();
-          showGameWelcomeScreen("lose");
+          showScreenTryAgain();
           return;
      }
 
@@ -578,10 +627,10 @@ export function updateGame() {
           setGameOver(false);
           setGamePaused(true);
           setGameMenuOpen(false);
-          setGameMenuView("main");
+          setGameMenuView("");
           resetTouchControls();
           clearGameOverlay();
-          showGameWelcomeScreen("win");
+          showScreenYouWin();
      }
 }
 
@@ -590,6 +639,8 @@ function gameLoop() {
      drawGame();
      requestAnimationFrame(gameLoop);
 }
+
+// STARTUP
 
 export function startSparkleSeeker() {
      resetGameState();
@@ -601,10 +652,10 @@ export function startSparkleSeeker() {
      updateTouchControlBounds();
      updateMenuUiBounds();
 
-     gameWelcome = true;
-     gameWelcomeTimer = -1;
-     gameWelcomeDuration = -1;
-     gameWelcomeMode = "welcome";
+     screenWelcome = true;
+     screenWelcomeTimer = -1;
+     screenWelcomeDuration = -1;
+     gameScreenMode = "screenWelcome";
 
      gameWelcomeUi.startButton.x = 0;
      gameWelcomeUi.startButton.y = 0;

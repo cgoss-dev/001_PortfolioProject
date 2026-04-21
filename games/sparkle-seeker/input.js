@@ -1,5 +1,5 @@
 // NOTE: INPUT SYSTEM
-// Handles keyboard, pointer/touch movement, touch buttons, menu clicks, and resize binding.
+// Handles keyboard, pointer/touch movement, touch buttons, screen clicks, and resize binding.
 
 import {
      miniGameCanvas,
@@ -25,43 +25,32 @@ import {
      setGameMenuView,
      setTouchMoveTarget,
      clearTouchMoveTarget,
-     setLeftButtonPressed,
-     setLeftButtonPointerId,
-     setRightButtonPressed,
-     setRightButtonPointerId
+     setpauseButtonPressed,
+     setpauseButtonPointerId,
 } from "./state.js";
 
-// NOTE: UI MODE IMPORTS
-// input.js should talk to ui_mode.js, not ui_draw.js.
-// Input needs hitboxes/state transitions, not rendering functions.
 import {
      updateMenuUiBounds,
      startNewGameRound,
-     cycleDifficulty,
-     toggleAllSound,
-     toggleObstaclesEnabled,
      cycleObstaclesLevel,
      cycleMusicLevel,
      cycleSoundEffectsLevel,
      isPointInsideMenuPanel,
-     isGameWelcomeActive,
+     isScreenWelcomeActive,
+     isOverlayScreenActive,
      getGameWelcomeUi,
      getGamePausedUi,
-     dismissGameWelcomeToStart,
-     dismissGameWelcomeToInstructionsMenu,
-     dismissGameWelcomeToMenu,
-     dismissGameWelcomeBackToMain
+     dismissScreenWelcomeToStart,
+     dismissScreenWelcomeToInstructionsMenu,
+     dismissScreenWelcomeToOptionsMenu,
+     dismissMenuBackToPreviousScreen
 } from "./ui_mode.js";
 
 // EDGE CONTROLS
-// Fixed edge spacing is defined here. Resize drift is prevented by anchoring from canvas edges here.
 const touchControlLayout = {
      buttonEdgePaddingX: 5,
      buttonEdgePaddingY: 5,
-
-     buttonGap: 10, // NOTE: BUTTON GAP
-
-     // VISUAL EDGE BUFFER - Extra room is added here because drawn circles extend past raw rect size.
+     buttonGap: 10,
      buttonVisualScale: 1
 };
 
@@ -95,13 +84,26 @@ function isPointInsideCircle(px, py, cx, cy, radius) {
      return (dx * dx + dy * dy) <= radius * radius;
 }
 
+function isAnyScreenActive() {
+     return isScreenWelcomeActive() || isOverlayScreenActive();
+}
+
 function setMenuViewAndRefresh(view) {
      setGameMenuView(view);
      updateMenuUiBounds();
 }
 
+function openScreenView(view, shouldPause = true) {
+     setGameMenuOpen(true);
+     setMenuViewAndRefresh(view);
+
+     if (shouldPause && gameStarted && !gameOver && !gameWon) {
+          setGamePaused(true);
+     }
+}
+
 // CONTROL HIT CIRCLE
-// Visual draw radius is matched here so click feel stays consistent.
+
 function isPointInsideControlButton(x, y, button) {
      if (!button) {
           return false;
@@ -123,16 +125,14 @@ function getCanvasPointerPosition(event) {
      const safeWidth = rect.width || 1;
      const safeHeight = rect.height || 1;
 
-     // miniGameWidth / miniGameHeight may still be 0 during early startup.
-     // If that happens, fallback is pulled from visible canvas size from DOM rect so pointer math still works on first interaction.
      return {
           x: ((event.clientX - rect.left) / safeWidth) * (miniGameWidth || safeWidth),
           y: ((event.clientY - rect.top) / safeHeight) * (miniGameHeight || safeHeight)
      };
 }
 
-// NOTE: MENU BUTTON LOOKUP
-// Active menu item is detected from pointer position here.
+// SCREEN BUTTON LOOKUP
+
 function getMenuButtonAtPoint(x, y) {
      if (!gameMenuOpen) {
           return null;
@@ -142,45 +142,29 @@ function getMenuButtonAtPoint(x, y) {
           return null;
      }
 
-     if (gameMenuView === "main") {
-          if (isPointInsideRect(x, y, gameMenuUi.newGameButton)) {
-               return gameMenuUi.newGameButton;
-          }
-
-          if (isPointInsideRect(x, y, gameMenuUi.instructionsButton)) {
-               return gameMenuUi.instructionsButton;
-          }
-
-          if (isPointInsideRect(x, y, gameMenuUi.optionsButton)) {
-               return gameMenuUi.optionsButton;
-          }
-     }
-
      if (gameMenuView === "options") {
           if (isPointInsideRect(x, y, gameMenuUi.obstaclesToggleButton)) {
-               return gameMenuUi.obstaclesToggleButton;
+               return "obstacles";
           }
 
           if (isPointInsideRect(x, y, gameMenuUi.musicToggleButton)) {
-               return gameMenuUi.musicToggleButton;
+               return "music";
           }
 
           if (isPointInsideRect(x, y, gameMenuUi.soundEffectsToggleButton)) {
-               return gameMenuUi.soundEffectsToggleButton;
+               return "sound_fx";
           }
      }
 
      if (isPointInsideRect(x, y, gameMenuUi.backButton)) {
-          return gameMenuUi.backButton;
+          return "back";
      }
 
      return null;
 }
 
-// NOTE: WELCOME BUTTON LOOKUP
-// Welcome action word bounds are read from ui state here.
 function getWelcomeButtonAtPoint(x, y) {
-     if (!isGameWelcomeActive()) {
+     if (!isAnyScreenActive()) {
           return null;
      }
 
@@ -195,14 +179,12 @@ function getWelcomeButtonAtPoint(x, y) {
      }
 
      if (isPointInsideRect(x, y, welcomeUi.menuButton)) {
-          return "menu";
+          return "options";
      }
 
      return null;
 }
 
-// PAUSED BUTTON LOOKUP
-// Pause marquee action word bounds are read from ui_mode state here.
 function getPausedButtonAtPoint(x, y) {
      if (!gamePaused || gameMenuOpen || gameOver || gameWon) {
           return null;
@@ -219,14 +201,14 @@ function getPausedButtonAtPoint(x, y) {
      }
 
      if (isPointInsideRect(x, y, pausedUi.menuButton)) {
-          return "menu";
+          return "options";
      }
 
      return null;
 }
 
 // CURSOR SYNC
-// Canvas cursor is swapped here when clickable areas are crossed.
+
 function updateCanvasCursor(x, y) {
      if (!miniGameCanvas) {
           return;
@@ -234,27 +216,19 @@ function updateCanvasCursor(x, y) {
 
      let cursor = "default";
 
-     // WELCOME CURSOR
-     // Only action words are treated as clickable while welcome state is active.
-     if (isGameWelcomeActive()) {
+     if (isAnyScreenActive()) {
           if (getWelcomeButtonAtPoint(x, y)) {
                cursor = "pointer";
           }
-
      } else if (gamePaused && !gameMenuOpen && !gameOver && !gameWon) {
           if (getPausedButtonAtPoint(x, y)) {
                cursor = "pointer";
           }
-
      } else if (gameMenuOpen) {
-          if (!isPointInsideMenuPanel(x, y)) {
-               cursor = "pointer";
-          } else if (getMenuButtonAtPoint(x, y)) {
+          if (!isPointInsideMenuPanel(x, y) || getMenuButtonAtPoint(x, y)) {
                cursor = "pointer";
           }
-     } else if (isPointInsideControlButton(x, y, touchControls.leftButton)) {
-          cursor = "pointer";
-     } else if (isPointInsideControlButton(x, y, touchControls.rightButton)) {
+     } else if (isPointInsideControlButton(x, y, touchControls.pauseButton)) {
           cursor = "pointer";
      }
 
@@ -269,25 +243,20 @@ function resetCanvasCursor() {
      miniGameCanvas.style.cursor = "default";
 }
 
-// NOTE: FULL-CANVAS TOUCH MOVEMENT
-// This is the part that actually sends pointer position into shared game state.
-// Without this setter call, touch/mouse movement will look dead even though events are firing.
+// MOVEMENT
+
 function updateTouchMovementFromPointer(event) {
      const pos = getCanvasPointerPosition(event);
 
-     // Normalized 0..1 target across the whole canvas.
      const nx = miniGameWidth > 0 ? (pos.x / miniGameWidth) : 0.5;
      const ny = miniGameHeight > 0 ? (pos.y / miniGameHeight) : 0.5;
 
-     // Clamp just to be safe.
      const clampedX = Math.max(0, Math.min(1, nx));
      const clampedY = Math.max(0, Math.min(1, ny));
 
      setTouchMoveTarget(clampedX, clampedY, event.pointerId);
 }
 
-// TOUCH RELEASE
-// Releasing clears the movement target for the pointer that was controlling movement.
 function clearTouchMovement(pointerId) {
      clearTouchMoveTarget(pointerId);
 
@@ -299,89 +268,52 @@ function clearTouchMovement(pointerId) {
 // TOUCH CONTROL LAYOUT
 
 export function updateTouchControlBounds() {
-     const leftButton = touchControls.leftButton;
-     const rightButton = touchControls.rightButton;
+     const pauseButton = touchControls.pauseButton;
 
-     if (!leftButton || !rightButton) {
+     if (!pauseButton) {
           return;
      }
 
-     const buttonLeftRadius = (leftButton.width / 2) * touchControlLayout.buttonVisualScale;
-     const buttonRightRadius = (rightButton.width / 2) * touchControlLayout.buttonVisualScale;
+     const pauseButtonRadius = (pauseButton.width / 2) * touchControlLayout.buttonVisualScale;
+     const pauseButtonDiameter = pauseButtonRadius * 2;
 
-     // RIGHT BUTTON EDGE ANCHOR
-     // Position is measured from right and bottom canvas edges here. Same spacing is preserved during resize here.
-     rightButton.x = miniGameWidth - touchControlLayout.buttonEdgePaddingX - (buttonRightRadius * 2);
-     rightButton.y = miniGameHeight - touchControlLayout.buttonEdgePaddingY - (buttonRightRadius * 2);
-
-     // LEFT BUTTON EDGE ANCHOR
-     // Gap is measured from right button here. Bottom alignment is matched here.
-     leftButton.x = rightButton.x - touchControlLayout.buttonGap - (buttonLeftRadius * 2);
-     leftButton.y = rightButton.y;
+     pauseButton.x = (miniGameWidth / 2) - (pauseButtonDiameter / 2);
+     pauseButton.y =
+          miniGameHeight -
+          touchControlLayout.buttonEdgePaddingY -
+          pauseButtonDiameter;
 }
 
 // TOUCH RESET
 
 export function resetTouchControls() {
-     const leftButton = touchControls.leftButton;
-     const rightButton = touchControls.rightButton;
+     const pauseButton = touchControls.pauseButton;
 
-     if (leftButton) {
-          leftButton.isPressed = false;
-          leftButton.pointerId = null;
+     if (pauseButton) {
+          pauseButton.isPressed = false;
+          pauseButton.pointerId = null;
      }
 
-     if (rightButton) {
-          rightButton.isPressed = false;
-          rightButton.pointerId = null;
-     }
-
-     // MOVEMENT RESET
-     // When a round/menu/welcome reset happens, touch movement should stop too.
      clearTouchMoveTarget(touchControls.touchMoveTarget.pointerId);
 
      resetCanvasCursor();
-
-     // EDGE LAYOUT REFRESH
-     // Fresh edge anchors are applied here after reset.
      updateTouchControlBounds();
 }
 
 // BUTTON LABEL SYNC
 
 export function updatePauseButtonState() {
-     touchControls.leftButton.label = "\u23EF\uFE0E";
-     touchControls.rightButton.label = "\u2630\uFE0E";
+     touchControls.pauseButton.label = "\u23EF\uFE0E";
 }
 
-// MENU CLOSE HELPER
-// Menu has 2 separate pieces of state:
-// 1. gameMenuOpen = whether menu is visible
-// 2. gameMenuView = which screen inside menu is showing
-// If only menu is closed, old screen will be remembered and reopened next time.
-// This helper makes sure every close resets back to main menu.
-function closeMenuAndResetView(shouldUnpause = true) {
-     setGameMenuOpen(false);
-     setGameMenuView("main");
+// SCREEN CLOSE HELPER
+
+function closeMenuToPreviousScreen() {
+     dismissMenuBackToPreviousScreen();
      resetCanvasCursor();
-
-     // RETURN TO WELCOME BEFORE FIRST GAME
-     // If the player has not started a round yet, closing the menu should
-     // go back to the welcome screen instead of leaving the game in a
-     // "not started but visible" state.
-     if (!gameStarted) {
-          dismissGameWelcomeBackToMain();
-          return;
-     }
-
-     // OPTIONAL UNPAUSE
-     // Some menu exits should resume gameplay, but Back can stay paused.
-     if (shouldUnpause && gameStarted && !gameOver && !gameWon) {
-          setGamePaused(false);
-     }
 }
 
-// ROUND + MENU ACTIONS
+// ROUND + SCREEN ACTIONS
 
 function triggerPauseAction() {
      if (!gameStarted || gameOver || gameWon) {
@@ -389,37 +321,12 @@ function triggerPauseAction() {
           return;
      }
 
-     // If pause/play button is pressed while menu is open,
-     // treat it as a full menu close and reset back to main menu.
      if (gameMenuOpen) {
-          closeMenuAndResetView();
+          closeMenuToPreviousScreen();
           return;
      }
 
      setGamePaused(!gamePaused);
-}
-
-function triggerMenuAction() {
-     if (gameMenuOpen) {
-          // If menu is open on a submenu like "instructions",
-          // first menu-button press returns to main menu.
-          if (gameMenuView !== "main") {
-               setMenuViewAndRefresh("main");
-               return;
-          }
-
-          // If already on main menu, pressing menu button closes it fully.
-          closeMenuAndResetView();
-          return;
-     }
-
-     // Always open fresh on main menu screen.
-     setGameMenuOpen(true);
-     setMenuViewAndRefresh("main");
-
-     if (gameStarted && !gameOver && !gameWon) {
-          setGamePaused(true);
-     }
 }
 
 function handleMenuClick(x, y) {
@@ -427,67 +334,37 @@ function handleMenuClick(x, y) {
           return false;
      }
 
-     // Clicking outside menu panel closes it completely
-     // and resets view so next open starts at main.
      if (!isPointInsideMenuPanel(x, y)) {
-          closeMenuAndResetView();
+          closeMenuToPreviousScreen();
           return true;
      }
 
-     if (gameMenuView === "main") {
-          if (isPointInsideRect(x, y, gameMenuUi.newGameButton)) {
-               // NEW GAME - RETURN TO WELCOME SCREEN
-               setGameMenuOpen(false);
-               dismissGameWelcomeBackToMain();
-               updateMenuUiBounds();
-               return true;
-          }
+     const target = getMenuButtonAtPoint(x, y);
 
-          if (isPointInsideRect(x, y, gameMenuUi.instructionsButton)) {
-               setMenuViewAndRefresh("instructions");
-               return true;
-          }
-
-          if (isPointInsideRect(x, y, gameMenuUi.optionsButton)) {
-               setMenuViewAndRefresh("options");
-               return true;
-          }
+     if (!target) {
+          return true;
      }
 
-     if (gameMenuView === "options") {
-          if (isPointInsideRect(x, y, gameMenuUi.obstaclesToggleButton)) {
-               cycleObstaclesLevel();
-               updateMenuUiBounds();
-               return true;
-          }
-
-          if (isPointInsideRect(x, y, gameMenuUi.musicToggleButton)) {
-               cycleMusicLevel();
-               updateMenuUiBounds();
-               return true;
-          }
-
-          if (isPointInsideRect(x, y, gameMenuUi.soundEffectsToggleButton)) {
-               cycleSoundEffectsLevel();
-               updateMenuUiBounds();
-               return true;
-          }
-     }
-
-     if (isPointInsideRect(x, y, gameMenuUi.backButton)) {
-          if (gameMenuView === "instructions") {
-               setMenuViewAndRefresh("main");
-               return true;
-          }
-
-          if (gameMenuView === "options") {
-               setMenuViewAndRefresh("main");
-               return true;
-          }
-
-          // BACK SHOULD NOT UNPAUSE
-          closeMenuAndResetView(false);
+     if (target === "obstacles") {
+          cycleObstaclesLevel();
           updateMenuUiBounds();
+          return true;
+     }
+
+     if (target === "music") {
+          cycleMusicLevel();
+          updateMenuUiBounds();
+          return true;
+     }
+
+     if (target === "sound_fx") {
+          cycleSoundEffectsLevel();
+          updateMenuUiBounds();
+          return true;
+     }
+
+     if (target === "back") {
+          closeMenuToPreviousScreen();
           return true;
      }
 
@@ -516,20 +393,16 @@ function onKeyDown(event) {
           event.preventDefault();
      }
 
-     // WELCOME KEY DISMISS
-     // Enter starts game from welcome state here. Escape opens menu.
-     if (isGameWelcomeActive()) {
+     if (isAnyScreenActive()) {
           if (key === "space" || key === "enter") {
-               dismissGameWelcomeToStart();
+               dismissScreenWelcomeToStart();
           } else if (key === "escape") {
-               dismissGameWelcomeToMenu();
+               dismissScreenWelcomeToOptionsMenu();
           }
 
           return;
      }
 
-     // PAUSED MARQUEE KEY ACTIONS
-     // Enter/space resumes from the paused marquee before reaching gameplay input.
      if (gamePaused && !gameMenuOpen && !gameOver && !gameWon) {
           if (key === "space" || key === "enter") {
                setGamePaused(false);
@@ -537,27 +410,16 @@ function onKeyDown(event) {
           }
 
           if (key === "escape") {
-               setGameMenuOpen(true);
-               setMenuViewAndRefresh("main");
+               openScreenView("options", false);
                return;
           }
      }
 
      if (key === "escape") {
           if (gameMenuOpen) {
-               if (gameMenuView !== "main") {
-                    setMenuViewAndRefresh("main");
-               } else {
-                    closeMenuAndResetView();
-               }
+               closeMenuToPreviousScreen();
           } else {
-               // ESC always opens to main menu, never last submenu.
-               setGameMenuOpen(true);
-               setMenuViewAndRefresh("main");
-
-               if (gameStarted && !gameOver && !gameWon) {
-                    setGamePaused(true);
-               }
+               openScreenView("options");
           }
 
           return;
@@ -584,14 +446,9 @@ export function bindKeyboardInput() {
 }
 
 function clearButtons(pointerId) {
-     if (touchControls.leftButton.pointerId === pointerId) {
-          setLeftButtonPressed(false);
-          setLeftButtonPointerId(null);
-     }
-
-     if (touchControls.rightButton.pointerId === pointerId) {
-          setRightButtonPressed(false);
-          setRightButtonPointerId(null);
+     if (touchControls.pauseButton.pointerId === pointerId) {
+          setpauseButtonPressed(false);
+          setpauseButtonPointerId(null);
      }
 }
 
@@ -603,32 +460,27 @@ function onPointerDown(event) {
      }
 
      const pos = getCanvasPointerPosition(event);
-     const leftButton = touchControls.leftButton;
-     const rightButton = touchControls.rightButton;
+     const pauseButton = touchControls.pauseButton;
 
      updateCanvasCursor(pos.x, pos.y);
 
-     // WELCOME CLICK ACTIONS
-     // Welcome actions are routed only through measured word bounds here.
-     if (isGameWelcomeActive()) {
+     if (isAnyScreenActive()) {
           const welcomeTarget = getWelcomeButtonAtPoint(pos.x, pos.y);
 
           if (welcomeTarget === "start") {
-               dismissGameWelcomeToStart();
+               dismissScreenWelcomeToStart();
                event.preventDefault();
                return;
           }
 
-          // WELCOME INSTRUCTIONS ROUTE
-          // This opens the existing instructions submenu inside the menu system.
           if (welcomeTarget === "instructions") {
-               dismissGameWelcomeToInstructionsMenu();
+               dismissScreenWelcomeToInstructionsMenu();
                event.preventDefault();
                return;
           }
 
-          if (welcomeTarget === "menu") {
-               dismissGameWelcomeToMenu();
+          if (welcomeTarget === "options") {
+               dismissScreenWelcomeToOptionsMenu();
                event.preventDefault();
                return;
           }
@@ -636,8 +488,6 @@ function onPointerDown(event) {
           return;
      }
 
-     // PAUSED MARQUEE CLICK ACTIONS
-     // Resume/Tips/Menu are routed through measured word bounds here.
      if (gamePaused && !gameMenuOpen && !gameOver && !gameWon) {
           const pausedTarget = getPausedButtonAtPoint(pos.x, pos.y);
 
@@ -648,15 +498,13 @@ function onPointerDown(event) {
           }
 
           if (pausedTarget === "instructions") {
-               setGameMenuOpen(true);
-               setMenuViewAndRefresh("instructions");
+               openScreenView("instructions", false);
                event.preventDefault();
                return;
           }
 
-          if (pausedTarget === "menu") {
-               setGameMenuOpen(true);
-               setMenuViewAndRefresh("main");
+          if (pausedTarget === "options") {
+               openScreenView("options", false);
                event.preventDefault();
                return;
           }
@@ -669,24 +517,14 @@ function onPointerDown(event) {
           return;
      }
 
-     if (isPointInsideControlButton(pos.x, pos.y, leftButton)) {
-          setLeftButtonPressed(true);
-          setLeftButtonPointerId(event.pointerId);
+     if (isPointInsideControlButton(pos.x, pos.y, pauseButton)) {
+          setpauseButtonPressed(true);
+          setpauseButtonPointerId(event.pointerId);
           triggerPauseAction();
           event.preventDefault();
           return;
      }
 
-     if (isPointInsideControlButton(pos.x, pos.y, rightButton)) {
-          setRightButtonPressed(true);
-          setRightButtonPointerId(event.pointerId);
-          triggerMenuAction();
-          event.preventDefault();
-          return;
-     }
-
-     // FULL-CANVAS TOUCH MOVE
-     // Any touch that is not on the pause/menu buttons is used for movement.
      if (miniGameCanvas?.setPointerCapture) {
           miniGameCanvas.setPointerCapture(event.pointerId);
      }
@@ -700,15 +538,10 @@ function onPointerMove(event) {
 
      updateCanvasCursor(pos.x, pos.y);
 
-     // WELCOME MOVE GATE
-     // Control motion is ignored here until welcome state is dismissed.
-     if (isGameWelcomeActive()) {
+     if (isAnyScreenActive()) {
           return;
      }
 
-     // ACTIVE POINTER CHECK
-     // Only the pointer that started movement is allowed to keep updating it.
-     // This matters more on touchscreens, where multiple fingers can exist at once.
      if (
           touchControls.touchMoveTarget.isActive &&
           touchControls.touchMoveTarget.pointerId === event.pointerId
@@ -719,9 +552,7 @@ function onPointerMove(event) {
 }
 
 function onPointerUp(event) {
-     // WELCOME RELEASE GATE
-     // Control resets are skipped here while welcome state is active.
-     if (isGameWelcomeActive()) {
+     if (isAnyScreenActive()) {
           if (miniGameCanvas) {
                const pos = getCanvasPointerPosition(event);
                updateCanvasCursor(pos.x, pos.y);
@@ -729,7 +560,6 @@ function onPointerUp(event) {
           return;
      }
 
-     // Reset any control that belongs to this pointer.
      clearTouchMovement(event.pointerId);
      clearButtons(event.pointerId);
 
@@ -763,8 +593,6 @@ export function bindPointerInput() {
 // RESIZE
 
 function handleWindowResize() {
-     // Canvas sizing itself is handled by ui_mode.js.
-     // This file only refreshes input layout after size changes.
      updateTouchControlBounds();
      updateMenuUiBounds();
      resetCanvasCursor();
