@@ -108,48 +108,50 @@ function getUiTheme() {
 
           colors: {
                white: getCssColor("--white", "#ffffff"),
-               softWhite: getCssColor("rgba(255, 255, 255, 0.75)"),
 
-               panelFill: "rgba(0, 0, 0, 0)",
+               fillColorNone: getCssColor("--fill-color-none", "rgba(0, 0, 0, 0)"),
+               fillColorSoft: getCssColor("--fill-color-soft", "rgba(0, 0, 0, 0.25)"),
+               fillColorMed: getCssColor("--fill-color-soft", "rgba(0, 0, 0, 0.5)"),
+               fillColorHard: getCssColor("--fill-color-soft", "rgba(0, 0, 0, 0.75)"),
 
                outlineStrong: getCssColor("--white", "#ffffff"),
                outlineSoft: "rgba(255, 255, 255, 0.25)",
 
-               buttonFill: "rgba(255, 255, 255, 0.15)",
-               buttonText: getCssColor("--white", "#ffffff"),
-
-               controlFill: "rgba(255, 255, 255, 0.1)",
-               controlFillPressed: "rgba(255, 255, 255, 0.25)",
-               controlText: getCssColor("--text-color", "#ffffff"),
-
+               controlFill: "rgba(255, 255, 255, 0.25)",
+               controlFillPressed: "rgba(255, 255, 255, 0.75)",
+               controlText: getCssColor("--white", "#ffffff"),
                controlGlow: getCssColor("--white", "#ffffff"),
 
                overlayGlow: getCssColor("--white", "#ffffff"),
                scoreGlow: getCssColor("--white", "#ffffff"),
 
-               heartFull: "#ffffff",
-               heartGlow: "#ffffff"
+               starFull: getCssColor("--white", "#ffffff"),
+               starGlow: getCssColor("--white", "#ffffff"),
+               scoreText: getCssColor("--white", "#ffffff"),
+               scoreTextGlow: getCssColor("--white", "#ffffff"),
+
+               heartFull: getCssColor("--white", "#ffffff"),
+               heartGlow: getCssColor("--white", "#ffffff"),
+               statusText: getCssColor("--white", "#ffffff"),
+               statusTextGlow: getCssColor("--white", "#ffffff"),
+
           },
 
           sizes: {
-               statusTextSize: getCssPixelSize("--text-size-small", 8),
+               statusFontSize: getCssPixelSize("--text-size-medium", 16),
+               statusFontY: 20,
                
-               starSize: 18,
-               heartSize: 25,
+               starSize: 16,
+               heartSize: 22,
 
-               statusIconY: 5,
-               statusTextY: 30,
+               starIconY: 3,
+               heartIconY: 2,
 
                scoreX: 5,
-               heartX: 5,
+               healthX: 5,
 
-               overlayTitleFont: 36,
-               overlaySubFont: getCssPixelSize("--text-size-medium", 16),
-
-               welcomeSubFont: getCssPixelSize("--text-size-small", 8),
-
-               menuButtonFont: getCssPixelSize("--text-size-small", 8),
-               menuSmallFont: getCssPixelSize("--text-size-small", 8),
+               overlayFontTitle: getCssPixelSize("--text-size-medium", 16),
+               uiFontSmall: getCssPixelSize("--text-size-small", 8),
 
                controlRadius: getCssNumber("--canvasboard-radius", 15)
           },
@@ -191,7 +193,7 @@ function drawPanelBox(x, y, width, height, theme, lineWidth = 3) {
      miniGameCtx.shadowBlur = glow.uiStrongGlow;
 
      drawRoundedRect(x, y, width, height, sizes.controlRadius);
-     miniGameCtx.fillStyle = colors.panelFill;
+     miniGameCtx.fillStyle = colors.fillColorNone;
      miniGameCtx.fill();
 
      miniGameCtx.shadowBlur = 0;
@@ -320,7 +322,7 @@ function drawMenuButton(button, label, theme) {
      const centerY = button.y + (button.height / 2);
 
      miniGameCtx.save();
-     miniGameCtx.fillStyle = colors.buttonFill;
+     miniGameCtx.fillStyle = colors.controlFill;
      miniGameCtx.strokeStyle = colors.outlineSoft;
      miniGameCtx.lineWidth = 2;
      miniGameCtx.shadowColor = colors.controlGlow;
@@ -330,13 +332,13 @@ function drawMenuButton(button, label, theme) {
      miniGameCtx.fill();
      miniGameCtx.stroke();
 
-     miniGameCtx.fillStyle = colors.buttonText;
+     miniGameCtx.fillStyle = colors.controlText;
      miniGameCtx.textAlign = "center";
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
 
-     miniGameCtx.font = `400 ${sizes.menuButtonFont}px ${fonts.body}`;
+     miniGameCtx.font = `400 ${sizes.uiFontSmall}px ${fonts.body}`;
      miniGameCtx.fillText(label, centerX, centerY + 1);
 
      miniGameCtx.restore();
@@ -399,21 +401,15 @@ function drawScore(theme) {
      miniGameCtx.save();
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "top";
-     miniGameCtx.fillStyle = colors.white;
-     miniGameCtx.shadowColor = colors.scoreGlow;
+     miniGameCtx.fillStyle = colors.starFull;
+     miniGameCtx.shadowColor = colors.starGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
 
      miniGameCtx.font = `${sizes.starSize}px ${fonts.symbol}`;
-     miniGameCtx.fillText(starRow, sizes.scoreX, sizes.statusIconY);
+     miniGameCtx.fillText(starRow, sizes.scoreX, sizes.starIconY);
 
-     miniGameCtx.font = `${sizes.statusTextSize}px ${fonts.display}`;
-
-     const scoreLabel = ""; // in case i want to add score text
-     const scoreValue = ` ${formattedScore}`;
-     const labelWidth = miniGameCtx.measureText(scoreLabel).width;
-
-     miniGameCtx.fillText(scoreLabel, sizes.scoreX, sizes.statusTextY);
-     miniGameCtx.fillText(scoreValue, sizes.scoreX + labelWidth, sizes.statusTextY);
+     miniGameCtx.font = `${sizes.statusFontSize}px ${fonts.display}`;
+     miniGameCtx.fillText(formattedScore, sizes.scoreX, sizes.statusFontY);
 
      miniGameCtx.restore();
 }
@@ -438,10 +434,10 @@ function drawHealth(theme) {
      miniGameCtx.font = `${sizes.heartSize}px ${fonts.body}`;
      miniGameCtx.textAlign = "right";
      miniGameCtx.textBaseline = "top";
-     miniGameCtx.fillStyle = colors.heartFull;
-     miniGameCtx.shadowColor = colors.heartGlow;
+     miniGameCtx.fillStyle = colors.statusText;
+     miniGameCtx.shadowColor = colors.StatusTextGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
-     miniGameCtx.fillText(heartRow, miniGameWidth - sizes.heartX, sizes.statusIconY);
+     miniGameCtx.fillText(heartRow, miniGameWidth - sizes.healthX, sizes.heartIconY);
      miniGameCtx.restore();
 }
 
@@ -464,7 +460,7 @@ function drawHealthStatus(theme) {
      }
 
      miniGameCtx.save();
-     miniGameCtx.font = `${sizes.statusTextSize}px ${fonts.display}`;
+     miniGameCtx.font = `${sizes.statusFontSize}px ${fonts.display}`;
      miniGameCtx.textAlign = "right";
      miniGameCtx.textBaseline = "top";
      miniGameCtx.fillStyle = colors.white;
@@ -473,8 +469,8 @@ function drawHealthStatus(theme) {
 
      miniGameCtx.fillText(
           statusText,
-          miniGameWidth - sizes.heartX,
-          sizes.statusTextY
+          miniGameWidth - sizes.healthX,
+          sizes.statusFontY
      );
 
      miniGameCtx.restore();
@@ -524,14 +520,14 @@ function drawTipsScreen(theme) {
      miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
-     miniGameCtx.fillStyle = colors.softWhite;
+     miniGameCtx.fillStyle = colors.fillColorNone;
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "top";
      miniGameCtx.shadowBlur = 0;
 
      const textX = Math.max(24, miniGameWidth * 0.12);
      let textY = Math.max(28, miniGameHeight * 0.12);
-     const fontSize = Math.max(12, sizes.menuSmallFont * Math.min(1, miniGameWidth / 320));
+     const fontSize = Math.max(12, sizes.uiFontSmall * Math.min(1, miniGameWidth / 320));
      const lineHeight = fontSize * 1;
      const sectionGap = lineHeight * 1.25;
      const maxTextWidth = miniGameWidth - (textX * 2);
@@ -665,7 +661,7 @@ function drawGameWelcomeOverlay(theme) {
 
      const buttonPaddingX = 12;
      const buttonPaddingY = 6;
-     const actionTextSize = Math.max(10, sizes.welcomeSubFont * 1.1);
+     const actionTextSize = Math.max(10, sizes.uiFontSmall * 1.1);
 
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "middle";
@@ -702,7 +698,7 @@ function drawGameWelcomeOverlay(theme) {
           miniGameCtx.fill();
           miniGameCtx.stroke();
 
-          miniGameCtx.fillStyle = colors.buttonText;
+          miniGameCtx.fillStyle = colors.controlText;
           miniGameCtx.textAlign = "center";
           miniGameCtx.textBaseline = "middle";
           miniGameCtx.fillText(item.text, textX, actionY);
@@ -804,7 +800,7 @@ function drawPausedOverlay(theme) {
 
      const buttonPaddingX = 12;
      const buttonPaddingY = 6;
-     const actionTextSize = Math.max(10, sizes.welcomeSubFont * 1.1);
+     const actionTextSize = Math.max(10, sizes.uiFontSmall * 1.1);
 
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "middle";
@@ -841,7 +837,7 @@ function drawPausedOverlay(theme) {
           miniGameCtx.fill();
           miniGameCtx.stroke();
 
-          miniGameCtx.fillStyle = colors.buttonText;
+          miniGameCtx.fillStyle = colors.controlText;
           miniGameCtx.textAlign = "center";
           miniGameCtx.textBaseline = "middle";
           miniGameCtx.fillText(item.text, textX, actionY);
@@ -894,12 +890,12 @@ function drawGameStatusOverlay(theme) {
      miniGameCtx.textAlign = "center";
      miniGameCtx.textBaseline = "middle";
 
-     miniGameCtx.font = `${sizes.overlayTitleFont}px ${fonts.display}`;
+     miniGameCtx.font = `${sizes.overlayFontTitle}px ${fonts.display}`;
      const titleWidth = miniGameCtx.measureText(gameOverlayText).width;
 
      let subWidth = 0;
      if (hasSubtext) {
-          miniGameCtx.font = `400 ${sizes.overlaySubFont}px ${fonts.body}`;
+          miniGameCtx.font = `400 ${sizes.overlayFontTitle}px ${fonts.body}`;
           subWidth = miniGameCtx.measureText(gameOverlaySubtext).width;
      }
 
@@ -910,12 +906,12 @@ function drawGameStatusOverlay(theme) {
 
      const panelWidth = Math.max(titleWidth, subWidth) + (horizontalPadding * 2);
      const panelHeight =
-          sizes.overlayTitleFont +
-          (hasSubtext ? sizes.overlaySubFont + gapBetweenLines : 0) +
+          sizes.overlayFontTitle +
+          (hasSubtext ? sizes.overlayFontTitle + gapBetweenLines : 0) +
           topPadding +
           bottomPadding;
      const panelX = (miniGameWidth - panelWidth) / 2;
-     const panelY = titleY - topPadding - (sizes.overlayTitleFont / 2);
+     const panelY = titleY - topPadding - (sizes.overlayFontTitle / 2);
 
      drawPanelBox(panelX, panelY, panelWidth, panelHeight, theme);
 
@@ -924,12 +920,12 @@ function drawGameStatusOverlay(theme) {
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.shadowColor = colors.overlayGlow;
      miniGameCtx.shadowBlur = glow.uiStrongGlow;
-     miniGameCtx.font = `${sizes.overlayTitleFont}px ${fonts.display}`;
+     miniGameCtx.font = `${sizes.overlayFontTitle}px ${fonts.display}`;
      miniGameCtx.fillText(gameOverlayText, miniGameWidth / 2, titleY);
 
      if (hasSubtext) {
           miniGameCtx.shadowBlur = glow.uiSoftGlow;
-          miniGameCtx.font = `400 ${sizes.overlaySubFont}px ${fonts.body}`;
+          miniGameCtx.font = `400 ${sizes.overlayFontTitle}px ${fonts.body}`;
           miniGameCtx.fillText(gameOverlaySubtext, miniGameWidth / 2, titleY + subtextOffset);
      }
 

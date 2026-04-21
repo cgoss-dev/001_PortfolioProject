@@ -4,150 +4,138 @@
 @import url("https://fonts.googleapis.com/css2?family=Bungee+Shade&display=swap");
 
 :root {
-     /* COLOR */
+     /* THEME COLORS */
+          --color-bg: #000000;
+          --color-text: #ffffff;
+          --color-accent: #ea76cb;
+          --overlay-none: rgba(0, 0, 0, 0);
+          --overlay-soft: rgba(0, 0, 0, 0.25);
+          --overlay-medium: rgba(0, 0, 0, 0.5);
+          --overlay-strong: rgba(0, 0, 0, 0.75);
+     
+     /* RAINBOW PALETTE */
+          --rainbow-pink: #ea76cb;
+          --rainbow-red: #d20f39;
+          --rainbow-maroon: #e64553;
+          --rainbow-peach: #fe640b;
+          --rainbow-flamingo: #dd7878;
+          --rainbow-yellow: #df8e1d;
+          --rainbow-green: #40a02b;
+          --rainbow-teal: #179299;
+          --rainbow-sky: #04a5e5;
+          --rainbow-blue: #1e66f5;
+          --rainbow-lavender: #7287fd;
+          --rainbow-violet: #8839ef;
+     
+     /* LAYOUT */
+          --page-width-wide: 72rem;
+          --page-padding-y: clamp(1rem, 2vw, 1.5rem);
+          --page-padding-x: var(--page-padding-y);
+          --page-section-gap: var(--page-padding-y);
+          --nav-height: clamp(3rem, 8vh, 4rem);
+          --hero-gap: clamp(1rem, 4vh, 2rem);
+          --content-width: min(100%, 40rem);
 
-     --bg-color: #000000;
-     --text-color: #ffffff;
-     --accent-color: #ea76cb;
-     --content-width: min(100%, 40rem);
+     /* TYPOGRAPHY */
+          --font-body: "Noto Sans Mono", monospace;
+          --font-display: "Bungee Shade", monospace;
+          --font-size-marquee: clamp(0.5rem, 20vw, 10rem);
+          --font-size-medium: clamp(0.5rem, 7vw, 2rem);
+          --font-size-small: clamp(0.5rem, 3vw, 1rem);
+          --font-color-marquee: var(--color-text);
+          --font-color-medium: var(--color-text);
+          --font-color-small: var(--color-text);
 
-     /* SHARED RAINBOW COLOR ENGINE PALETTE */
-     /* Core JS + background JS can both pull from these if needed. */
+     /* COMPONENTS*/
+          /* MENU */
+               --menu-button-color: var(--color-text);
+               --menu-panel-min-width: 10em;
+               --menu-item-padding: 0.25em;
+          /* NAV */
+               --nav-panel-width: 100%;
+               --nav-pill-gap: clamp(1.5rem, 1vw, 2rem);
+               --nav-pill-padding-y: 0.5rem;
+               --nav-pill-padding-x: 0.5rem;
+               --nav-icon-size: clamp(2rem, 5vw, 3rem);
+          /* PANEL */
+               --panel-radius: 1em;
+               --panel-border-width: 0.25em;
+               --panel-border-color: var(--color-text);
+               --panel-glow-color: var(--color-text);
+               --panel-border: var(--panel-border-width) solid var(--panel-border-color);
 
-     --rainbow-pink: #ea76cb;
-     --rainbow-red: #d20f39;
-     --rainbow-maroon: #e64553;
-     --rainbow-peach: #fe640b;
-     --rainbow-flamingo: #dd7878;
-     --rainbow-yellow: #df8e1d;
-     --rainbow-green: #40a02b;
-     --rainbow-teal: #179299;
-     --rainbow-sky: #04a5e5;
-     --rainbow-blue: #1e66f5;
-     --rainbow-lavender: #7287fd;
-     --rainbow-violet: #8839ef;
-
-     /* PAGE LAYOUT */
-
-     --page-width-wide: 72rem;
-     --page-padding-y: clamp(1rem, 2vw, 1.5rem);
-     --page-padding-x: calc(var(--page-padding-y) * 1);
-     --page-section-gap: var(--page-padding-y);
-
-     --menu-button-color: var(--text-color);
-     --menu-canvasboard-width-min: 10em;
-     --menu-item-padding: 0.25em;
-
-     /* TEXT */
-
-     --font-body: "Noto Sans Mono", monospace;
-     --font-fancy: "Bungee Shade", monospace;
-
-     --header-text-align: left;
-
-     /* NOTE: TEXT SIZE */
-     --text-size-marquee: 32px;
-     --text-size-marquee: clamp(0.5rem, 20vw, 10rem);
-
-     --text-size-large: 32px;
-     --text-size-large: clamp(1.5rem, 10vw, 3rem);
-
-     --text-size-medium: 16px;
-     --text-size-medium: clamp(1rem, 7vw, 2rem);
-
-     --text-size-small: 8px;
-     --text-size-small: clamp(0.5rem, 3vw, 1rem);
-
-     --text-color-marquee: var(--text-color);
-     --text-color-medium: var(--text-color);
-     --text-color-small: var(--text-color);
-
-     /* JS TEXT COLOR CYCLE CONTROL */
-     /* Core JS reads this exact variable name. */
-
-     --text-rainbow-cycle-speed: 1600;
-     --text-rainbow-transition-speed: 0.02s;
-     --text-rainbow-transition-style: ease-in-out;
-
-     /* GLOW */
-
-     --glow-depth: 0 0.75rem 1.75rem rgba(0, 0, 0, 0.5);
-
-     --glow-core: 0 0 clamp(0.02rem, 0.08vw, 0.05rem);
-     --glow-soft: 0 0 clamp(0.08rem, 0.3vw, 0.25rem);
-     --glow-wide: 0 0 clamp(0.25rem, 0.9vw, 0.75rem);
-     --glow-max: 0 0 1rem;
-
-     --glow-text:
-          var(--glow-core) currentColor,
-          var(--glow-soft) currentColor,
-          var(--glow-wide) currentColor;
-
-     --glow-canvasboard:
-          var(--glow-depth),
-          var(--glow-wide) var(--canvasboard-glow-color),
-          var(--glow-max) var(--canvasboard-glow-color);
-
-     /* Core JS reads these exact names for bungee-style +/- glow. */
-     /* Leaving these variables in place so JS does not break, but neutralizing them. */
-     --glow-bg-particle-blur: 10;
-     --glow-game-particle-blur: 10;
-     --bungee-shadow-offset-1: 0 0 0 transparent;
-     --bungee-shadow-offset-2: 0 0 0 transparent;
-
-     /* PANEL / BOX STYLING */
-
-     --canvasboard-radius: 1em;
-     --canvasboard-border-width: 0.25em;
-     --canvasboard-border: var(--canvasboard-border-width) solid var(--canvasboard-border-color);
-     --canvasboard-border-color: white;
-     --canvasboard-glow-color: white
-     ;
+     /* EFFECTS */
+          /* GLOW */
+               --glow-depth: 0 0.75rem 1.75rem rgba(0, 0, 0, 0.5);
+               --glow-core: 0 0 clamp(0.02rem, 0.08vw, 0.05rem);
+               --glow-soft: 0 0 clamp(0.08rem, 0.3vw, 0.25rem);
+               --glow-wide: 0 0 clamp(0.25rem, 0.9vw, 0.75rem);
+               --glow-max: 0 0 1rem;
+               --glow-text:
+                    var(--glow-core) currentColor,
+                    var(--glow-soft) currentColor,
+                    var(--glow-wide) currentColor;
+               --glow-panel:
+                    var(--glow-depth),
+                    var(--glow-wide) var(--panel-glow-color),
+                    var(--glow-max) var(--panel-glow-color);
+          /* RAINBOW CYCLE */
+               --text-rainbow-cycle-speed: 1600;
+               --text-rainbow-transition-speed: 0.02s;
+               --text-rainbow-transition-style: ease-in-out;
+          /* SPARKLES */
+               --sparkle-opacity: 1;
+               --sparkle-count-max: 180;
+               --sparkle-density: 0.00015;
+               --sparkle-size-min: 20;
+               --sparkle-size-max: 25;
+               --sparkle-speed-min: 0.2;
+               --sparkle-speed-max: 0.7;
+               --sparkle-wobble-speed-min: 0.005;
+               --sparkle-wobble-speed-max: 0.02;
+               --sparkle-wobble-amount-min: 5;
+               --sparkle-wobble-amount-max: 15;
+               --sparkle-opacity-min: 0.2;
+               --sparkle-opacity-max: 1;
+               --sparkle-respawn-offset-top: -20;
+               --sparkle-respawn-offset-bottom: 24;
 
      /* LAYERS */
-
-     --sparkle-layer-z: -1;
-     --ui-layer-z: 2;
-     --menu-layer-z: 20;
-
-     /* BACKGROUND SPARKLE CONTROL CENTER */
-
-     --sparkle-opacity: 1;
-     --sparkle-count-max: 180;
-     --sparkle-density: 0.00015;
-     --sparkle-size-min: 20;
-     --sparkle-size-max: 25;
-     --sparkle-speed-min: 0.2;
-     --sparkle-speed-max: 0.7;
-     --sparkle-wobble-speed-min: 0.005;
-     --sparkle-wobble-speed-max: 0.02;
-     --sparkle-wobble-amount-min: 5;
-     --sparkle-wobble-amount-max: 15;
-     --sparkle-opacity-min: 0.2;
-     --sparkle-opacity-max: 1;
-     --sparkle-respawn-offset-top: -20;
-     --sparkle-respawn-offset-bottom: 24;
+          --z-sparkle: -1;
+          --z-ui: 2;
+          --z-menu: 20;
 
      /* BREAKPOINTS */
+          --breakpoint-sm-max: 40rem;
+          --breakpoint-md-max: 64rem;
+          --breakpoint-lg-max: 90rem;
 
-     --breakpoint-sm-max: 40rem;
-     --breakpoint-md-max: 64rem;
-     --breakpoint-lg-max: 90rem;
-
-     /* SHARED SPACING */
-
-     --nav-height: clamp(3rem, 8vh, 4rem);
-     --hero-gap: clamp(1rem, 4vh, 2rem);
-
-     /* NAV SIZE CONTROL */
-     /* Tighter clamp values are used here so a single row is kept longer. */
-
-     --nav-panel-width: 100%;
-     --nav-pill-gap: clamp(1.5rem, 1vw, 2rem);
-     --nav-pill-padding-y: 0.5rem;
-     --nav-pill-padding-x: 0.5rem;
-
-     --nav-icon-size: clamp(2rem, 5vw, 3rem);
+     /* JS COMPAT / LEGACY TOKENS */
+          --bg-color: var(--color-bg);
+          --text-color: var(--color-text);
+          --accent-color: var(--color-accent);
+          --fill-color-none: var(--overlay-none);
+          --fill-color-soft: var(--overlay-soft);
+          --fill-color-med: var(--overlay-medium);
+          --fill-color-hard: var(--overlay-strong);
+          --font-fancy: var(--font-display);
+          --text-size-marquee: var(--font-size-marquee);
+          --text-size-medium: var(--font-size-medium);
+          --text-size-small: var(--font-size-small);
+          --canvasboard-radius: var(--panel-radius);
+          --canvasboard-border-width: var(--panel-border-width);
+          --canvasboard-border-color: var(--panel-border-color);
+          --canvasboard-glow-color: var(--panel-glow-color);
+          --canvasboard-border: var(--panel-border);
+          --glow-canvasboard: var(--glow-panel);
+          --menu-canvasboard-width-min: var(--menu-panel-min-width);
+          --sparkle-layer-z: var(--z-sparkle);
+          --ui-layer-z: var(--z-ui);
+          --menu-layer-z: var(--z-menu);
+          --glow-bg-particle-blur: 10;
+          --glow-game-particle-blur: 10;
+          --bungee-shadow-offset-1: 0 0 0 transparent;
+          --bungee-shadow-offset-2: 0 0 0 transparent;
 }
 
 /* NON-ROOT CORE */
@@ -158,7 +146,6 @@
      box-sizing: border-box;
 }
 
-/* Base document sizing is kept together here for easier scanning. */
 html {
      font-size: 16px;
      overflow-x: hidden;
@@ -170,7 +157,7 @@ body {
      text-align: left;
      min-height: 100dvh;
      background: var(--bg-color);
-     color: var(--text-color);
+     color: var(--font-color);
      font-family: var(--font-body);
      position: relative;
      overflow-x: hidden;
@@ -189,6 +176,10 @@ body {
      grid-template-rows: auto 1fr;
      overflow: visible;
 }
+
+
+
+
 
 /* BACKGROUND SPARKLE CANVAS */
 
@@ -395,7 +386,7 @@ h1 {
      max-width: 100%;
      min-width: 0;
      padding: var(--nav-pill-padding-y) var(--nav-pill-padding-x);
-     color: var(--text-color-medium);
+     color: var(--font-color-medium);
      background: none;
      border-radius: 999px;
      cursor: pointer;
@@ -412,7 +403,7 @@ h1 {
 .nav-link:hover,
 .nav-link:active,
 .nav-link:focus-visible {
-     color: var(--text-color);
+     color: var(--font-color);
      text-shadow: var(--glow-text);
 }
 
@@ -580,7 +571,7 @@ h1 {
      padding-top: clamp(0.2rem, 0.5vh, 0.25rem);
      padding-left: 0;
      padding-right: 0;
-     color: var(--text-color-small);
+     color: var(--font-color-small);
      font-size: var(--text-size-small);
      line-height: 1;
      text-align: center;
