@@ -51,8 +51,8 @@ import {
 
 // EDGE CONTROLS
 const touchControlLayout = {
-     buttonEdgePaddingX: 5,
-     buttonEdgePaddingY: 5,
+     buttonEdgePaddingX: 10,
+     buttonEdgePaddingY: 10,
      buttonGap: 10,
      buttonVisualScale: 1
 };

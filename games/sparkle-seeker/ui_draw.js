@@ -144,10 +144,10 @@ function getUiTheme() {
                statusFontSize: getCssPixelSize("--font-size-medium", 16),
                statusFontY: 20,
 
-               starSize: 20 * hudScale,
-               heartSize: 22 * hudScale,
+               starSize: Math.max(15, Math.min(20, miniGameWidth * 0.055)),
+               heartSize: Math.max(13, Math.min(28, miniGameWidth * 0.06)),
 
-               starIconY: 4,
+               starIconY: 3,
                heartIconY: 2,
 
                scoreX: 5,
@@ -197,7 +197,7 @@ function drawPanelBox(x, y, width, height, theme, lineWidth = 3) {
      miniGameCtx.shadowBlur = glow.uiStrongGlow;
 
      drawRoundedRect(x, y, width, height, sizes.controlRadius);
-     miniGameCtx.fillStyle = colors.fillTranslucentNone;
+     miniGameCtx.fillStyle = colors.fillTranslucentStrong;
      miniGameCtx.fill();
 
      miniGameCtx.shadowBlur = 0;

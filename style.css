@@ -750,7 +750,7 @@ h1 {
      border: var(--panel-border);
      border-radius: var(--panel-radius);
      box-shadow: var(--glow-panel);
-     background: var(--overlay-strong);
+     background: var(--translucent-strong);
      overflow: hidden;
      display: flex;
      align-items: stretch;
