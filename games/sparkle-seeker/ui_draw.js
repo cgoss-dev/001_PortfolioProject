@@ -29,7 +29,11 @@ import {
      touchControls,
      gameMenuUi,
      sparkleScore,
-     playerHealth
+     playerHealth,
+     musicLevel,
+     soundEffectsLevel,
+     obstaclesLevel,
+     maxOptionLevelIndex
 } from "./state.js";
 
 import {
@@ -144,10 +148,10 @@ function getUiTheme() {
                statusFontSize: getCssPixelSize("--font-size-medium", 16),
                statusFontY: 20,
 
-               starSize: Math.max(15, Math.min(20, miniGameWidth * 0.055)),
+               starSize: Math.max(15, Math.min(24, miniGameWidth * 0.055)),
                heartSize: Math.max(13, Math.min(28, miniGameWidth * 0.06)),
 
-               starIconY: 3,
+               starIconY: 2.5,
                heartIconY: 2,
 
                scoreX: 5,
@@ -166,7 +170,6 @@ function getUiTheme() {
           }
      };
 }
-
 
 // SHARED DRAW HELPERS
 
@@ -344,6 +347,61 @@ function drawMenuButton(button, label, theme) {
 
      miniGameCtx.font = `400 ${sizes.uiFontSmall}px ${fonts.body}`;
      miniGameCtx.fillText(label, centerX, centerY + 1);
+
+     miniGameCtx.restore();
+}
+
+function drawOptionStepper(row, decreaseButton, increaseButton, label, value, levelIndex, theme) {
+     if (!miniGameCtx || !row || !decreaseButton || !increaseButton) {
+          return;
+     }
+
+     const { colors, sizes, fonts, glow } = theme;
+     const centerY = row.y + (row.height / 2);
+     const decreaseAlpha = levelIndex <= 0 ? 0.28 : 1;
+     const increaseAlpha = levelIndex >= maxOptionLevelIndex ? 0.28 : 1;
+     const arrowFontSize = Math.max(sizes.uiFontSmall * 1.55, row.height * 0.72);
+
+     miniGameCtx.save();
+     miniGameCtx.fillStyle = colors.controlFill;
+     miniGameCtx.strokeStyle = colors.outlineSoft;
+     miniGameCtx.lineWidth = 2;
+     miniGameCtx.shadowColor = colors.controlGlow;
+     miniGameCtx.shadowBlur = glow.uiSoftGlow;
+
+     drawRoundedRect(row.x, row.y, row.width, row.height, sizes.controlRadius);
+     miniGameCtx.fill();
+     miniGameCtx.stroke();
+
+     miniGameCtx.textAlign = "center";
+     miniGameCtx.textBaseline = "middle";
+     miniGameCtx.shadowColor = colors.controlGlow;
+     miniGameCtx.shadowBlur = glow.uiSoftGlow;
+
+     miniGameCtx.fillStyle = colors.controlText;
+     miniGameCtx.globalAlpha = decreaseAlpha;
+     miniGameCtx.font = `700 ${arrowFontSize}px ${fonts.body}`;
+     miniGameCtx.fillText(
+          "<",
+          decreaseButton.x + (decreaseButton.width / 2),
+          centerY + 1
+     );
+
+     miniGameCtx.globalAlpha = 1;
+     miniGameCtx.font = `400 ${sizes.uiFontSmall}px ${fonts.body}`;
+     miniGameCtx.fillText(
+          `${label}: ${value}`,
+          row.x + (row.width / 2),
+          centerY + 1
+     );
+
+     miniGameCtx.globalAlpha = increaseAlpha;
+     miniGameCtx.font = `700 ${arrowFontSize}px ${fonts.body}`;
+     miniGameCtx.fillText(
+          ">",
+          increaseButton.x + (increaseButton.width / 2),
+          centerY + 1
+     );
 
      miniGameCtx.restore();
 }
@@ -569,21 +627,33 @@ function drawOptionsScreen(theme) {
      miniGameCtx.fillStyle = colors.fillTranslucentMedium;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
-     drawMenuButton(
-          gameMenuUi.obstaclesToggleButton,
-          `Obstacles: ${getObstaclesToggleLabel()}`,
+     drawOptionStepper(
+          gameMenuUi.obstaclesRow,
+          gameMenuUi.obstaclesDecreaseButton,
+          gameMenuUi.obstaclesIncreaseButton,
+          "Obstacles",
+          getObstaclesToggleLabel(),
+          obstaclesLevel,
           theme
      );
 
-     drawMenuButton(
-          gameMenuUi.musicToggleButton,
-          `Music: ${getMusicToggleLabel()}`,
+     drawOptionStepper(
+          gameMenuUi.musicRow,
+          gameMenuUi.musicDecreaseButton,
+          gameMenuUi.musicIncreaseButton,
+          "Music",
+          getMusicToggleLabel(),
+          musicLevel,
           theme
      );
 
-     drawMenuButton(
-          gameMenuUi.soundEffectsToggleButton,
-          `Sound FX: ${getSoundEffectsToggleLabel()}`,
+     drawOptionStepper(
+          gameMenuUi.soundEffectsRow,
+          gameMenuUi.soundEffectsDecreaseButton,
+          gameMenuUi.soundEffectsIncreaseButton,
+          "Sound FX",
+          getSoundEffectsToggleLabel(),
+          soundEffectsLevel,
           theme
      );
 

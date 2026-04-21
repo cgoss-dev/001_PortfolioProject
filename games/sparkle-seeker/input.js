@@ -34,9 +34,12 @@ import {
 import {
      updateMenuUiBounds,
      startNewGameRound,
-     cycleObstaclesLevel,
-     cycleMusicLevel,
-     cycleSoundEffectsLevel,
+     decreaseObstaclesLevel,
+     increaseObstaclesLevel,
+     decreaseMusicLevel,
+     increaseMusicLevel,
+     decreaseSoundEffectsLevel,
+     increaseSoundEffectsLevel,
      isPointInsideMenuPanel,
      isScreenWelcomeActive,
      isOverlayScreenActive,
@@ -166,16 +169,28 @@ function getMenuButtonAtPoint(x, y) {
      }
 
      if (gameMenuView === "options") {
-          if (isPointInsideRect(x, y, gameMenuUi.obstaclesToggleButton)) {
-               return "obstacles";
+          if (isPointInsideRect(x, y, gameMenuUi.obstaclesDecreaseButton)) {
+               return "obstacles_decrease";
           }
 
-          if (isPointInsideRect(x, y, gameMenuUi.musicToggleButton)) {
-               return "music";
+          if (isPointInsideRect(x, y, gameMenuUi.obstaclesIncreaseButton)) {
+               return "obstacles_increase";
           }
 
-          if (isPointInsideRect(x, y, gameMenuUi.soundEffectsToggleButton)) {
-               return "sound_fx";
+          if (isPointInsideRect(x, y, gameMenuUi.musicDecreaseButton)) {
+               return "music_decrease";
+          }
+
+          if (isPointInsideRect(x, y, gameMenuUi.musicIncreaseButton)) {
+               return "music_increase";
+          }
+
+          if (isPointInsideRect(x, y, gameMenuUi.soundEffectsDecreaseButton)) {
+               return "sound_fx_decrease";
+          }
+
+          if (isPointInsideRect(x, y, gameMenuUi.soundEffectsIncreaseButton)) {
+               return "sound_fx_increase";
           }
      }
 
@@ -377,20 +392,38 @@ function handleMenuClick(x, y) {
           return true;
      }
 
-     if (target === "obstacles") {
-          cycleObstaclesLevel();
+     if (target === "obstacles_decrease") {
+          decreaseObstaclesLevel();
           updateMenuUiBounds();
           return true;
      }
 
-     if (target === "music") {
-          cycleMusicLevel();
+     if (target === "obstacles_increase") {
+          increaseObstaclesLevel();
           updateMenuUiBounds();
           return true;
      }
 
-     if (target === "sound_fx") {
-          cycleSoundEffectsLevel();
+     if (target === "music_decrease") {
+          decreaseMusicLevel();
+          updateMenuUiBounds();
+          return true;
+     }
+
+     if (target === "music_increase") {
+          increaseMusicLevel();
+          updateMenuUiBounds();
+          return true;
+     }
+
+     if (target === "sound_fx_decrease") {
+          decreaseSoundEffectsLevel();
+          updateMenuUiBounds();
+          return true;
+     }
+
+     if (target === "sound_fx_increase") {
+          increaseSoundEffectsLevel();
           updateMenuUiBounds();
           return true;
      }

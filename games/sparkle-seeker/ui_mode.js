@@ -77,7 +77,6 @@ import {
      updatePlayerFaceState,
      updatePlayerTrail,
      updateSparkleSpawns,
-     updateObstacleSpawns,
      updateSparkles,
      updateObstacles,
      updateCollisionBursts,
@@ -424,8 +423,12 @@ export function getOptionLevelValue(levelIndex) {
      return optionLevelValues[levelIndex] ?? optionLevelValues[0];
 }
 
+function getPreviousOptionLevelIndex(levelIndex) {
+     return Math.max(0, levelIndex - 1);
+}
+
 function getNextOptionLevelIndex(levelIndex) {
-     return (levelIndex + 1) % (maxOptionLevelIndex + 1);
+     return Math.min(maxOptionLevelIndex, levelIndex + 1);
 }
 
 export function getObstaclesToggleLabel() {
@@ -440,16 +443,24 @@ export function getSoundEffectsToggleLabel() {
      return getOptionLevelLabel(soundEffectsLevel);
 }
 
-export function cycleMusicLevel() {
+export function decreaseMusicLevel() {
+     setMusicLevel(getPreviousOptionLevelIndex(musicLevel));
+}
+
+export function increaseMusicLevel() {
      setMusicLevel(getNextOptionLevelIndex(musicLevel));
 }
 
-export function cycleSoundEffectsLevel() {
+export function decreaseSoundEffectsLevel() {
+     setSoundEffectsLevel(getPreviousOptionLevelIndex(soundEffectsLevel));
+}
+
+export function increaseSoundEffectsLevel() {
      setSoundEffectsLevel(getNextOptionLevelIndex(soundEffectsLevel));
 }
 
-export function cycleObstaclesLevel() {
-     const nextLevel = getNextOptionLevelIndex(obstaclesLevel);
+export function decreaseObstaclesLevel() {
+     const nextLevel = getPreviousOptionLevelIndex(obstaclesLevel);
      setObstaclesLevel(nextLevel);
 
      if (nextLevel === 0) {
@@ -457,8 +468,31 @@ export function cycleObstaclesLevel() {
      }
 }
 
+export function increaseObstaclesLevel() {
+     setObstaclesLevel(getNextOptionLevelIndex(obstaclesLevel));
+}
+
 // TEMPORARY SCREEN LAYOUT
 // This layer only feeds instructions + options bounds to input + draw code.
+
+function setOptionRowBounds(row, decreaseButton, increaseButton, x, y, width, height) {
+     const arrowWidth = Math.min(48, Math.max(35, width * 0.18));
+
+     row.x = x;
+     row.y = y;
+     row.width = width;
+     row.height = height;
+
+     decreaseButton.x = x;
+     decreaseButton.y = y;
+     decreaseButton.width = arrowWidth;
+     decreaseButton.height = height;
+
+     increaseButton.x = x + width - arrowWidth;
+     increaseButton.y = y;
+     increaseButton.width = arrowWidth;
+     increaseButton.height = height;
+}
 
 export function updateMenuUiBounds() {
      const panelX = 0;
@@ -484,33 +518,55 @@ export function updateMenuUiBounds() {
           return;
      }
 
-     let stackedButtons = [];
-
-     if (gameMenuView === "options") {
-          stackedButtons = [
-               gameMenuUi.obstaclesToggleButton,
-               gameMenuUi.musicToggleButton,
-               gameMenuUi.soundEffectsToggleButton,
-               gameMenuUi.backButton
-          ];
-     }
-
-     const visibleButtons = stackedButtons.filter(Boolean);
-     const buttonCount = visibleButtons.length;
-
-     if (buttonCount === 0) {
+     if (gameMenuView !== "options") {
           return;
      }
 
-     const totalButtonHeight = buttonCount * buttonHeight;
-     const availableHeight = panelHeight - totalButtonHeight;
-     const gap = Math.max(18, availableHeight / (buttonCount + 1));
+     const visibleRows = [
+          {
+               row: gameMenuUi.obstaclesRow,
+               decreaseButton: gameMenuUi.obstaclesDecreaseButton,
+               increaseButton: gameMenuUi.obstaclesIncreaseButton
+          },
+          {
+               row: gameMenuUi.musicRow,
+               decreaseButton: gameMenuUi.musicDecreaseButton,
+               increaseButton: gameMenuUi.musicIncreaseButton
+          },
+          {
+               row: gameMenuUi.soundEffectsRow,
+               decreaseButton: gameMenuUi.soundEffectsDecreaseButton,
+               increaseButton: gameMenuUi.soundEffectsIncreaseButton
+          },
+          {
+               row: gameMenuUi.backButton
+          }
+     ];
 
-     visibleButtons.forEach((button, index) => {
-          button.x = buttonX;
-          button.y = panelY + gap + (index * (buttonHeight + gap));
-          button.width = buttonWidth;
-          button.height = buttonHeight;
+     const totalButtonHeight = visibleRows.length * buttonHeight;
+     const availableHeight = panelHeight - totalButtonHeight;
+     const gap = Math.max(18, availableHeight / (visibleRows.length + 1));
+
+     visibleRows.forEach((item, index) => {
+          const y = panelY + gap + (index * (buttonHeight + gap));
+
+          if (item.row === gameMenuUi.backButton) {
+               item.row.x = buttonX;
+               item.row.y = y;
+               item.row.width = buttonWidth;
+               item.row.height = buttonHeight;
+               return;
+          }
+
+          setOptionRowBounds(
+               item.row,
+               item.decreaseButton,
+               item.increaseButton,
+               buttonX,
+               y,
+               buttonWidth,
+               buttonHeight
+          );
      });
 }
 
@@ -615,11 +671,6 @@ export function updateGame() {
 
      updatePlayer();
      updateSparkleSpawns();
-
-     if (obstaclesEnabled) {
-          updateObstacleSpawns();
-     }
-
      updateSparkles();
 
      if (obstaclesEnabled) {

@@ -69,7 +69,7 @@ export const maxPlayerHealth = 5;
 export const optionLevelLabels = ["Off", "Min", "Low", "Med", "Max"];
 export const optionLevelValues = [0, 0.25, 0.5, 0.75, 1];
 export const maxOptionLevelIndex = optionLevelLabels.length - 1;
-export const defaultOptionLevelIndex = 1;
+export const defaultOptionLevelIndex = 2;
 
 // ==================================================
 // GAME FLOW FLAGS
@@ -118,9 +118,17 @@ export const gameMenuUi = {
      instructionsButton: { x: 0, y: 0, width: 0, height: 0 },
      optionsButton: { x: 0, y: 0, width: 0, height: 0 },
 
-     obstaclesToggleButton: { x: 0, y: 0, width: 0, height: 0 },
-     musicToggleButton: { x: 0, y: 0, width: 0, height: 0 },
-     soundEffectsToggleButton: { x: 0, y: 0, width: 0, height: 0 },
+     obstaclesRow: { x: 0, y: 0, width: 0, height: 0 },
+     obstaclesDecreaseButton: { x: 0, y: 0, width: 0, height: 0 },
+     obstaclesIncreaseButton: { x: 0, y: 0, width: 0, height: 0 },
+
+     musicRow: { x: 0, y: 0, width: 0, height: 0 },
+     musicDecreaseButton: { x: 0, y: 0, width: 0, height: 0 },
+     musicIncreaseButton: { x: 0, y: 0, width: 0, height: 0 },
+
+     soundEffectsRow: { x: 0, y: 0, width: 0, height: 0 },
+     soundEffectsDecreaseButton: { x: 0, y: 0, width: 0, height: 0 },
+     soundEffectsIncreaseButton: { x: 0, y: 0, width: 0, height: 0 },
 
      backButton: { x: 0, y: 0, width: 0, height: 0 }
 };

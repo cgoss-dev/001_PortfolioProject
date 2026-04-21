@@ -43,9 +43,9 @@
           --font-body: "Noto Sans Mono", monospace;
           --font-display: "Bungee Shade", monospace;
           --font-color: var(--color-text);
-          --font-size-marquee: clamp(0.5rem, 20vw, 10rem);
-          --font-size-medium: clamp(0.5rem, 7vw, 2rem);
-          --font-size-small: clamp(0.5rem, 3vw, 1rem);
+          --font-size-marquee: clamp(0.25rem, 20vw, 10rem);
+          --font-size-medium: clamp(0.25rem, 7vw, 2rem);
+          --font-size-small: clamp(0.25rem, 3vw, 1rem);
           --font-color-marquee: var(--font-color);
           --font-color-medium: var(--font-color);
           --font-color-small: var(--font-color);

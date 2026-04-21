@@ -26,10 +26,9 @@ import {
      obstacles,
      collisionBursts,
      sparkleSpawnTimer,
-     obstacleSpawnTimer,
+     obstaclesLevel,
 
      setSparkleSpawnTimer,
-     setObstacleSpawnTimer,
      setSparkleHealProgress,
      setSparkleScore,
      setPlayerHealth,
@@ -49,21 +48,22 @@ const siteTheme = window.SiteTheme;
 // These are game rules, so they belong in JS.
 // ==================================================
 
-export const sparkleSpawnDelay = 30;
-export const sparkleSpawnCap = 20;
+export const sparkleSpawnDelay = 20;
+export const sparkleSpawnCap = 60;
 
-export const obstacleSpawnDelay = 60;
+// Global safety cap only.
+// Obstacle density is controlled by Options, not by level.
+export const obstacleSpawnCap = 60;
 
 // LEVEL RULES
 // Score controls the current level here.
-// Each level sets the obstacle cap that the spawner is allowed to reach.
 // Keeping this in one place makes balancing much easier later.
 export const levelRules = [
-     { level: 1, minScore: 0, maxScore: 49, obstacleSpawnCap: 3 },
-     { level: 2, minScore: 50, maxScore: 149, obstacleSpawnCap: 3 },
-     { level: 3, minScore: 150, maxScore: 249, obstacleSpawnCap: 5 },
-     { level: 4, minScore: 250, maxScore: 449, obstacleSpawnCap: 7 },
-     { level: 5, minScore: 450, maxScore: 999, obstacleSpawnCap: 10 }
+     { level: 1, minScore: 0, maxScore: 49 },
+     { level: 2, minScore: 50, maxScore: 149 },
+     { level: 3, minScore: 150, maxScore: 249 },
+     { level: 4, minScore: 250, maxScore: 449 },
+     { level: 5, minScore: 450, maxScore: 999 }
 ];
 
 // WIN SCORE: 1000+ ends the run in a win state.
@@ -329,7 +329,6 @@ export function triggerPlayerFacePop(scale = 1.1) {
 
 // NOTE: LEVEL LOOKUP
 // This helper reads the current score and returns the matching level rule.
-// The obstacle spawner uses this so it does not need hardcoded score checks.
 export function getCurrentLevelData() {
      for (let i = 0; i < levelRules.length; i += 1) {
           const rule = levelRules[i];
@@ -344,8 +343,7 @@ export function getCurrentLevelData() {
      return {
           level: 5,
           minScore: 450,
-          maxScore: winScore - 1,
-          obstacleSpawnCap: 10
+          maxScore: winScore - 1
      };
 }
 
@@ -545,6 +543,7 @@ export function updateSparkleSpawns() {
      if (nextSparkleSpawnTimer >= sparkleSpawnDelay + sparkleSpawnJitter) {
           if (sparkles.length < sparkleSpawnCap) {
                createSparkle();
+               maybeCreateObstacleFromSparkleSpawn();
           }
 
           setSparkleSpawnTimer(0);
@@ -631,6 +630,16 @@ export const obstacleTypes = [
      { name: "affectType", char: "⚠\uFE0E", effect: ["swapSparkleObjects"], penalty: 1 }
 ];
 
+// Obstacles are spawned as a ratio of successful sparkle spawns:
+// Off 0:1, Min 1:10, Low 1:8, Med 1:6, Max 1:4.
+export const obstacleSpawnRatios = [
+     0,
+     1 / 10,
+     1 / 8,
+     1 / 6,
+     1 / 4
+];
+
 export function createObstacle() {
      const type = randomItem(obstacleTypes);
      const x = Math.random() * (miniGameWidth - 20) + 10;
@@ -650,23 +659,19 @@ export function createObstacle() {
      });
 }
 
-export function updateObstacleSpawns() {
-     const nextObstacleSpawnTimer = obstacleSpawnTimer + 1;
-     setObstacleSpawnTimer(nextObstacleSpawnTimer);
+function maybeCreateObstacleFromSparkleSpawn() {
+     const obstacleSpawnChance = obstacleSpawnRatios[obstaclesLevel] ?? 0;
 
-     const levelData = getCurrentLevelData();
+     if (obstacleSpawnChance <= 0) {
+          return;
+     }
 
-     // LIGHT DIFFICULTY SCALING
-     // As score rises, obstacles arrive a little sooner.
-     // This affects timing, while levelData.obstacleSpawnCap affects crowd size.
-     const difficultyBoost = Math.min(24, sparkleScore * 0.4);
+     if (obstacles.length >= obstacleSpawnCap) {
+          return;
+     }
 
-     if (nextObstacleSpawnTimer >= obstacleSpawnDelay - difficultyBoost) {
-          if (obstacles.length < levelData.obstacleSpawnCap) {
-               createObstacle();
-          }
-
-          setObstacleSpawnTimer(0);
+     if (Math.random() <= obstacleSpawnChance) {
+          createObstacle();
      }
 }
 
