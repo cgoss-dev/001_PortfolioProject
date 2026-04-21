@@ -101,46 +101,45 @@ function getCssPixelSize(variableName, fallback = 16) {
 function getUiTheme() {
      return {
           fonts: {
-               display: getCssString("--font-fancy", '"Bungee Shade", cursive'),
+               display: getCssString("--font-display", '"Bungee Shade", cursive'),
                body: getCssString("--font-body", '"Noto Sans Mono", monospace'),
                symbol: '"Segoe UI Symbol", "Apple Color Emoji", "Noto Color Emoji", sans-serif'
           },
 
           colors: {
-               white: getCssColor("--white", "#ffffff"),
+               fontColor: getCssColor("--color-text", "#ffffff"),
 
-               fillColorNone: getCssColor("--fill-color-none", "rgba(0, 0, 0, 0)"),
-               fillColorSoft: getCssColor("--fill-color-soft", "rgba(0, 0, 0, 0.25)"),
-               fillColorMed: getCssColor("--fill-color-soft", "rgba(0, 0, 0, 0.5)"),
-               fillColorHard: getCssColor("--fill-color-soft", "rgba(0, 0, 0, 0.75)"),
+               fillColorNone: getCssColor("--overlay-none", "rgba(0, 0, 0, 0)"),
+               fillColorSoft: getCssColor("--overlay-soft", "rgba(0, 0, 0, 0.25)"),
+               fillColorMed: getCssColor("--overlay-medium", "rgba(0, 0, 0, 0.5)"),
+               fillColorHard: getCssColor("--overlay-strong", "rgba(0, 0, 0, 0.75)"),
 
-               outlineStrong: getCssColor("--white", "#ffffff"),
+               outlineStrong: getCssColor("--color-text", "#ffffff"),
                outlineSoft: "rgba(255, 255, 255, 0.25)",
 
                controlFill: "rgba(255, 255, 255, 0.25)",
                controlFillPressed: "rgba(255, 255, 255, 0.75)",
-               controlText: getCssColor("--white", "#ffffff"),
-               controlGlow: getCssColor("--white", "#ffffff"),
+               controlText: getCssColor("--font-color", getCssColor("--color-text", "#ffffff")),
+               controlGlow: getCssColor("--font-color", getCssColor("--color-text", "#ffffff")),
 
-               overlayGlow: getCssColor("--white", "#ffffff"),
-               scoreGlow: getCssColor("--white", "#ffffff"),
+               overlayGlow: getCssColor("--font-color", getCssColor("--color-text", "#ffffff")),
+               scoreGlow: getCssColor("--font-color", getCssColor("--color-text", "#ffffff")),
 
-               starFull: getCssColor("--white", "#ffffff"),
-               starGlow: getCssColor("--white", "#ffffff"),
-               scoreText: getCssColor("--white", "#ffffff"),
-               scoreTextGlow: getCssColor("--white", "#ffffff"),
+               starFull: getCssColor("--font-color", getCssColor("--color-text", "#ffffff")),
+               starGlow: getCssColor("--font-color", getCssColor("--color-text", "#ffffff")),
+               scoreText: getCssColor("--font-color", getCssColor("--color-text", "#ffffff")),
+               scoreTextGlow: getCssColor("--font-color", getCssColor("--color-text", "#ffffff")),
 
-               heartFull: getCssColor("--white", "#ffffff"),
-               heartGlow: getCssColor("--white", "#ffffff"),
-               statusText: getCssColor("--white", "#ffffff"),
-               statusTextGlow: getCssColor("--white", "#ffffff"),
-
+               heartFull: getCssColor("--font-color", getCssColor("--color-text", "#ffffff")),
+               heartGlow: getCssColor("--font-color", getCssColor("--color-text", "#ffffff")),
+               statusText: getCssColor("--font-color", getCssColor("--color-text", "#ffffff")),
+               statusTextGlow: getCssColor("--font-color", getCssColor("--color-text", "#ffffff"))
           },
 
           sizes: {
-               statusFontSize: getCssPixelSize("--text-size-medium", 16),
+               statusFontSize: getCssPixelSize("--font-size-medium", 16),
                statusFontY: 20,
-               
+
                starSize: 16,
                heartSize: 22,
 
@@ -150,16 +149,16 @@ function getUiTheme() {
                scoreX: 5,
                healthX: 5,
 
-               overlayFontTitle: getCssPixelSize("--text-size-medium", 16),
-               uiFontSmall: getCssPixelSize("--text-size-small", 8),
+               overlayFontTitle: getCssPixelSize("--font-size-medium", 16),
+               uiFontSmall: getCssPixelSize("--font-size-small", 8),
 
-               controlRadius: getCssNumber("--canvasboard-radius", 15)
+               controlRadius: getCssNumber("--panel-radius", 15)
           },
 
           glow: {
-               uiSoftGlow: getCssNumber("--glow-bg-particle-blur", 10),
-               uiMediumGlow: getCssNumber("--glow-game-particle-blur", 16),
-               uiStrongGlow: getCssNumber("--glow-game-particle-blur", 16) * 1.35
+               uiSoftGlow: getCssNumber("--glow-particle-bg-blur", 10),
+               uiMediumGlow: getCssNumber("--glow-particle-game-blur", 16),
+               uiStrongGlow: getCssNumber("--glow-particle-game-blur", 16) * 1.35
           }
      };
 }
@@ -260,7 +259,7 @@ export function updateWelcomeTitleColors(titleLines = getCurrentScreenTitleLines
      }
 
      if (!welcomeColorEngine?.nextCycle) {
-          const fallbackColor = getCssColor("--text-color", "#ffffff");
+          const fallbackColor = getCssColor("--font-color", getCssColor("--color-text", "#ffffff"));
           welcomeCurrentColors = titleLines.map((line) => Array(line.length).fill(fallbackColor));
           welcomePreviousColors = welcomeCurrentColors.map((colors) => [...colors]);
           welcomeLastColorCycleTime = now;
@@ -377,7 +376,7 @@ function drawMiniGameBackground() {
      }
 
      miniGameCtx.clearRect(0, 0, miniGameWidth, miniGameHeight);
-     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
+     miniGameCtx.fillStyle = getCssColor("--overlay-medium", "rgba(0, 0, 0, 0.5)");
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 }
 
@@ -435,7 +434,7 @@ function drawHealth(theme) {
      miniGameCtx.textAlign = "right";
      miniGameCtx.textBaseline = "top";
      miniGameCtx.fillStyle = colors.statusText;
-     miniGameCtx.shadowColor = colors.StatusTextGlow;
+     miniGameCtx.shadowColor = colors.statusTextGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
      miniGameCtx.fillText(heartRow, miniGameWidth - sizes.healthX, sizes.heartIconY);
      miniGameCtx.restore();
@@ -463,7 +462,7 @@ function drawHealthStatus(theme) {
      miniGameCtx.font = `${sizes.statusFontSize}px ${fonts.display}`;
      miniGameCtx.textAlign = "right";
      miniGameCtx.textBaseline = "top";
-     miniGameCtx.fillStyle = colors.white;
+     miniGameCtx.fillStyle = colors.fontColor;
      miniGameCtx.shadowColor = colors.heartGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
 
@@ -491,7 +490,7 @@ function drawTouchButtons(theme) {
      drawControlButton(pauseButton, pauseButton.isPressed, theme);
 
      miniGameCtx.save();
-     miniGameCtx.fillStyle = colors.controlText;
+     miniGameCtx.fillStyle = colors.fontColor;
      miniGameCtx.textAlign = "center";
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.shadowColor = colors.controlGlow;
@@ -517,10 +516,10 @@ function drawTipsScreen(theme) {
      const { colors, fonts, sizes } = theme;
 
      miniGameCtx.save();
-     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
+     miniGameCtx.fillStyle = colors.fillColorMed;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
-     miniGameCtx.fillStyle = colors.fillColorNone;
+     miniGameCtx.fillStyle = colors.fontColor;
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "top";
      miniGameCtx.shadowBlur = 0;
@@ -556,8 +555,10 @@ function drawOptionsScreen(theme) {
           return;
      }
 
+     const { colors } = theme;
+
      miniGameCtx.save();
-     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
+     miniGameCtx.fillStyle = colors.fillColorMed;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
      drawMenuButton(
@@ -608,7 +609,7 @@ function drawGameWelcomeOverlay(theme) {
      miniGameCtx.globalAlpha = alpha;
 
      if (!isScreenWelcomeActive()) {
-          miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
+          miniGameCtx.fillStyle = colors.fillColorMed;
           miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
      }
 
@@ -631,7 +632,7 @@ function drawGameWelcomeOverlay(theme) {
           for (let i = 0; i < line.length; i += 1) {
                const letter = line[i];
                const letterWidth = letterWidths[i];
-               const letterColor = colorsForLine[i] || colors.white;
+               const letterColor = colorsForLine[i] || colors.fontColor;
 
                miniGameCtx.fillStyle = letterColor;
                miniGameCtx.shadowColor = letterColor;
@@ -748,7 +749,7 @@ function drawPausedOverlay(theme) {
 
      miniGameCtx.save();
 
-     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
+     miniGameCtx.fillStyle = colors.fillColorMed;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
      const pausedUi = getGamePausedUi();
@@ -787,7 +788,7 @@ function drawPausedOverlay(theme) {
           for (let i = 0; i < line.length; i += 1) {
                const letter = line[i];
                const letterWidth = letterWidths[i];
-               const letterColor = colorsForLine[i] || colors.white;
+               const letterColor = colorsForLine[i] || colors.fontColor;
 
                miniGameCtx.fillStyle = letterColor;
                miniGameCtx.shadowColor = letterColor;
@@ -884,7 +885,7 @@ function drawGameStatusOverlay(theme) {
      miniGameCtx.save();
      miniGameCtx.globalAlpha = alpha;
 
-     miniGameCtx.fillStyle = "rgba(0, 0, 0, 0.25)";
+     miniGameCtx.fillStyle = colors.fillColorSoft;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
      miniGameCtx.textAlign = "center";
@@ -915,7 +916,7 @@ function drawGameStatusOverlay(theme) {
 
      drawPanelBox(panelX, panelY, panelWidth, panelHeight, theme);
 
-     miniGameCtx.fillStyle = colors.white;
+     miniGameCtx.fillStyle = colors.fontColor;
      miniGameCtx.textAlign = "center";
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.shadowColor = colors.overlayGlow;

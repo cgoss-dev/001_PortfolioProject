@@ -25,8 +25,8 @@ import {
      setGameMenuView,
      setTouchMoveTarget,
      clearTouchMoveTarget,
-     setpauseButtonPressed,
-     setpauseButtonPointerId,
+     setPauseButtonPressed,
+     setPauseButtonPointerId
 } from "./state.js";
 
 import {
@@ -38,8 +38,8 @@ import {
      isPointInsideMenuPanel,
      isScreenWelcomeActive,
      isOverlayScreenActive,
-     getGameWelcomeUi,
-     getGamePausedUi,
+     getScreenActionUi,
+     getPausedActionUi,
      dismissScreenWelcomeToStart,
      dismissScreenWelcomeToInstructionsMenu,
      dismissScreenWelcomeToOptionsMenu,
@@ -63,8 +63,13 @@ function normalizeKeyName(key) {
 
      const lower = String(key).toLowerCase();
 
-     if (lower === " ") return "space";
-     if (lower === "esc") return "escape";
+     if (lower === " ") {
+          return "space";
+     }
+
+     if (lower === "esc") {
+          return "escape";
+     }
 
      return lower;
 }
@@ -163,22 +168,22 @@ function getMenuButtonAtPoint(x, y) {
      return null;
 }
 
-function getWelcomeButtonAtPoint(x, y) {
+function getScreenButtonAtPoint(x, y) {
      if (!isAnyScreenActive()) {
           return null;
      }
 
-     const welcomeUi = getGameWelcomeUi();
+     const screenUi = getScreenActionUi();
 
-     if (isPointInsideRect(x, y, welcomeUi.startButton)) {
+     if (isPointInsideRect(x, y, screenUi.startButton)) {
           return "start";
      }
 
-     if (isPointInsideRect(x, y, welcomeUi.instructionsButton)) {
+     if (isPointInsideRect(x, y, screenUi.instructionsButton)) {
           return "instructions";
      }
 
-     if (isPointInsideRect(x, y, welcomeUi.menuButton)) {
+     if (isPointInsideRect(x, y, screenUi.menuButton)) {
           return "options";
      }
 
@@ -190,7 +195,7 @@ function getPausedButtonAtPoint(x, y) {
           return null;
      }
 
-     const pausedUi = getGamePausedUi();
+     const pausedUi = getPausedActionUi();
 
      if (isPointInsideRect(x, y, pausedUi.resumeButton)) {
           return "resume";
@@ -217,7 +222,7 @@ function updateCanvasCursor(x, y) {
      let cursor = "default";
 
      if (isAnyScreenActive()) {
-          if (getWelcomeButtonAtPoint(x, y)) {
+          if (getScreenButtonAtPoint(x, y)) {
                cursor = "pointer";
           }
      } else if (gamePaused && !gameMenuOpen && !gameOver && !gameWon) {
@@ -447,8 +452,8 @@ export function bindKeyboardInput() {
 
 function clearButtons(pointerId) {
      if (touchControls.pauseButton.pointerId === pointerId) {
-          setpauseButtonPressed(false);
-          setpauseButtonPointerId(null);
+          setPauseButtonPressed(false);
+          setPauseButtonPointerId(null);
      }
 }
 
@@ -465,21 +470,21 @@ function onPointerDown(event) {
      updateCanvasCursor(pos.x, pos.y);
 
      if (isAnyScreenActive()) {
-          const welcomeTarget = getWelcomeButtonAtPoint(pos.x, pos.y);
+          const screenTarget = getScreenButtonAtPoint(pos.x, pos.y);
 
-          if (welcomeTarget === "start") {
+          if (screenTarget === "start") {
                dismissScreenWelcomeToStart();
                event.preventDefault();
                return;
           }
 
-          if (welcomeTarget === "instructions") {
+          if (screenTarget === "instructions") {
                dismissScreenWelcomeToInstructionsMenu();
                event.preventDefault();
                return;
           }
 
-          if (welcomeTarget === "options") {
+          if (screenTarget === "options") {
                dismissScreenWelcomeToOptionsMenu();
                event.preventDefault();
                return;
@@ -518,8 +523,8 @@ function onPointerDown(event) {
      }
 
      if (isPointInsideControlButton(pos.x, pos.y, pauseButton)) {
-          setpauseButtonPressed(true);
-          setpauseButtonPointerId(event.pointerId);
+          setPauseButtonPressed(true);
+          setPauseButtonPointerId(event.pointerId);
           triggerPauseAction();
           event.preventDefault();
           return;
@@ -557,6 +562,7 @@ function onPointerUp(event) {
                const pos = getCanvasPointerPosition(event);
                updateCanvasCursor(pos.x, pos.y);
           }
+
           return;
      }
 

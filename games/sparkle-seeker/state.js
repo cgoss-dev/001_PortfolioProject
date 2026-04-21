@@ -37,7 +37,7 @@ export const player = {
      sparkleFaceTimer: 0,
 
      hitScale: 1,
-     lowHealthPulseTime: 0,
+     lowHealthPulseTime: 0
 };
 
 // ==================================================
@@ -146,10 +146,13 @@ export const touchControls = {
           isPressed: false,
           pointerId: null,
           label: "\u23EF\uFE0E"
-     },
+     }
 };
 
-// REVIEW - TOUCHSCREEN FUNCTIONALITY
+// ==================================================
+// TOUCH TARGET HELPERS
+// ==================================================
+
 export function setTouchMoveTarget(x, y, pointerId) {
      touchControls.touchMoveTarget.x = x;
      touchControls.touchMoveTarget.y = y;
@@ -361,12 +364,21 @@ export function setGameOverlayDuration(value) {
 // TOUCH BUTTON SETTERS
 // ==================================================
 
-export function setpauseButtonPressed(value) {
+export function setPauseButtonPressed(value) {
      touchControls.pauseButton.isPressed = value;
 }
 
-export function setpauseButtonPointerId(value) {
+export function setPauseButtonPointerId(value) {
      touchControls.pauseButton.pointerId = value;
+}
+
+// Compatibility aliases for older imports.
+export function setpauseButtonPressed(value) {
+     setPauseButtonPressed(value);
+}
+
+export function setpauseButtonPointerId(value) {
+     setPauseButtonPointerId(value);
 }
 
 // ==================================================

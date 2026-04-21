@@ -87,7 +87,7 @@ export const playerFaces = {
 
 export const playerBaseHealth = 3;
 export const playerBaseSpeed = 3;
-export const playerSpeedPerHeart = 1; // Adjust for if it's 5 hearts during testing or 10 hearts during final.
+export const playerSpeedPerHeart = 1;
 
 // NOTE: PLAYER BASE SIZE
 // These are the player's normal visual/collision values.
@@ -170,9 +170,18 @@ export function resetEntityColorCycle() {
 // ==================================================
 
 export function getDefaultPlayerFace() {
-     if (playerHealth <= 0) return playerFaces.dead;
-     if (playerHealth === maxPlayerHealth) return playerFaces.maxHealth;
-     if (playerHealth <= 2) return playerFaces.lowHealth;
+     if (playerHealth <= 0) {
+          return playerFaces.dead;
+     }
+
+     if (playerHealth === maxPlayerHealth) {
+          return playerFaces.maxHealth;
+     }
+
+     if (playerHealth <= 2) {
+          return playerFaces.lowHealth;
+     }
+
      return playerFaces.smile;
 }
 
@@ -328,7 +337,7 @@ export function updatePlayer() {
           const tdy = targetY - player.y;
           const distance = Math.hypot(tdx, tdy);
 
-          if (distance > 4) { // REVIEW - FINETUNE TOUCH
+          if (distance > 4) {
                const dirX = tdx / distance;
                const dirY = tdy / distance;
 
@@ -356,17 +365,15 @@ export function updatePlayer() {
 
 export function updatePlayerFaceState() {
      // NOTE: LEVEL SIZE SHOULD STILL APPLY WHILE PAUSED
-     // Pause changes the face to 😐, but size/radius still reflect current level.
+     // Pause changes the face to neutral, but size/radius still reflect current level.
      applyPlayerLevelScale();
 
-     // When paused, always show neutral face.
      if (gamePaused) {
           player.char = playerFaces.neutral;
           player.hitScale = 1;
           return;
      }
 
-     // TEMPORARY FACE TIMER (sparkle / obstacle reactions)
      if (player.sparkleFaceTimer > 0) {
           player.sparkleFaceTimer -= 1;
      }
@@ -375,7 +382,6 @@ export function updatePlayerFaceState() {
           refreshPlayerFaceFromHealth();
      }
 
-     // HIT SCALE RECOVERY
      if (player.hitScale > 1) {
           player.hitScale += (1 - player.hitScale) * 0.18;
 

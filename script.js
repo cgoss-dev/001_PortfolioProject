@@ -36,11 +36,11 @@ function getTextSettings() {
 
 function getGlowSettings() {
      return {
-          bgParticleBlur: getCssNumber("--glow-bg-particle-blur", 12),
-          gameParticleBlur: getCssNumber("--glow-game-particle-blur", 16),
-          bungeeGlowBlur: getCssValue("--bungee-glow-blur") || "0 0 0.05rem",
-          bungeeShadowOffset1: getCssValue("--bungee-shadow-offset-1") || "0.125rem 0.125rem 0 rgba(0, 0, 0, 0.8)",
-          bungeeShadowOffset2: getCssValue("--bungee-shadow-offset-2") || "0.25rem 0.25rem 0 rgba(0, 0, 0, 0.6)"
+          bgParticleBlur: getCssNumber("--glow-particle-bg-blur", 12),
+          gameParticleBlur: getCssNumber("--glow-particle-game-blur", 16),
+          bungeeGlowBlur: getCssValue("--glow-bungee-core") || "0 0 0 transparent",
+          bungeeShadowOffset1: getCssValue("--glow-bungee-shadow-offset-1") || "0 0 0 transparent",
+          bungeeShadowOffset2: getCssValue("--glow-bungee-shadow-offset-2") || "0 0 0 transparent"
      };
 }
 
@@ -265,7 +265,10 @@ function syncNavButtonGlow() {
           return;
      }
 
-     const currentColor = getCssColor("--menu-button-color", getCssColor("--text-color", "#ffffff"));
+     const currentColor = getCssColor(
+          "--menu-button-color",
+          getCssColor("--font-color", getCssColor("--color-text", "#ffffff"))
+     );
 
      navButton.style.color = currentColor;
      navButton.style.webkitTextFillColor = "currentColor";
@@ -503,7 +506,7 @@ function cycleMarqueeColors() {
           const nextAccentColor = accentColorEngine.next();
 
           if (nextAccentColor) {
-               document.documentElement.style.setProperty("--accent-color", nextAccentColor);
+               document.documentElement.style.setProperty("--color-accent", nextAccentColor);
                syncNavButtonGlow();
           }
      }
@@ -590,7 +593,7 @@ function createBgParticle(startAboveScreen = false) {
                ? sparkleSettings.respawnOffsetTop
                : Math.random() * bgHeight,
           char: Math.random() < 0.5 ? "✦" : "✧",
-          color: sparkleColorEngine.next() || getCssColor("--text-color", "#ffffff"),
+          color: sparkleColorEngine.next() || getCssColor("--font-color", getCssColor("--color-text", "#ffffff")),
           size: randomNumber(sparkleSettings.sizeMin, sparkleSettings.sizeMax),
           speed: randomNumber(sparkleSettings.speedMin, sparkleSettings.speedMax),
           wobbleOffset: randomNumber(0, Math.PI * 2),
@@ -693,7 +696,10 @@ const taglineBreaks = [
 
 function setRandomTaglineBreak() {
      const el = document.querySelector(".tagline-break");
-     if (!el) return;
+
+     if (!el) {
+          return;
+     }
 
      const randomIndex = Math.floor(Math.random() * taglineBreaks.length);
      el.textContent = taglineBreaks[randomIndex];

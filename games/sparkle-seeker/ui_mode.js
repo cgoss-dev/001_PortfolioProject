@@ -93,9 +93,9 @@ export const startOverlayDuration = 120;
 export const overlayFadeFrames = 30;
 
 // SCREEN STATE
-let screenWelcome = true;
-let screenWelcomeTimer = -1;
-let screenWelcomeDuration = -1;
+let screenLayerActive = true;
+let screenLayerTimer = -1;
+let screenLayerDuration = -1;
 
 // SCREEN MODE
 // `screenWelcome` is the only screen that hides the board.
@@ -104,20 +104,20 @@ let gameScreenMode = "screenWelcome";
 
 // SCREEN ACTION TARGETS
 
-const gameWelcomeUi = {
+const screenActionUi = {
      startButton: { x: 0, y: 0, width: 0, height: 0 },
      instructionsButton: { x: 0, y: 0, width: 0, height: 0 },
      menuButton: { x: 0, y: 0, width: 0, height: 0 }
 };
 
-const gamePausedUi = {
+const pausedActionUi = {
      resumeButton: { x: 0, y: 0, width: 0, height: 0 },
      instructionsButton: { x: 0, y: 0, width: 0, height: 0 },
      menuButton: { x: 0, y: 0, width: 0, height: 0 }
 };
 
-// WELCOME TITLE CONTENT
-const welcomeTitleLines = ["SPARKLE", "SEEKER"];
+// SCREEN TITLE CONTENT
+const screenWelcomeTitleLines = ["SPARKLE", "SEEKER"];
 
 function setMenuViewAndRefresh(view) {
      setGameMenuView(view);
@@ -125,11 +125,11 @@ function setMenuViewAndRefresh(view) {
 }
 
 export function isScreenWelcomeActive() {
-     return screenWelcome && gameScreenMode === "screenWelcome";
+     return screenLayerActive && gameScreenMode === "screenWelcome";
 }
 
 export function isOverlayScreenActive() {
-     return screenWelcome && (
+     return screenLayerActive && (
           gameScreenMode === "screenTryAgain" ||
           gameScreenMode === "screenYouWin"
      );
@@ -137,15 +137,25 @@ export function isOverlayScreenActive() {
 
 // Compatibility alias for older imports.
 export function isGameWelcomeActive() {
-     return screenWelcome;
+     return screenLayerActive;
 }
 
+export function getScreenActionUi() {
+     return screenActionUi;
+}
+
+// Compatibility alias for older imports.
 export function getGameWelcomeUi() {
-     return gameWelcomeUi;
+     return getScreenActionUi();
 }
 
+export function getPausedActionUi() {
+     return pausedActionUi;
+}
+
+// Compatibility alias for older imports.
 export function getGamePausedUi() {
-     return gamePausedUi;
+     return getPausedActionUi();
 }
 
 export function getGameScreenMode() {
@@ -158,7 +168,7 @@ export function getGameWelcomeMode() {
 }
 
 export function getWelcomeTitleLines() {
-     return welcomeTitleLines;
+     return screenWelcomeTitleLines;
 }
 
 export function getCurrentScreenTitleLines() {
@@ -170,7 +180,7 @@ export function getCurrentScreenTitleLines() {
           return ["TRY", "AGAIN"];
      }
 
-     return welcomeTitleLines;
+     return screenWelcomeTitleLines;
 }
 
 // Compatibility alias for older imports.
@@ -192,10 +202,10 @@ export function getCurrentPausedActionTexts() {
 }
 
 export function dismissScreenWelcomeToStart() {
-     screenWelcome = false;
+     screenLayerActive = false;
      gameScreenMode = "screenWelcome";
-     screenWelcomeTimer = 0;
-     screenWelcomeDuration = 0;
+     screenLayerTimer = 0;
+     screenLayerDuration = 0;
      startNewGameRound();
 }
 
@@ -205,10 +215,10 @@ export function dismissGameWelcomeToStart() {
 }
 
 export function dismissScreenWelcomeToInstructionsMenu() {
-     screenWelcome = false;
+     screenLayerActive = false;
      gameScreenMode = "screenWelcome";
-     screenWelcomeTimer = 0;
-     screenWelcomeDuration = 0;
+     screenLayerTimer = 0;
+     screenLayerDuration = 0;
 
      resetGameState();
      resetTouchControls();
@@ -234,10 +244,10 @@ export function dismissGameWelcomeToInstructionsMenu() {
 }
 
 export function dismissScreenWelcomeToOptionsMenu() {
-     screenWelcome = false;
+     screenLayerActive = false;
      gameScreenMode = "screenWelcome";
-     screenWelcomeTimer = 0;
-     screenWelcomeDuration = 0;
+     screenLayerTimer = 0;
+     screenLayerDuration = 0;
 
      resetGameState();
      resetTouchControls();
@@ -301,24 +311,24 @@ export function dismissMenuBackToPreviousScreen() {
 }
 
 export function showScreenWelcome() {
-     screenWelcome = true;
+     screenLayerActive = true;
      gameScreenMode = "screenWelcome";
-     screenWelcomeTimer = -1;
-     screenWelcomeDuration = -1;
+     screenLayerTimer = -1;
+     screenLayerDuration = -1;
 }
 
 export function showScreenTryAgain() {
-     screenWelcome = true;
+     screenLayerActive = true;
      gameScreenMode = "screenTryAgain";
-     screenWelcomeTimer = -1;
-     screenWelcomeDuration = -1;
+     screenLayerTimer = -1;
+     screenLayerDuration = -1;
 }
 
 export function showScreenYouWin() {
-     screenWelcome = true;
+     screenLayerActive = true;
      gameScreenMode = "screenYouWin";
-     screenWelcomeTimer = -1;
-     screenWelcomeDuration = -1;
+     screenLayerTimer = -1;
+     screenLayerDuration = -1;
 }
 
 // Compatibility wrapper for older calls.
@@ -342,17 +352,17 @@ export function dismissGameWelcomeBackToMain() {
 }
 
 export function getGameWelcomeAlpha() {
-     if (!screenWelcome) {
+     if (!screenLayerActive) {
           return 0;
      }
 
-     if (screenWelcomeTimer < 0 || screenWelcomeDuration < 0) {
+     if (screenLayerTimer < 0 || screenLayerDuration < 0) {
           return 1;
      }
 
-     const elapsed = screenWelcomeDuration - screenWelcomeTimer;
+     const elapsed = screenLayerDuration - screenLayerTimer;
      const fadeIn = Math.min(1, elapsed / overlayFadeFrames);
-     const fadeOut = Math.min(1, screenWelcomeTimer / overlayFadeFrames);
+     const fadeOut = Math.min(1, screenLayerTimer / overlayFadeFrames);
 
      return Math.max(0, Math.min(1, Math.min(fadeIn, fadeOut)));
 }
@@ -392,7 +402,7 @@ export function startNewGameRound() {
      updateTouchControlBounds();
      updateMenuUiBounds();
 
-     screenWelcome = false;
+     screenLayerActive = false;
 
      setGameStarted(true);
      setGamePaused(false);
@@ -550,8 +560,13 @@ export function updateGameOverlayTimer() {
 }
 
 export function getGameOverlayAlpha() {
-     if (!gameOverlayText) return 0;
-     if (gameOverlayTimer < 0 || gameOverlayDuration < 0) return 1;
+     if (!gameOverlayText) {
+          return 0;
+     }
+
+     if (gameOverlayTimer < 0 || gameOverlayDuration < 0) {
+          return 1;
+     }
 
      const elapsed = gameOverlayDuration - gameOverlayTimer;
      const fadeIn = Math.min(1, elapsed / overlayFadeFrames);
@@ -572,7 +587,7 @@ export function updateGame() {
      updatePauseButtonState();
      updateGameOverlayTimer();
 
-     if (screenWelcome) {
+     if (screenLayerActive) {
           updateWelcomeTitleColors(getCurrentScreenTitleLines());
      }
 
@@ -652,40 +667,40 @@ export function startSparkleSeeker() {
      updateTouchControlBounds();
      updateMenuUiBounds();
 
-     screenWelcome = true;
-     screenWelcomeTimer = -1;
-     screenWelcomeDuration = -1;
+     screenLayerActive = true;
+     screenLayerTimer = -1;
+     screenLayerDuration = -1;
      gameScreenMode = "screenWelcome";
 
-     gameWelcomeUi.startButton.x = 0;
-     gameWelcomeUi.startButton.y = 0;
-     gameWelcomeUi.startButton.width = 0;
-     gameWelcomeUi.startButton.height = 0;
+     screenActionUi.startButton.x = 0;
+     screenActionUi.startButton.y = 0;
+     screenActionUi.startButton.width = 0;
+     screenActionUi.startButton.height = 0;
 
-     gameWelcomeUi.instructionsButton.x = 0;
-     gameWelcomeUi.instructionsButton.y = 0;
-     gameWelcomeUi.instructionsButton.width = 0;
-     gameWelcomeUi.instructionsButton.height = 0;
+     screenActionUi.instructionsButton.x = 0;
+     screenActionUi.instructionsButton.y = 0;
+     screenActionUi.instructionsButton.width = 0;
+     screenActionUi.instructionsButton.height = 0;
 
-     gameWelcomeUi.menuButton.x = 0;
-     gameWelcomeUi.menuButton.y = 0;
-     gameWelcomeUi.menuButton.width = 0;
-     gameWelcomeUi.menuButton.height = 0;
+     screenActionUi.menuButton.x = 0;
+     screenActionUi.menuButton.y = 0;
+     screenActionUi.menuButton.width = 0;
+     screenActionUi.menuButton.height = 0;
 
-     gamePausedUi.resumeButton.x = 0;
-     gamePausedUi.resumeButton.y = 0;
-     gamePausedUi.resumeButton.width = 0;
-     gamePausedUi.resumeButton.height = 0;
+     pausedActionUi.resumeButton.x = 0;
+     pausedActionUi.resumeButton.y = 0;
+     pausedActionUi.resumeButton.width = 0;
+     pausedActionUi.resumeButton.height = 0;
 
-     gamePausedUi.instructionsButton.x = 0;
-     gamePausedUi.instructionsButton.y = 0;
-     gamePausedUi.instructionsButton.width = 0;
-     gamePausedUi.instructionsButton.height = 0;
+     pausedActionUi.instructionsButton.x = 0;
+     pausedActionUi.instructionsButton.y = 0;
+     pausedActionUi.instructionsButton.width = 0;
+     pausedActionUi.instructionsButton.height = 0;
 
-     gamePausedUi.menuButton.x = 0;
-     gamePausedUi.menuButton.y = 0;
-     gamePausedUi.menuButton.width = 0;
-     gamePausedUi.menuButton.height = 0;
+     pausedActionUi.menuButton.x = 0;
+     pausedActionUi.menuButton.y = 0;
+     pausedActionUi.menuButton.width = 0;
+     pausedActionUi.menuButton.height = 0;
 
      bindKeyboardInput();
      bindPointerInput();
