@@ -141,10 +141,10 @@ function getUiTheme() {
           },
 
           sizes: {
-               statusFontSize: getCssPixelSize("--font-size-small", 8),
+               statusFontSize: getCssPixelSize("--font-size-medium", 16),
                statusFontY: 20,
 
-               starSize: 18 * hudScale,
+               starSize: 20 * hudScale,
                heartSize: 22 * hudScale,
 
                starIconY: 4,

@@ -323,7 +323,7 @@ export function applyTemporaryPlayerFace(face, duration) {
 
 // NOTE: SHARED FACE POP
 // Centralized collision scale effect for both sparkles and obstacles.
-export function triggerPlayerFacePop(scale = 1.25) {
+export function triggerPlayerFacePop(scale = 1.1) {
      player.hitScale = Math.max(player.hitScale, scale);
 }
 
@@ -389,7 +389,7 @@ export function applyPlayerLevelScale() {
 
 export function resetPlayerPosition() {
      player.x = miniGameWidth / 2;
-     player.y = miniGameHeight * 0.65; //How far down y player should populate.
+     player.y = miniGameHeight * 0.75; // NOTE: How far down y player should populate.
      player.size = playerBaseSize;
      player.radius = playerBaseRadius;
      player.sparkleFaceTimer = 0;

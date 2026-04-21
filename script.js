@@ -692,6 +692,9 @@ const taglineBreaks = [
      "feedback in, better code out.",
      "gremlin in dev, professional in prod.",
      "unhinged energy, finished tickets.",
+     "three raccoons in a trenchcoat.",
+     "Sasquatch enthusiast.",
+     "keyboard snob.",
 ];
 
 function setRandomTaglineBreak() {
