@@ -389,7 +389,7 @@ export function applyPlayerLevelScale() {
 
 export function resetPlayerPosition() {
      player.x = miniGameWidth / 2;
-     player.y = miniGameHeight * 0.75;
+     player.y = miniGameHeight * 0.65; //How far down y player should populate.
      player.size = playerBaseSize;
      player.radius = playerBaseRadius;
      player.sparkleFaceTimer = 0;

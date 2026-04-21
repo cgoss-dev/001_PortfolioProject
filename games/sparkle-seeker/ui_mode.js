@@ -475,11 +475,17 @@ export function updateMenuUiBounds() {
      const buttonX = panelX + sidePadding;
      const buttonWidth = panelWidth - (sidePadding * 2);
 
+     if (gameMenuView === "instructions") {
+          gameMenuUi.backButton.x = buttonX;
+          gameMenuUi.backButton.y = panelY + panelHeight - buttonHeight - Math.max(18, panelHeight * 0.08);
+          gameMenuUi.backButton.width = buttonWidth;
+          gameMenuUi.backButton.height = buttonHeight;
+          return;
+     }
+
      let stackedButtons = [];
 
-     if (gameMenuView === "instructions") {
-          stackedButtons = [gameMenuUi.backButton];
-     } else if (gameMenuView === "options") {
+     if (gameMenuView === "options") {
           stackedButtons = [
                gameMenuUi.obstaclesToggleButton,
                gameMenuUi.musicToggleButton,
@@ -506,6 +512,7 @@ export function updateMenuUiBounds() {
           button.height = buttonHeight;
      });
 }
+
 
 export function isPointInsideMenuPanel(x, y) {
      return (
