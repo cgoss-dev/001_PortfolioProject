@@ -738,17 +738,25 @@ h1 {
 /* SPARKLE SEEKER */
 
 .game-container {
-     aspect-ratio: 1 / 1;
+     /* Allow canvas height to vary from 75% to 125% of its width. */
+     width: min(100%, 40rem);
+     height: clamp(
+          calc(min(100vw, 40rem) * 0.75),
+          70dvh,
+          calc(min(100vw, 40rem) * 1.25)
+     );
+
      margin: 0 auto;
      border: var(--panel-border);
      border-radius: var(--panel-radius);
      box-shadow: var(--glow-panel);
-     background: var(--translucent-strong);
+     background: var(--overlay-strong);
      overflow: hidden;
      display: flex;
      align-items: stretch;
      justify-content: stretch;
 }
+
 
 #miniGameCanvas {
      width: 100%;

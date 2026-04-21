@@ -713,7 +713,7 @@ export function startSparkleSeeker() {
 
      bindKeyboardInput();
      bindPointerInput();
-     bindResizeHandler();
+     bindResizeHandler(updateMiniGameCanvasSize);
 
      gameLoop();
 }

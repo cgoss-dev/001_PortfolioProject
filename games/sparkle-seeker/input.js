@@ -624,13 +624,24 @@ export function bindPointerInput() {
 
 // RESIZE
 
+let resizeLayoutCallback = null;
+
 function handleWindowResize() {
-     updateTouchControlBounds();
-     updateMenuUiBounds();
+     if (resizeLayoutCallback) {
+          resizeLayoutCallback();
+     } else {
+          updateTouchControlBounds();
+          updateMenuUiBounds();
+     }
+
      resetCanvasCursor();
 }
 
-export function bindResizeHandler() {
+export function bindResizeHandler(callback = null) {
+     if (callback) {
+          resizeLayoutCallback = callback;
+     }
+
      if (resizeHandlerBound) {
           return;
      }
