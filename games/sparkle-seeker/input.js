@@ -581,6 +581,8 @@ function onPointerMove(event) {
 }
 
 function onPointerUp(event) {
+     event.preventDefault(); // REQ TO PREVENT HOLD/FAST CLICK ON MOBILE DEVICES.
+
      if (isAnyScreenActive()) {
           if (miniGameCanvas) {
                const pos = getCanvasPointerPosition(event);
@@ -613,8 +615,8 @@ export function bindPointerInput() {
 
      miniGameCanvas.addEventListener("pointerdown", onPointerDown, { passive: false });
      miniGameCanvas.addEventListener("pointermove", onPointerMove, { passive: false });
-     miniGameCanvas.addEventListener("pointerup", onPointerUp);
-     miniGameCanvas.addEventListener("pointercancel", onPointerUp);
+     miniGameCanvas.addEventListener("pointerup", onPointerUp, { passive: false });
+     miniGameCanvas.addEventListener("pointercancel", onPointerUp, { passive: false });
      miniGameCanvas.addEventListener("pointerleave", onPointerLeave);
 
      setPointerInputBound(true);
