@@ -113,16 +113,16 @@ function getUiTheme() {
           colors: {
                fontColor,
 
-               fillColorNone: getCssColor("--overlay-none", "rgba(0, 0, 0, 0)"),
-               fillColorSoft: getCssColor("--overlay-soft", "rgba(0, 0, 0, 0.25)"),
-               fillColorMed: getCssColor("--overlay-medium", "rgba(0, 0, 0, 0.5)"),
-               fillColorHard: getCssColor("--overlay-strong", "rgba(0, 0, 0, 0.75)"),
+               fillTranslucentNone: getCssColor("--translucent-none", "rgba(0, 0, 0, 0)"),
+               fillTranslucentSoft: getCssColor("--translucent-soft", "rgba(0, 0, 0, 0.25)"),
+               fillTranslucentMedium: getCssColor("--translucent-medium", "rgba(0, 0, 0, 0.5)"),
+               fillTranslucentStrong: getCssColor("--translucent-strong", "rgba(0, 0, 0, 0.75)"),
 
-               outlineStrong: fontColor,
-               outlineSoft: "rgba(255, 255, 255, 0.25)",
+               outlineSoft: getCssColor("--opaque-soft", "rgba(0, 0, 0, 0.25)"),
+               outlineStrong: getCssColor("--opaque-strong", "rgba(0, 0, 0, 0.75)"),
+               controlFill: getCssColor("--opaque-soft", "rgba(0, 0, 0, 0.25)"),
+               controlFillPressed: getCssColor("--opaque-strong", "rgba(0, 0, 0, 0.75)"),
 
-               controlFill: "rgba(255, 255, 255, 0.25)",
-               controlFillPressed: "rgba(255, 255, 255, 0.75)",
                controlText: fontColor,
                controlGlow: fontColor,
 
@@ -144,7 +144,7 @@ function getUiTheme() {
                statusFontSize: getCssPixelSize("--font-size-small", 8),
                statusFontY: 20,
 
-               starSize: 16 * hudScale,
+               starSize: 18 * hudScale,
                heartSize: 22 * hudScale,
 
                starIconY: 4,
@@ -197,7 +197,7 @@ function drawPanelBox(x, y, width, height, theme, lineWidth = 3) {
      miniGameCtx.shadowBlur = glow.uiStrongGlow;
 
      drawRoundedRect(x, y, width, height, sizes.controlRadius);
-     miniGameCtx.fillStyle = colors.fillColorNone;
+     miniGameCtx.fillStyle = colors.fillTranslucentNone;
      miniGameCtx.fill();
 
      miniGameCtx.shadowBlur = 0;
@@ -381,7 +381,7 @@ function drawMiniGameBackground() {
      }
 
      miniGameCtx.clearRect(0, 0, miniGameWidth, miniGameHeight);
-     miniGameCtx.fillStyle = getCssColor("--overlay-medium", "rgba(0, 0, 0, 0.5)");
+     miniGameCtx.fillStyle = getCssColor("--translucent-medium", "rgba(0, 0, 0, 0.5)");
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 }
 
@@ -527,7 +527,7 @@ function drawTipsScreen(theme) {
      const { colors, fonts, sizes } = theme;
 
      miniGameCtx.save();
-     miniGameCtx.fillStyle = colors.fillColorMed;
+     miniGameCtx.fillStyle = colors.fillTranslucentMedium;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
      miniGameCtx.fillStyle = colors.fontColor;
@@ -569,7 +569,7 @@ function drawOptionsScreen(theme) {
      const { colors } = theme;
 
      miniGameCtx.save();
-     miniGameCtx.fillStyle = colors.fillColorMed;
+     miniGameCtx.fillStyle = colors.fillTranslucentMedium;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
      drawMenuButton(
@@ -620,7 +620,7 @@ function drawGameWelcomeOverlay(theme) {
      miniGameCtx.globalAlpha = alpha;
 
      if (!isScreenWelcomeActive()) {
-          miniGameCtx.fillStyle = colors.fillColorMed;
+          miniGameCtx.fillStyle = colors.fillTranslucentMedium;
           miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
      }
 
@@ -760,7 +760,7 @@ function drawPausedOverlay(theme) {
 
      miniGameCtx.save();
 
-     miniGameCtx.fillStyle = colors.fillColorMed;
+     miniGameCtx.fillStyle = colors.fillTranslucentMedium;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
      const pausedUi = getGamePausedUi();
@@ -896,7 +896,7 @@ function drawGameStatusOverlay(theme) {
      miniGameCtx.save();
      miniGameCtx.globalAlpha = alpha;
 
-     miniGameCtx.fillStyle = colors.fillColorSoft;
+     miniGameCtx.fillStyle = colors.fillTranslucentSoft;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
      miniGameCtx.textAlign = "center";

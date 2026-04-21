@@ -8,10 +8,13 @@
           --color-bg: #000000;
           --color-text: #ffffff;
           --color-accent: #ea76cb;
-          --overlay-none: rgba(0, 0, 0, 0);
-          --overlay-soft: rgba(0, 0, 0, 0.25);
-          --overlay-medium: rgba(0, 0, 0, 0.5);
-          --overlay-strong: rgba(0, 0, 0, 0.75);
+          --translucent-none: rgba(0, 0, 0, 0);
+          --translucent-soft: rgba(0, 0, 0, 0.25);
+          --translucent-medium: rgba(0, 0, 0, 0.5);
+          --translucent-strong: rgba(0, 0, 0, 0.75);
+          --opaque-soft: rgba(255, 255, 255, 0.25);
+          --opaque-medium: rgba(255, 255, 255, 0.5);
+          --opaque-strong: rgba(255, 255, 255, 0.75);
 
      /* RAINBOW PALETTE */
           --rainbow-pink: #ea76cb;
@@ -740,7 +743,7 @@ h1 {
      border: var(--panel-border);
      border-radius: var(--panel-radius);
      box-shadow: var(--glow-panel);
-     background: var(--overlay-strong);
+     background: var(--translucent-strong);
      overflow: hidden;
      display: flex;
      align-items: stretch;
@@ -763,4 +766,26 @@ h1 {
      -webkit-user-select: none;
      -webkit-touch-callout: none;
      -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+.body-ody,
+.main-squeeze,
+.hero-stack,
+.game-container,
+#miniGameCanvas {
+     -webkit-user-select: none;
+     user-select: none;
+     -webkit-touch-callout: none;
+     -webkit-tap-highlight-color: transparent;
+}
+
+.game-container,
+#miniGameCanvas {
+     touch-action: none;
+}
+
+body {
+     overscroll-behavior: none;
 }

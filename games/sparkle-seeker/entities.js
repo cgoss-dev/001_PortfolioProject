@@ -105,7 +105,7 @@ export const playerTrailCountMax = 2;
 export const playerTrailCountMin = 0;
 
 export const playerTrailLifeMax = 64;
-export const playerTrailLifeMin = 8;
+export const playerTrailLifeMin = 12;
 
 export const playerTrailWidthMax = 10;
 export const playerTrailWidthMin = 2;
@@ -349,7 +349,7 @@ export function getCurrentLevelData() {
      };
 }
 
-// LEVEL NUMBER HELPER
+// REVIEW: HUD LVL
 // Handy if you want to draw "LVL 3" in the HUD later.
 export function getCurrentLevelNumber() {
      return getCurrentLevelData().level;
