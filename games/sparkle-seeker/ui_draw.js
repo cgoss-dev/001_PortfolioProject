@@ -143,8 +143,8 @@ function getUiTheme() {
                statusFontSize: getCssPixelSize("--font-size-small", 8),
                statusFontY: 20,
 
-               starSize: 16,
-               heartSize: 22,
+               starSize: 16 * hudScale, //Req to adjust size within canvas on small screens.
+               heartSize: 22 * hudScale,
 
                starIconY: 4,
                heartIconY: 2,
