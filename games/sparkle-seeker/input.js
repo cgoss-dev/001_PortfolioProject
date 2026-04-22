@@ -23,12 +23,10 @@ import {
      setGamePaused,
      setGameMenuOpen,
      setGameMenuView,
-     setLeftButtonPressed,
-     setLeftButtonPointerId,
+     setTouchMoveTarget,
+     clearTouchMoveTarget,
      setPauseButtonPressed,
-     setPauseButtonPointerId,
-     setRightButtonPressed,
-     setRightButtonPointerId
+     setPauseButtonPointerId
 } from "./state.js";
 
 import {
@@ -266,11 +264,7 @@ function updateCanvasCursor(x, y) {
           if (!isPointInsideMenuPanel(x, y) || getMenuButtonAtPoint(x, y)) {
                cursor = "pointer";
           }
-     } else if (
-          isPointInsideControlButton(x, y, touchControls.leftButton) ||
-          isPointInsideControlButton(x, y, touchControls.pauseButton) ||
-          isPointInsideControlButton(x, y, touchControls.rightButton)
-     ) {
+     } else if (isPointInsideControlButton(x, y, touchControls.pauseButton)) {
           cursor = "pointer";
      }
 
@@ -288,60 +282,34 @@ function resetCanvasCursor() {
 // TOUCH CONTROL LAYOUT
 
 export function updateTouchControlBounds() {
-     const leftButton = touchControls.leftButton;
      const pauseButton = touchControls.pauseButton;
-     const rightButton = touchControls.rightButton;
 
-     if (!leftButton || !pauseButton || !rightButton) {
+     if (!pauseButton) {
           return;
      }
 
      const buttonDiameter = touchControlLayout.buttonSize * touchControlLayout.buttonVisualScale;
-     const buttonY =
+
+     pauseButton.x = (miniGameWidth / 2) - (buttonDiameter / 2);
+     pauseButton.y =
           miniGameHeight -
           touchControlLayout.buttonEdgePaddingY -
           buttonDiameter;
-
-     leftButton.x = touchControlLayout.buttonEdgePaddingX;
-     leftButton.y = buttonY;
-     leftButton.width = buttonDiameter;
-     leftButton.height = buttonDiameter;
-
-     pauseButton.x = (miniGameWidth / 2) - (buttonDiameter / 2);
-     pauseButton.y = buttonY;
      pauseButton.width = buttonDiameter;
      pauseButton.height = buttonDiameter;
-
-     rightButton.x =
-          miniGameWidth -
-          touchControlLayout.buttonEdgePaddingX -
-          buttonDiameter;
-     rightButton.y = buttonY;
-     rightButton.width = buttonDiameter;
-     rightButton.height = buttonDiameter;
 }
 
 // TOUCH RESET
 
 export function resetTouchControls() {
-     const leftButton = touchControls.leftButton;
      const pauseButton = touchControls.pauseButton;
-     const rightButton = touchControls.rightButton;
-
-     if (leftButton) {
-          leftButton.isPressed = false;
-          leftButton.pointerId = null;
-     }
 
      if (pauseButton) {
           pauseButton.isPressed = false;
           pauseButton.pointerId = null;
      }
 
-     if (rightButton) {
-          rightButton.isPressed = false;
-          rightButton.pointerId = null;
-     }
+     clearTouchMoveTarget(touchControls.touchMoveTarget.pointerId);
 
      resetCanvasCursor();
      updateTouchControlBounds();
@@ -443,9 +411,13 @@ function onKeyDown(event) {
      keys[key] = true;
 
      if (
+          key === "w" ||
           key === "a" ||
+          key === "s" ||
           key === "d" ||
+          key === "arrowup" ||
           key === "arrowleft" ||
+          key === "arrowdown" ||
           key === "arrowright" ||
           key === "space" ||
           key === "enter" ||
@@ -507,19 +479,9 @@ export function bindKeyboardInput() {
 }
 
 function clearButtons(pointerId) {
-     if (touchControls.leftButton.pointerId === pointerId) {
-          setLeftButtonPressed(false);
-          setLeftButtonPointerId(null);
-     }
-
      if (touchControls.pauseButton.pointerId === pointerId) {
           setPauseButtonPressed(false);
           setPauseButtonPointerId(null);
-     }
-
-     if (touchControls.rightButton.pointerId === pointerId) {
-          setRightButtonPressed(false);
-          setRightButtonPointerId(null);
      }
 }
 
@@ -582,13 +544,6 @@ function onPointerDown(event) {
           return;
      }
 
-     if (isPointInsideControlButton(pos.x, pos.y, touchControls.leftButton)) {
-          setLeftButtonPressed(true);
-          setLeftButtonPointerId(event.pointerId);
-          capturePointer(event.pointerId);
-          return;
-     }
-
      if (isPointInsideControlButton(pos.x, pos.y, touchControls.pauseButton)) {
           setPauseButtonPressed(true);
           setPauseButtonPointerId(event.pointerId);
@@ -597,12 +552,12 @@ function onPointerDown(event) {
           return;
      }
 
-     if (isPointInsideControlButton(pos.x, pos.y, touchControls.rightButton)) {
-          setRightButtonPressed(true);
-          setRightButtonPointerId(event.pointerId);
-          capturePointer(event.pointerId);
+     if (!gameStarted || gamePaused || gameMenuOpen || gameOver || gameWon) {
           return;
      }
+
+     setTouchMoveTarget(pos.x, pos.y, event.pointerId);
+     capturePointer(event.pointerId);
 }
 
 function onPointerMove(event) {
@@ -610,12 +565,17 @@ function onPointerMove(event) {
 
      const pos = getCanvasPointerPosition(event);
      updateCanvasCursor(pos.x, pos.y);
+
+     if (touchControls.touchMoveTarget.pointerId === event.pointerId) {
+          setTouchMoveTarget(pos.x, pos.y, event.pointerId);
+     }
 }
 
 function onPointerUp(event) {
      event.preventDefault();
 
      clearButtons(event.pointerId);
+     clearTouchMoveTarget(event.pointerId);
      releasePointer(event.pointerId);
 
      if (miniGameCanvas) {

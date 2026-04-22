@@ -48,7 +48,7 @@ const siteTheme = window.SiteTheme;
 // These are game rules, so they belong in JS.
 // ==================================================
 
-export const sparkleSpawnDelay = 20;
+export const sparkleSpawnDelay = 25;
 export const sparkleSpawnCap = 60;
 
 // Global safety cap only.
@@ -98,7 +98,7 @@ export const playerBaseRadius = 30;
 // ==================================================
 // NOTE: PLAYER TRAIL
 // Short rainbow ribbon segments that follow actual movement.
-// This works for x-only movement now and will still work if y movement returns later.
+// This now supports full 2D movement from keyboard or touch.
 // ==================================================
 
 export const playerTrailCountMax = 2;
@@ -422,29 +422,67 @@ export function clampPlayerToCanvas() {
      );
 }
 
-export function updatePlayer() {
-     let dx = 0;
+function movePlayerTowardTouchTarget() {
+     const target = touchControls.touchMoveTarget;
 
-     if (
-          keys["a"] ||
-          keys["arrowleft"] ||
-          touchControls.leftButton?.isPressed
-     ) {
+     if (!target?.isActive) {
+          return false;
+     }
+
+     const dx = target.x - player.x;
+     const dy = target.y - player.y;
+     const distance = Math.hypot(dx, dy);
+
+     if (distance < 0.5) {
+          return true;
+     }
+
+     const step = Math.min(player.speed, distance);
+
+     player.x += (dx / distance) * step;
+     player.y += (dy / distance) * step;
+
+     return true;
+}
+
+function movePlayerFromKeyboard() {
+     let dx = 0;
+     let dy = 0;
+
+     if (keys["a"] || keys["arrowleft"]) {
           dx -= 1;
      }
 
-     if (
-          keys["d"] ||
-          keys["arrowright"] ||
-          touchControls.rightButton?.isPressed
-     ) {
+     if (keys["d"] || keys["arrowright"]) {
           dx += 1;
      }
 
+     if (keys["w"] || keys["arrowup"]) {
+          dy -= 1;
+     }
+
+     if (keys["s"] || keys["arrowdown"]) {
+          dy += 1;
+     }
+
+     if (dx === 0 && dy === 0) {
+          return;
+     }
+
+     // Normalize diagonal movement so moving at an angle is not faster.
+     const length = Math.hypot(dx, dy);
+
+     player.x += (dx / length) * player.speed;
+     player.y += (dy / length) * player.speed;
+}
+
+export function updatePlayer() {
      const previousX = player.x;
      const previousY = player.y;
 
-     player.x += dx * player.speed;
+     if (!movePlayerTowardTouchTarget()) {
+          movePlayerFromKeyboard();
+     }
 
      clampPlayerToCanvas();
 

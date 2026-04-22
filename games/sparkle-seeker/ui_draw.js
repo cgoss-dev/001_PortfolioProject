@@ -542,9 +542,7 @@ function drawTouchButtons(theme) {
 
      const { colors, fonts, glow } = theme;
      const buttons = [
-          touchControls.leftButton,
-          touchControls.pauseButton,
-          touchControls.rightButton
+          touchControls.pauseButton
      ];
 
      buttons.forEach((button) => {

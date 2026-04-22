@@ -140,14 +140,11 @@ export const gameMenuUi = {
 // ==================================================
 
 export const touchControls = {
-     leftButton: {
+     touchMoveTarget: {
           x: 0,
           y: 0,
-          width: 60,
-          height: 60,
-          isPressed: false,
           pointerId: null,
-          label: "L"
+          isActive: false
      },
 
      pauseButton: {
@@ -158,18 +155,28 @@ export const touchControls = {
           isPressed: false,
           pointerId: null,
           label: "\u23EF\uFE0E"
-     },
-
-     rightButton: {
-          x: 0,
-          y: 0,
-          width: 60,
-          height: 60,
-          isPressed: false,
-          pointerId: null,
-          label: "R"
      }
 };
+
+// ==================================================
+// TOUCH TARGET SETTERS
+// ==================================================
+
+export function setTouchMoveTarget(x, y, pointerId) {
+     touchControls.touchMoveTarget.x = x;
+     touchControls.touchMoveTarget.y = y;
+     touchControls.touchMoveTarget.pointerId = pointerId;
+     touchControls.touchMoveTarget.isActive = true;
+}
+
+export function clearTouchMoveTarget(pointerId) {
+     if (touchControls.touchMoveTarget.pointerId !== pointerId) {
+          return;
+     }
+
+     touchControls.touchMoveTarget.pointerId = null;
+     touchControls.touchMoveTarget.isActive = false;
+}
 
 // ==================================================
 // ONE-TIME BIND FLAGS
@@ -370,28 +377,12 @@ export function setGameOverlayDuration(value) {
 // TOUCH BUTTON SETTERS
 // ==================================================
 
-export function setLeftButtonPressed(value) {
-     touchControls.leftButton.isPressed = value;
-}
-
-export function setLeftButtonPointerId(value) {
-     touchControls.leftButton.pointerId = value;
-}
-
 export function setPauseButtonPressed(value) {
      touchControls.pauseButton.isPressed = value;
 }
 
 export function setPauseButtonPointerId(value) {
      touchControls.pauseButton.pointerId = value;
-}
-
-export function setRightButtonPressed(value) {
-     touchControls.rightButton.isPressed = value;
-}
-
-export function setRightButtonPointerId(value) {
-     touchControls.rightButton.pointerId = value;
 }
 
 // ==================================================
@@ -431,6 +422,14 @@ export function resetGameState() {
      sparkles.length = 0;
      obstacles.length = 0;
      collisionBursts.length = 0;
+
+     touchControls.touchMoveTarget.x = 0;
+     touchControls.touchMoveTarget.y = 0;
+     touchControls.touchMoveTarget.pointerId = null;
+     touchControls.touchMoveTarget.isActive = false;
+
+     touchControls.pauseButton.isPressed = false;
+     touchControls.pauseButton.pointerId = null;
 }
 
 // ==================================================
