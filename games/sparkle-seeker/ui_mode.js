@@ -582,12 +582,13 @@ export function isPointInsideMenuPanel(x, y) {
 export function getInstructionLines() {
      return [
           "Collect sparkles, avoid obstacles.",
-          "Use L/R buttons or left/right keys to move.",
-          "Health changes movement speed.",
-          "Stars show progress toward next level.",
-          "Reach the win score to clear the run."
+          "Use WASD/arrows, or touchscreen to move.",
+          "Health affects movement speed.",
+          "Stars indicate progress toward next level.",
+          "Reach the 1000 points to win."
      ];
 }
+
 
 // OVERLAY SYSTEM
 
