@@ -52,13 +52,15 @@ import {
 import {
      isScreenWelcomeActive,
      isOverlayScreenActive,
-     getGameWelcomeUi,
-     getGamePausedUi,
+     getScreenActionUi,
+     getPausedActionUi,
      getCurrentScreenTitleLines,
      getCurrentScreenActionTexts,
      getCurrentPausedActionTexts,
      getGameWelcomeAlpha,
-     getInstructionLines,
+     getHowToPlayLines,
+     getHelpfulEffectLines,
+     getHarmfulEffectLines,
      getHarmfulToggleLabel,
      getMusicToggleLabel,
      getSoundEffectsToggleLabel,
@@ -578,7 +580,6 @@ function drawHealth(theme) {
      miniGameCtx.restore();
 }
 
-
 function drawFogOverlay() {
      if (!miniGameCtx || !isEffectActive("fog")) {
           return;
@@ -607,7 +608,6 @@ function drawFogOverlay() {
 
      miniGameCtx.restore();
 }
-
 
 function drawTouchButtons(theme) {
      if (!miniGameCtx) {
@@ -646,36 +646,62 @@ function drawTouchButtons(theme) {
 
 // FULL-SCREEN SCREENS
 
-function drawTipsScreen(theme) {
+function drawTipsMenuScreen(theme) {
      if (!miniGameCtx) {
           return;
      }
 
-     const { colors, fonts, sizes } = theme;
+     const { colors } = theme;
 
      miniGameCtx.save();
      miniGameCtx.fillStyle = colors.fillTranslucentMedium;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
-     miniGameCtx.fillStyle = colors.fontColor;
-     miniGameCtx.textAlign = "left";
-     miniGameCtx.textBaseline = "top";
-     miniGameCtx.shadowBlur = 0;
+     drawMenuButton(gameMenuUi.tipsHowToPlayButton, "HOW TO PLAY", theme);
+     drawMenuButton(gameMenuUi.tipsHelpEffectsButton, "HELPFUL EFFECTS", theme);
+     drawMenuButton(gameMenuUi.tipsHarmEffectsButton, "HARMFUL EFFECTS", theme);
+     drawMenuButton(gameMenuUi.backButton, "Back", theme);
+
+     miniGameCtx.restore();
+}
+
+function drawTipsDetailScreen(theme, title, lines) {
+     if (!miniGameCtx) {
+          return;
+     }
+
+     const { colors, fonts, sizes, glow } = theme;
+
+     miniGameCtx.save();
+     miniGameCtx.fillStyle = colors.fillTranslucentMedium;
+     miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
      const textX = Math.max(24, miniGameWidth * 0.12);
      let textY = Math.max(28, miniGameHeight * 0.12);
+     const titleFontSize = Math.max(14, sizes.uiFontSmall * 1.2);
      const fontSize = Math.max(12, sizes.uiFontSmall * Math.min(1, miniGameWidth / 320));
-     const lineHeight = fontSize * 1;
-     const sectionGap = lineHeight * 1.25;
+     const lineHeight = fontSize * 1.15;
+     const sectionGap = lineHeight * 1.15;
      const maxTextWidth = miniGameWidth - (textX * 2);
 
+     miniGameCtx.fillStyle = colors.fontColor;
+     miniGameCtx.textAlign = "left";
+     miniGameCtx.textBaseline = "top";
+     miniGameCtx.shadowColor = colors.overlayGlow;
+     miniGameCtx.shadowBlur = glow.uiSoftGlow;
+     miniGameCtx.font = `${titleFontSize}px ${fonts.display}`;
+     miniGameCtx.fillText(title, textX, textY);
+
+     textY += titleFontSize + sectionGap;
+
+     miniGameCtx.shadowBlur = 0;
      miniGameCtx.font = `400 ${fontSize}px ${fonts.body}`;
 
-     getInstructionLines().forEach((instructionLine) => {
+     lines.forEach((line) => {
           textY += (
                drawWrappedText(
                     miniGameCtx,
-                    instructionLine,
+                    line,
                     textX,
                     textY,
                     maxTextWidth,
@@ -703,7 +729,7 @@ function drawOptionsScreen(theme) {
           gameMenuUi.harmfulRow,
           gameMenuUi.harmfulDecreaseButton,
           gameMenuUi.harmfulIncreaseButton,
-          "Harmful",
+          "Difficulty",
           getHarmfulToggleLabel(),
           harmfulLevel,
           theme
@@ -793,17 +819,17 @@ function drawGameWelcomeOverlay(theme) {
           }
      });
 
-     const welcomeUi = getGameWelcomeUi();
+     const welcomeUi = getScreenActionUi();
 
      welcomeUi.startButton.x = 0;
      welcomeUi.startButton.y = 0;
      welcomeUi.startButton.width = 0;
      welcomeUi.startButton.height = 0;
 
-     welcomeUi.instructionsButton.x = 0;
-     welcomeUi.instructionsButton.y = 0;
-     welcomeUi.instructionsButton.width = 0;
-     welcomeUi.instructionsButton.height = 0;
+     welcomeUi.tipsButton.x = 0;
+     welcomeUi.tipsButton.y = 0;
+     welcomeUi.tipsButton.width = 0;
+     welcomeUi.tipsButton.height = 0;
 
      welcomeUi.menuButton.x = 0;
      welcomeUi.menuButton.y = 0;
@@ -863,10 +889,10 @@ function drawGameWelcomeOverlay(theme) {
           }
 
           if (item.text === "TIPS") {
-               welcomeUi.instructionsButton.x = buttonX;
-               welcomeUi.instructionsButton.y = buttonY;
-               welcomeUi.instructionsButton.width = buttonWidth;
-               welcomeUi.instructionsButton.height = buttonHeight;
+               welcomeUi.tipsButton.x = buttonX;
+               welcomeUi.tipsButton.y = buttonY;
+               welcomeUi.tipsButton.width = buttonWidth;
+               welcomeUi.tipsButton.height = buttonHeight;
           }
 
           if (item.text === "OPTIONS") {
@@ -902,17 +928,17 @@ function drawPausedOverlay(theme) {
      miniGameCtx.fillStyle = colors.fillTranslucentMedium;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
-     const pausedUi = getGamePausedUi();
+     const pausedUi = getPausedActionUi();
 
      pausedUi.resumeButton.x = 0;
      pausedUi.resumeButton.y = 0;
      pausedUi.resumeButton.width = 0;
      pausedUi.resumeButton.height = 0;
 
-     pausedUi.instructionsButton.x = 0;
-     pausedUi.instructionsButton.y = 0;
-     pausedUi.instructionsButton.width = 0;
-     pausedUi.instructionsButton.height = 0;
+     pausedUi.tipsButton.x = 0;
+     pausedUi.tipsButton.y = 0;
+     pausedUi.tipsButton.width = 0;
+     pausedUi.tipsButton.height = 0;
 
      pausedUi.menuButton.x = 0;
      pausedUi.menuButton.y = 0;
@@ -1002,10 +1028,10 @@ function drawPausedOverlay(theme) {
           }
 
           if (item.text === "TIPS") {
-               pausedUi.instructionsButton.x = buttonX;
-               pausedUi.instructionsButton.y = buttonY;
-               pausedUi.instructionsButton.width = buttonWidth;
-               pausedUi.instructionsButton.height = buttonHeight;
+               pausedUi.tipsButton.x = buttonX;
+               pausedUi.tipsButton.y = buttonY;
+               pausedUi.tipsButton.width = buttonWidth;
+               pausedUi.tipsButton.height = buttonHeight;
           }
 
           if (item.text === "OPTIONS") {
@@ -1113,8 +1139,14 @@ export function drawGame() {
      }
 
      if (gameMenuOpen) {
-          if (gameMenuView === "instructions") {
-               drawTipsScreen(theme);
+          if (gameMenuView === "tips") {
+               drawTipsMenuScreen(theme);
+          } else if (gameMenuView === "tips_how_to_play") {
+               drawTipsDetailScreen(theme, "HOW TO PLAY", getHowToPlayLines());
+          } else if (gameMenuView === "tips_help_effects") {
+               drawTipsDetailScreen(theme, "HELPFUL EFFECTS", getHelpfulEffectLines());
+          } else if (gameMenuView === "tips_harm_effects") {
+               drawTipsDetailScreen(theme, "HARMFUL EFFECTS", getHarmfulEffectLines());
           } else if (gameMenuView === "options") {
                drawOptionsScreen(theme);
           }

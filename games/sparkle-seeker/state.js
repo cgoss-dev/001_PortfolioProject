@@ -145,8 +145,12 @@ export const gameMenuUi = {
      panel: { x: 0, y: 0, width: 0, height: 0 },
 
      newGameButton: { x: 0, y: 0, width: 0, height: 0 },
-     instructionsButton: { x: 0, y: 0, width: 0, height: 0 },
+     tipsButton: { x: 0, y: 0, width: 0, height: 0 },
      optionsButton: { x: 0, y: 0, width: 0, height: 0 },
+
+     tipsHowToPlayButton: { x: 0, y: 0, width: 0, height: 0 },
+     tipsHelpEffectsButton: { x: 0, y: 0, width: 0, height: 0 },
+     tipsHarmEffectsButton: { x: 0, y: 0, width: 0, height: 0 },
 
      harmfulRow: { x: 0, y: 0, width: 0, height: 0 },
      harmfulDecreaseButton: { x: 0, y: 0, width: 0, height: 0 },
@@ -421,7 +425,7 @@ export function setGameMenuView(value) {
      gameMenuView = value;
 }
 
-// Compatibility boolean setters.
+// Boolean setters. Keep legacy simple on/off controls in sync with option levels.
 export function setMusicEnabled(value) {
      musicEnabled = value;
      musicLevel = value ? maxOptionLevelIndex : 0;

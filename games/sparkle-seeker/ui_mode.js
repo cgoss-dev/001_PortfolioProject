@@ -100,20 +100,20 @@ let screenLayerDuration = -1;
 
 // SCREEN MODE
 // `screenWelcome` is the only screen that hides the board.
-// `screenPaused`, `screenTryAgain`, and `screenYouWin` are overlays.
+// `screenTryAgain` and `screenYouWin` are overlays.
 let gameScreenMode = "screenWelcome";
 
 // SCREEN ACTION TARGETS
 
 const screenActionUi = {
      startButton: { x: 0, y: 0, width: 0, height: 0 },
-     instructionsButton: { x: 0, y: 0, width: 0, height: 0 },
+     tipsButton: { x: 0, y: 0, width: 0, height: 0 },
      menuButton: { x: 0, y: 0, width: 0, height: 0 }
 };
 
 const pausedActionUi = {
      resumeButton: { x: 0, y: 0, width: 0, height: 0 },
-     instructionsButton: { x: 0, y: 0, width: 0, height: 0 },
+     tipsButton: { x: 0, y: 0, width: 0, height: 0 },
      menuButton: { x: 0, y: 0, width: 0, height: 0 }
 };
 
@@ -136,35 +136,15 @@ export function isOverlayScreenActive() {
      );
 }
 
-// Compatibility alias for older imports.
-export function isGameWelcomeActive() {
-     return screenLayerActive;
-}
-
 export function getScreenActionUi() {
      return screenActionUi;
-}
-
-// Compatibility alias for older imports.
-export function getGameWelcomeUi() {
-     return getScreenActionUi();
 }
 
 export function getPausedActionUi() {
      return pausedActionUi;
 }
 
-// Compatibility alias for older imports.
-export function getGamePausedUi() {
-     return getPausedActionUi();
-}
-
 export function getGameScreenMode() {
-     return gameScreenMode;
-}
-
-// Compatibility alias for older imports.
-export function getGameWelcomeMode() {
      return gameScreenMode;
 }
 
@@ -184,18 +164,8 @@ export function getCurrentScreenTitleLines() {
      return screenWelcomeTitleLines;
 }
 
-// Compatibility alias for older imports.
-export function getCurrentWelcomeTitleLines() {
-     return getCurrentScreenTitleLines();
-}
-
 export function getCurrentScreenActionTexts() {
      return ["NEW GAME", "TIPS", "OPTIONS"];
-}
-
-// Compatibility alias for older imports.
-export function getCurrentWelcomeActionTexts() {
-     return getCurrentScreenActionTexts();
 }
 
 export function getCurrentPausedActionTexts() {
@@ -210,12 +180,7 @@ export function dismissScreenWelcomeToStart() {
      startNewGameRound();
 }
 
-// Compatibility alias for older imports.
-export function dismissGameWelcomeToStart() {
-     dismissScreenWelcomeToStart();
-}
-
-export function dismissScreenWelcomeToInstructionsMenu() {
+export function dismissScreenWelcomeToTipsMenu() {
      screenLayerActive = false;
      gameScreenMode = "screenWelcome";
      screenLayerTimer = 0;
@@ -232,16 +197,11 @@ export function dismissScreenWelcomeToInstructionsMenu() {
      setGameStarted(false);
      setGamePaused(false);
      setGameMenuOpen(true);
-     setMenuViewAndRefresh("instructions");
+     setMenuViewAndRefresh("tips");
      setGameOver(false);
      setGameWon(false);
 
      clearGameOverlay();
-}
-
-// Compatibility alias for older imports.
-export function dismissGameWelcomeToInstructionsMenu() {
-     dismissScreenWelcomeToInstructionsMenu();
 }
 
 export function dismissScreenWelcomeToOptionsMenu() {
@@ -268,20 +228,10 @@ export function dismissScreenWelcomeToOptionsMenu() {
      clearGameOverlay();
 }
 
-// Compatibility alias for older imports.
-export function dismissGameWelcomeToOptionsMenu() {
-     dismissScreenWelcomeToOptionsMenu();
-}
-
-// Compatibility alias in case older input code still imports the old name.
-export function dismissGameWelcomeToMenu() {
-     dismissScreenWelcomeToOptionsMenu();
-}
-
-export function dismissPausedToInstructionsMenu() {
+export function dismissPausedToTipsMenu() {
      setGamePaused(true);
      setGameMenuOpen(true);
-     setMenuViewAndRefresh("instructions");
+     setMenuViewAndRefresh("tips");
 }
 
 export function dismissPausedToOptionsMenu() {
@@ -291,6 +241,15 @@ export function dismissPausedToOptionsMenu() {
 }
 
 export function dismissMenuBackToPreviousScreen() {
+     if (
+          gameMenuView === "tips_how_to_play" ||
+          gameMenuView === "tips_help_effects" ||
+          gameMenuView === "tips_harm_effects"
+     ) {
+          setMenuViewAndRefresh("tips");
+          return;
+     }
+
      setGameMenuOpen(false);
      setGameMenuView("");
 
@@ -306,7 +265,6 @@ export function dismissMenuBackToPreviousScreen() {
      }
 
      setGamePaused(true);
-     gameScreenMode = "screenPaused";
      updateMenuUiBounds();
      updateTouchControlBounds();
 }
@@ -330,26 +288,6 @@ export function showScreenYouWin() {
      gameScreenMode = "screenYouWin";
      screenLayerTimer = -1;
      screenLayerDuration = -1;
-}
-
-// Compatibility wrapper for older calls.
-export function showGameWelcomeScreen(mode = "welcome") {
-     if (mode === "win") {
-          showScreenYouWin();
-          return;
-     }
-
-     if (mode === "lose") {
-          showScreenTryAgain();
-          return;
-     }
-
-     showScreenWelcome();
-}
-
-// Compatibility wrapper for older calls.
-export function dismissGameWelcomeBackToMain() {
-     showScreenWelcome();
 }
 
 export function getGameWelcomeAlpha() {
@@ -473,7 +411,7 @@ export function increaseHarmfulLevel() {
 }
 
 // TEMPORARY SCREEN LAYOUT
-// This layer only feeds instructions + options bounds to input + draw code.
+// This layer only feeds tips + options bounds to input + draw code.
 
 function setOptionRowBounds(row, decreaseButton, increaseButton, x, y, width, height) {
      const arrowWidth = Math.min(48, Math.max(35, width * 0.18));
@@ -510,7 +448,35 @@ export function updateMenuUiBounds() {
      const buttonX = panelX + sidePadding;
      const buttonWidth = panelWidth - (sidePadding * 2);
 
-     if (gameMenuView === "instructions") {
+     if (gameMenuView === "tips") {
+          const visibleRows = [
+               gameMenuUi.tipsHowToPlayButton,
+               gameMenuUi.tipsHelpEffectsButton,
+               gameMenuUi.tipsHarmEffectsButton,
+               gameMenuUi.backButton
+          ];
+
+          const totalButtonHeight = visibleRows.length * buttonHeight;
+          const availableHeight = panelHeight - totalButtonHeight;
+          const gap = Math.max(18, availableHeight / (visibleRows.length + 1));
+
+          visibleRows.forEach((row, index) => {
+               const y = panelY + gap + (index * (buttonHeight + gap));
+
+               row.x = buttonX;
+               row.y = y;
+               row.width = buttonWidth;
+               row.height = buttonHeight;
+          });
+
+          return;
+     }
+
+     if (
+          gameMenuView === "tips_how_to_play" ||
+          gameMenuView === "tips_help_effects" ||
+          gameMenuView === "tips_harm_effects"
+     ) {
           gameMenuUi.backButton.x = buttonX;
           gameMenuUi.backButton.y = panelY + panelHeight - buttonHeight - Math.max(18, panelHeight * 0.08);
           gameMenuUi.backButton.width = buttonWidth;
@@ -579,13 +545,33 @@ export function isPointInsideMenuPanel(x, y) {
      );
 }
 
-export function getInstructionLines() {
+export function getHowToPlayLines() {
      return [
           "Collect sparkles to score and heal.",
-          "Use WASD, arrow keys, or drag on touchscreen to move.",
+          "Use arrows/WASD, or click/hold to move.",
           "Stars show progress toward the next level.",
-          "Helpful effects boost you. Harmful effects make trouble.",
+          "Only one timed effect active at a time.",
           "Reach 1000 sparkles to win."
+     ];
+}
+
+export function getHelpfulEffectLines() {
+     return [
+          "\u2B21\uFE0E Shield: blocks the next harmful pickup.",
+          "\u271A\uFE0E Cure: blocks the next harmful status effect.",
+          "\u2618\uFE0E Luck: doubles sparkle points for a short time.",
+          "\u2316\uFE0E Magnet: pulls nearby sparkles toward you.",
+          "\u29D6\uFE0E Slowmo: slows falling objects."
+     ];
+}
+
+export function getHarmfulEffectLines() {
+     return [
+          "\u2744\uFE0E Freeze: stops movement briefly.",
+          "\u26A1\uFE0E Surge: speeds falling objects up.",
+          "\u2300\uFE0E Daze: reverses movement.",
+          "\u26A0\uFE0E Glass: makes the next hit hurt more.",
+          "\u224B\uFE0E Fog: limits your visible area."
      ];
 }
 
@@ -731,10 +717,10 @@ export function startSparkleSeeker() {
      screenActionUi.startButton.width = 0;
      screenActionUi.startButton.height = 0;
 
-     screenActionUi.instructionsButton.x = 0;
-     screenActionUi.instructionsButton.y = 0;
-     screenActionUi.instructionsButton.width = 0;
-     screenActionUi.instructionsButton.height = 0;
+     screenActionUi.tipsButton.x = 0;
+     screenActionUi.tipsButton.y = 0;
+     screenActionUi.tipsButton.width = 0;
+     screenActionUi.tipsButton.height = 0;
 
      screenActionUi.menuButton.x = 0;
      screenActionUi.menuButton.y = 0;
@@ -746,10 +732,10 @@ export function startSparkleSeeker() {
      pausedActionUi.resumeButton.width = 0;
      pausedActionUi.resumeButton.height = 0;
 
-     pausedActionUi.instructionsButton.x = 0;
-     pausedActionUi.instructionsButton.y = 0;
-     pausedActionUi.instructionsButton.width = 0;
-     pausedActionUi.instructionsButton.height = 0;
+     pausedActionUi.tipsButton.x = 0;
+     pausedActionUi.tipsButton.y = 0;
+     pausedActionUi.tipsButton.width = 0;
+     pausedActionUi.tipsButton.height = 0;
 
      pausedActionUi.menuButton.x = 0;
      pausedActionUi.menuButton.y = 0;

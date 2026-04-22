@@ -44,7 +44,7 @@ import {
      getScreenActionUi,
      getPausedActionUi,
      dismissScreenWelcomeToStart,
-     dismissScreenWelcomeToInstructionsMenu,
+     dismissScreenWelcomeToTipsMenu,
      dismissScreenWelcomeToOptionsMenu,
      dismissMenuBackToPreviousScreen
 } from "./ui_mode.js";
@@ -166,6 +166,20 @@ function getMenuButtonAtPoint(x, y) {
           return null;
      }
 
+     if (gameMenuView === "tips") {
+          if (isPointInsideRect(x, y, gameMenuUi.tipsHowToPlayButton)) {
+               return "tips_how_to_play";
+          }
+
+          if (isPointInsideRect(x, y, gameMenuUi.tipsHelpEffectsButton)) {
+               return "tips_help_effects";
+          }
+
+          if (isPointInsideRect(x, y, gameMenuUi.tipsHarmEffectsButton)) {
+               return "tips_harm_effects";
+          }
+     }
+
      if (gameMenuView === "options") {
           if (isPointInsideRect(x, y, gameMenuUi.harmfulDecreaseButton)) {
                return "harmful_decrease";
@@ -210,8 +224,8 @@ function getScreenButtonAtPoint(x, y) {
           return "start";
      }
 
-     if (isPointInsideRect(x, y, screenUi.instructionsButton)) {
-          return "instructions";
+     if (isPointInsideRect(x, y, screenUi.tipsButton)) {
+          return "tips";
      }
 
      if (isPointInsideRect(x, y, screenUi.menuButton)) {
@@ -232,8 +246,8 @@ function getPausedButtonAtPoint(x, y) {
           return "resume";
      }
 
-     if (isPointInsideRect(x, y, pausedUi.instructionsButton)) {
-          return "instructions";
+     if (isPointInsideRect(x, y, pausedUi.tipsButton)) {
+          return "tips";
      }
 
      if (isPointInsideRect(x, y, pausedUi.menuButton)) {
@@ -357,6 +371,15 @@ function handleMenuClick(x, y) {
      const target = getMenuButtonAtPoint(x, y);
 
      if (!target) {
+          return true;
+     }
+
+     if (
+          target === "tips_how_to_play" ||
+          target === "tips_help_effects" ||
+          target === "tips_harm_effects"
+     ) {
+          setMenuViewAndRefresh(target);
           return true;
      }
 
@@ -506,8 +529,8 @@ function onPointerDown(event) {
                return;
           }
 
-          if (screenTarget === "instructions") {
-               dismissScreenWelcomeToInstructionsMenu();
+          if (screenTarget === "tips") {
+               dismissScreenWelcomeToTipsMenu();
                return;
           }
 
@@ -527,8 +550,8 @@ function onPointerDown(event) {
                return;
           }
 
-          if (pausedTarget === "instructions") {
-               openScreenView("instructions", false);
+          if (pausedTarget === "tips") {
+               openScreenView("tips", false);
                return;
           }
 
