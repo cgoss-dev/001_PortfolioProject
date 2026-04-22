@@ -18,6 +18,7 @@
 
      /* RAINBOW PALETTE */
           --rainbow-pink: #ea76cb;
+          --rainbow-magenta: #DE4382;
           --rainbow-red: #d20f39;
           --rainbow-maroon: #e64553;
           --rainbow-peach: #fe640b;
@@ -29,6 +30,7 @@
           --rainbow-blue: #1e66f5;
           --rainbow-lavender: #7287fd;
           --rainbow-violet: #8839ef;
+          --rainbow-orchid: #B958DD;
 
      /* LAYOUT */
           --page-width-wide: 72rem;

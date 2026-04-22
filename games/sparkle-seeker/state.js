@@ -47,7 +47,7 @@ export const player = {
 
 export const keys = {};
 export const sparkles = [];
-export const obstacles = [];
+export const effectPickups = [];
 export const collisionBursts = [];
 
 // ==================================================
@@ -72,6 +72,36 @@ export const maxOptionLevelIndex = optionLevelLabels.length - 1;
 export const defaultOptionLevelIndex = 2;
 
 // ==================================================
+// NOTE: EFFECT STATE
+// Runtime storage only. Effect rules live in entities.js.
+// Timers are frame counts, so 60 frames is roughly 1 second.
+// ==================================================
+
+export const storedEffects = {
+     shield: false,
+     cure: false
+};
+
+export const effectTimers = {
+     luck: 0,
+     magnet: 0,
+     slowmo: 0,
+
+     freeze: 0,
+     surge: 0,
+     daze: 0,
+     glass: 0,
+     fog: 0
+};
+
+export const activeStatusUi = {
+     label: "CLEAR",
+     char: "",
+     timer: 0,
+     duration: 0
+};
+
+// ==================================================
 // GAME FLOW FLAGS
 // ==================================================
 
@@ -86,12 +116,12 @@ export let gameMenuView = "main";
 // Compatibility booleans for gameplay/audio systems that still expect simple flags.
 export let musicEnabled = true;
 export let soundEffectsEnabled = true;
-export let obstaclesEnabled = true;
+export let harmfulEnabled = true;
 
 // Persistent option levels.
 export let musicLevel = defaultOptionLevelIndex;
 export let soundEffectsLevel = defaultOptionLevelIndex;
-export let obstaclesLevel = defaultOptionLevelIndex;
+export let harmfulLevel = defaultOptionLevelIndex;
 
 export let gameOver = false;
 export let gameWon = false;
@@ -118,9 +148,9 @@ export const gameMenuUi = {
      instructionsButton: { x: 0, y: 0, width: 0, height: 0 },
      optionsButton: { x: 0, y: 0, width: 0, height: 0 },
 
-     obstaclesRow: { x: 0, y: 0, width: 0, height: 0 },
-     obstaclesDecreaseButton: { x: 0, y: 0, width: 0, height: 0 },
-     obstaclesIncreaseButton: { x: 0, y: 0, width: 0, height: 0 },
+     harmfulRow: { x: 0, y: 0, width: 0, height: 0 },
+     harmfulDecreaseButton: { x: 0, y: 0, width: 0, height: 0 },
+     harmfulIncreaseButton: { x: 0, y: 0, width: 0, height: 0 },
 
      musicRow: { x: 0, y: 0, width: 0, height: 0 },
      musicDecreaseButton: { x: 0, y: 0, width: 0, height: 0 },
@@ -192,7 +222,7 @@ export let resizeHandlerBound = false;
 // ==================================================
 
 export let sparkleSpawnTimer = 0;
-export let obstacleSpawnTimer = 0;
+export let effectPickupSpawnTimer = 0;
 
 // ==================================================
 // BASIC SETTERS
@@ -219,8 +249,8 @@ export function setSparkleSpawnTimer(value) {
      sparkleSpawnTimer = value;
 }
 
-export function setObstacleSpawnTimer(value) {
-     obstacleSpawnTimer = value;
+export function setEffectPickupSpawnTimer(value) {
+     effectPickupSpawnTimer = value;
 }
 
 // ==================================================
@@ -260,6 +290,84 @@ export function addPlayerHealth(value) {
 }
 
 // ==================================================
+// EFFECT SETTERS + HELPERS
+// ==================================================
+
+export function setStoredEffect(effectName, value) {
+     if (!(effectName in storedEffects)) {
+          return;
+     }
+
+     storedEffects[effectName] = Boolean(value);
+}
+
+export function clearStoredEffect(effectName) {
+     setStoredEffect(effectName, false);
+}
+
+export function isStoredEffectReady(effectName) {
+     return Boolean(storedEffects[effectName]);
+}
+
+export function setEffectTimer(effectName, value) {
+     if (!(effectName in effectTimers)) {
+          return;
+     }
+
+     effectTimers[effectName] = Math.max(0, value);
+}
+
+export function addEffectTimer(effectName, value) {
+     if (!(effectName in effectTimers)) {
+          return;
+     }
+
+     effectTimers[effectName] = Math.max(0, effectTimers[effectName] + value);
+}
+
+export function isEffectActive(effectName) {
+     return (effectTimers[effectName] || 0) > 0;
+}
+
+export function decrementEffectTimers() {
+     Object.keys(effectTimers).forEach((effectName) => {
+          if (effectTimers[effectName] > 0) {
+               effectTimers[effectName] -= 1;
+          }
+     });
+
+     if (activeStatusUi.timer > 0) {
+          activeStatusUi.timer -= 1;
+     }
+}
+
+export function setActiveStatusUi(label, char = "", timer = 0, duration = timer) {
+     activeStatusUi.label = label;
+     activeStatusUi.char = char;
+     activeStatusUi.timer = Math.max(0, timer);
+     activeStatusUi.duration = Math.max(0, duration);
+}
+
+export function clearActiveStatusUi() {
+     activeStatusUi.label = "CLEAR";
+     activeStatusUi.char = "";
+     activeStatusUi.timer = 0;
+     activeStatusUi.duration = 0;
+}
+
+export function resetEffectState() {
+     storedEffects.shield = false;
+     storedEffects.cure = false;
+
+     Object.keys(effectTimers).forEach((effectName) => {
+          effectTimers[effectName] = 0;
+     });
+
+     clearActiveStatusUi();
+     resetScoreMultiplier();
+}
+
+// ==================================================
 // OPTIONS HELPERS
 // ==================================================
 
@@ -275,20 +383,20 @@ function syncSoundEffectsEnabledFromLevel() {
      soundEffectsEnabled = soundEffectsLevel > 0;
 }
 
-function syncObstaclesEnabledFromLevel() {
-     obstaclesEnabled = obstaclesLevel > 0;
+function syncHarmfulEnabledFromLevel() {
+     harmfulEnabled = harmfulLevel > 0;
 }
 
 export function syncOptionFlagsFromLevels() {
      syncMusicEnabledFromLevel();
      syncSoundEffectsEnabledFromLevel();
-     syncObstaclesEnabledFromLevel();
+     syncHarmfulEnabledFromLevel();
 }
 
 export function resetOptionsToDefaults() {
      musicLevel = defaultOptionLevelIndex;
      soundEffectsLevel = defaultOptionLevelIndex;
-     obstaclesLevel = defaultOptionLevelIndex;
+     harmfulLevel = defaultOptionLevelIndex;
 
      syncOptionFlagsFromLevels();
 }
@@ -324,9 +432,9 @@ export function setSoundEffectsEnabled(value) {
      soundEffectsLevel = value ? maxOptionLevelIndex : 0;
 }
 
-export function setObstaclesEnabled(value) {
-     obstaclesEnabled = value;
-     obstaclesLevel = value ? maxOptionLevelIndex : 0;
+export function setHarmfulEnabled(value) {
+     harmfulEnabled = value;
+     harmfulLevel = value ? maxOptionLevelIndex : 0;
 }
 
 // Level setters for Options UI.
@@ -340,9 +448,9 @@ export function setSoundEffectsLevel(value) {
      syncSoundEffectsEnabledFromLevel();
 }
 
-export function setObstaclesLevel(value) {
-     obstaclesLevel = clampOptionLevelIndex(value);
-     syncObstaclesEnabledFromLevel();
+export function setHarmfulLevel(value) {
+     harmfulLevel = clampOptionLevelIndex(value);
+     syncHarmfulEnabledFromLevel();
 }
 
 export function setGameOver(value) {
@@ -417,11 +525,13 @@ export function resetGameState() {
      gameOverlayDuration = 0;
 
      sparkleSpawnTimer = 0;
-     obstacleSpawnTimer = 0;
+     effectPickupSpawnTimer = 0;
 
      sparkles.length = 0;
-     obstacles.length = 0;
+     effectPickups.length = 0;
      collisionBursts.length = 0;
+
+     resetEffectState();
 
      touchControls.touchMoveTarget.x = 0;
      touchControls.touchMoveTarget.y = 0;

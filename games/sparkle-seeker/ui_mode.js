@@ -34,12 +34,11 @@ import {
      gameMenuUi,
      musicLevel,
      soundEffectsLevel,
-     obstaclesLevel,
-     obstaclesEnabled,
+     harmfulLevel,
      optionLevelLabels,
      optionLevelValues,
      maxOptionLevelIndex,
-     obstacles,
+     effectPickups,
      sparkleScore,
      playerHealth,
 
@@ -55,7 +54,7 @@ import {
      setGameOverlayDuration,
      setMusicLevel,
      setSoundEffectsLevel,
-     setObstaclesLevel,
+     setHarmfulLevel,
      setMiniGameSize,
 
      resetGameState
@@ -73,15 +72,16 @@ import {
 import {
      resetPlayerPosition,
      resetEntityColorCycle,
+     updateEffectState,
      updatePlayer,
      updatePlayerFaceState,
      updatePlayerTrail,
      updateSparkleSpawns,
      updateSparkles,
-     updateObstacles,
+     updateEffectPickups,
      updateCollisionBursts,
      collectSparkles,
-     hitObstacles,
+     collectEffectPickups,
      winScore
 } from "./entities.js";
 
@@ -431,8 +431,8 @@ function getNextOptionLevelIndex(levelIndex) {
      return Math.min(maxOptionLevelIndex, levelIndex + 1);
 }
 
-export function getObstaclesToggleLabel() {
-     return getOptionLevelLabel(obstaclesLevel);
+export function getHarmfulToggleLabel() {
+     return getOptionLevelLabel(harmfulLevel);
 }
 
 export function getMusicToggleLabel() {
@@ -459,17 +459,17 @@ export function increaseSoundEffectsLevel() {
      setSoundEffectsLevel(getNextOptionLevelIndex(soundEffectsLevel));
 }
 
-export function decreaseObstaclesLevel() {
-     const nextLevel = getPreviousOptionLevelIndex(obstaclesLevel);
-     setObstaclesLevel(nextLevel);
+export function decreaseHarmfulLevel() {
+     const nextLevel = getPreviousOptionLevelIndex(harmfulLevel);
+     setHarmfulLevel(nextLevel);
 
      if (nextLevel === 0) {
-          obstacles.length = 0;
+          effectPickups.length = 0;
      }
 }
 
-export function increaseObstaclesLevel() {
-     setObstaclesLevel(getNextOptionLevelIndex(obstaclesLevel));
+export function increaseHarmfulLevel() {
+     setHarmfulLevel(getNextOptionLevelIndex(harmfulLevel));
 }
 
 // TEMPORARY SCREEN LAYOUT
@@ -524,9 +524,9 @@ export function updateMenuUiBounds() {
 
      const visibleRows = [
           {
-               row: gameMenuUi.obstaclesRow,
-               decreaseButton: gameMenuUi.obstaclesDecreaseButton,
-               increaseButton: gameMenuUi.obstaclesIncreaseButton
+               row: gameMenuUi.harmfulRow,
+               decreaseButton: gameMenuUi.harmfulDecreaseButton,
+               increaseButton: gameMenuUi.harmfulIncreaseButton
           },
           {
                row: gameMenuUi.musicRow,
@@ -581,14 +581,13 @@ export function isPointInsideMenuPanel(x, y) {
 
 export function getInstructionLines() {
      return [
-          "Collect sparkles, avoid obstacles.",
-          "Use WASD/arrows, or touchscreen to move.",
-          "Health affects movement speed.",
-          "Stars indicate progress toward next level.",
-          "Reach the 1000 points to win."
+          "Collect sparkles to score and heal.",
+          "Use WASD, arrow keys, or drag on touchscreen to move.",
+          "Stars show progress toward the next level.",
+          "Helpful effects boost you. Harmful effects make trouble.",
+          "Reach 1000 sparkles to win."
      ];
 }
-
 
 // OVERLAY SYSTEM
 
@@ -670,21 +669,15 @@ export function updateGame() {
           return;
      }
 
+     updateEffectState();
      updatePlayer();
      updateSparkleSpawns();
      updateSparkles();
-
-     if (obstaclesEnabled) {
-          updateObstacles();
-     }
-
+     updateEffectPickups();
      updateCollisionBursts();
      updatePlayerTrail();
      collectSparkles();
-
-     if (obstaclesEnabled) {
-          hitObstacles();
-     }
+     collectEffectPickups();
 
      if (playerHealth <= 0) {
           setGameOver(true);

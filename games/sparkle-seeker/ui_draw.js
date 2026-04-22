@@ -18,6 +18,7 @@ import {
      miniGameCtx,
      miniGameWidth,
      miniGameHeight,
+     player,
      gameStarted,
      gamePaused,
      gameMenuOpen,
@@ -32,18 +33,20 @@ import {
      playerHealth,
      musicLevel,
      soundEffectsLevel,
-     obstaclesLevel,
-     maxOptionLevelIndex
+     harmfulLevel,
+     maxOptionLevelIndex,
+     activeStatusUi,
+     isEffectActive
 } from "./state.js";
 
 import {
      drawPlayer,
      drawPlayerTrail,
      drawSparkles,
-     drawObstacles,
+     drawEffectPickups,
      drawCollisionBursts,
      getCurrentLevelProgressStars,
-     playerBaseHealth
+     getCurrentLevelNumber
 } from "./entities.js";
 
 import {
@@ -56,7 +59,7 @@ import {
      getCurrentPausedActionTexts,
      getGameWelcomeAlpha,
      getInstructionLines,
-     getObstaclesToggleLabel,
+     getHarmfulToggleLabel,
      getMusicToggleLabel,
      getSoundEffectsToggleLabel,
      getGameOverlayAlpha
@@ -445,14 +448,24 @@ function drawMiniGameBackground() {
 
 // HUD
 
+function getStatusSecondsRemaining() {
+     if (activeStatusUi.timer <= 0) {
+          return "";
+     }
+
+     return `${Math.ceil(activeStatusUi.timer / 60)}s`;
+}
+
 function drawScore(theme) {
      if (!miniGameCtx) {
           return;
      }
 
      const { colors, sizes, fonts, glow } = theme;
-     const formattedScore = String(sparkleScore).padStart(3, "0");
+     const levelText = `LVL ${getCurrentLevelNumber()}`;
+     const sparkleText = `\u2726\uFE0E ${String(sparkleScore).padStart(3, "0")}`;
      const filledStars = getCurrentLevelProgressStars();
+     const lineGap = Math.max(2, sizes.uiFontSmall * 0.25);
 
      let starRow = "";
 
@@ -470,10 +483,35 @@ function drawScore(theme) {
      miniGameCtx.font = `${sizes.starSize}px ${fonts.symbol}`;
      miniGameCtx.fillText(starRow, sizes.scoreX, sizes.starIconY);
 
-     miniGameCtx.font = `${sizes.statusFontSize}px ${fonts.display}`;
-     miniGameCtx.fillText(formattedScore, sizes.scoreX, sizes.statusFontY);
+     miniGameCtx.font = `${sizes.uiFontSmall}px ${fonts.display}`;
+     miniGameCtx.fillText(levelText, sizes.scoreX, sizes.starIconY + sizes.starSize + lineGap);
+
+     miniGameCtx.font = `400 ${sizes.uiFontSmall}px ${fonts.body}`;
+     miniGameCtx.fillText(
+          sparkleText,
+          sizes.scoreX,
+          sizes.starIconY + sizes.starSize + sizes.uiFontSmall + (lineGap * 2)
+     );
 
      miniGameCtx.restore();
+}
+
+function getStatusIconScale(statusLabel) {
+     if (
+          statusLabel === "SHIELD" ||
+          statusLabel === "BLOCKED" ||
+          statusLabel === "LUCK" ||
+          statusLabel === "MAGNET" ||
+          statusLabel === "FOG"
+     ) {
+          return 1.25;
+     }
+
+     if (statusLabel === "GLASS") {
+          return 0.85;
+     }
+
+     return 1;
 }
 
 function drawHealth(theme) {
@@ -485,6 +523,12 @@ function drawHealth(theme) {
      const filledHeart = "\u2665\uFE0E";
      const emptyHeart = "\u2661\uFE0E";
      const maxVisibleHearts = 5;
+     const lineGap = Math.max(2, sizes.uiFontSmall * 0.25);
+     const statusLabel = activeStatusUi.label || "CLEAR";
+     const statusSeconds = getStatusSecondsRemaining();
+     const statusIconScale = getStatusIconScale(statusLabel);
+     const statusIcon = activeStatusUi.char || "";
+     const statusDetailY = sizes.heartIconY + sizes.heartSize + sizes.uiFontSmall + (lineGap * 2);
 
      let heartRow = "";
 
@@ -493,47 +537,77 @@ function drawHealth(theme) {
      }
 
      miniGameCtx.save();
-     miniGameCtx.font = `${sizes.heartSize}px ${fonts.body}`;
      miniGameCtx.textAlign = "right";
      miniGameCtx.textBaseline = "top";
      miniGameCtx.fillStyle = colors.statusText;
      miniGameCtx.shadowColor = colors.statusTextGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
+
+     miniGameCtx.font = `${sizes.heartSize}px ${fonts.body}`;
      miniGameCtx.fillText(heartRow, miniGameWidth - sizes.healthX, sizes.heartIconY);
+
+     miniGameCtx.font = `${sizes.uiFontSmall}px ${fonts.display}`;
+     miniGameCtx.fillText(
+          statusLabel,
+          miniGameWidth - sizes.healthX,
+          sizes.heartIconY + sizes.heartSize + lineGap
+     );
+
+     if (statusIcon) {
+          const statusTimeText = statusSeconds ? ` ${statusSeconds}` : "";
+          const statusTimeWidth = statusTimeText
+               ? miniGameCtx.measureText(statusTimeText).width
+               : 0;
+          const iconFontSize = sizes.uiFontSmall * statusIconScale;
+          const iconX = miniGameWidth - sizes.healthX - statusTimeWidth;
+
+          miniGameCtx.font = `400 ${sizes.uiFontSmall}px ${fonts.body}`;
+          miniGameCtx.fillText(statusTimeText, miniGameWidth - sizes.healthX, statusDetailY);
+
+          miniGameCtx.font = `400 ${iconFontSize}px ${fonts.body}`;
+          miniGameCtx.fillText(statusIcon, iconX, statusDetailY - ((iconFontSize - sizes.uiFontSmall) * 0.35));
+     } else {
+          miniGameCtx.font = `400 ${sizes.uiFontSmall}px ${fonts.body}`;
+          miniGameCtx.fillText(
+               "READY",
+               miniGameWidth - sizes.healthX,
+               statusDetailY
+          );
+     }
+
      miniGameCtx.restore();
 }
 
-function drawHealthStatus(theme) {
-     if (!miniGameCtx) {
+
+function drawFogOverlay() {
+     if (!miniGameCtx || !isEffectActive("fog")) {
           return;
      }
 
-     const { colors, sizes, fonts, glow } = theme;
-     const speedDelta = playerHealth - playerBaseHealth;
-     let statusText = "";
-
-     if (speedDelta > 0) {
-          statusText = `Speed +${speedDelta}`;
-     } else if (speedDelta < 0) {
-          statusText = `Speed ${speedDelta}`;
-     }
+     const clearRadius = Math.max(44, Math.min(82, miniGameWidth * 0.16));
+     const fadeRadius = clearRadius * 1.5;
 
      miniGameCtx.save();
-     miniGameCtx.font = `${sizes.statusFontSize}px ${fonts.display}`;
-     miniGameCtx.textAlign = "right";
-     miniGameCtx.textBaseline = "top";
-     miniGameCtx.fillStyle = colors.fontColor;
-     miniGameCtx.shadowColor = colors.heartGlow;
-     miniGameCtx.shadowBlur = glow.uiSoftGlow;
 
-     miniGameCtx.fillText(
-          statusText,
-          miniGameWidth - sizes.healthX,
-          sizes.statusFontY
+     const gradient = miniGameCtx.createRadialGradient(
+          player.x,
+          player.y,
+          clearRadius,
+          player.x,
+          player.y,
+          fadeRadius
      );
+
+     gradient.addColorStop(0, "rgba(0, 0, 0, 0)");
+     gradient.addColorStop(0.45, "rgba(0, 0, 0, 0.18)");
+     gradient.addColorStop(1, "rgba(0, 0, 0, 0.9)");
+
+     miniGameCtx.fillStyle = gradient;
+     miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
      miniGameCtx.restore();
 }
+
 
 function drawTouchButtons(theme) {
      if (!miniGameCtx) {
@@ -626,12 +700,12 @@ function drawOptionsScreen(theme) {
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
      drawOptionStepper(
-          gameMenuUi.obstaclesRow,
-          gameMenuUi.obstaclesDecreaseButton,
-          gameMenuUi.obstaclesIncreaseButton,
-          "Obstacles",
-          getObstaclesToggleLabel(),
-          obstaclesLevel,
+          gameMenuUi.harmfulRow,
+          gameMenuUi.harmfulDecreaseButton,
+          gameMenuUi.harmfulIncreaseButton,
+          "Harmful",
+          getHarmfulToggleLabel(),
+          harmfulLevel,
           theme
      );
 
@@ -1023,14 +1097,15 @@ export function drawGame() {
 
      if (gameStarted) {
           drawSparkles();
-          drawObstacles();
+          drawEffectPickups();
           drawCollisionBursts();
           drawPlayerTrail();
           drawPlayer();
 
+          drawFogOverlay();
+
           drawScore(theme);
           drawHealth(theme);
-          drawHealthStatus(theme);
 
           if (!gamePaused && !gameMenuOpen && !gameOver && !gameWon) {
                drawTouchButtons(theme);

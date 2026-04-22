@@ -66,6 +66,7 @@ function getSparkleSettings() {
 function getRainbowPalette() {
      return [
           getCssColor("--rainbow-pink"),
+          getCssColor("--rainbow-magenta"),
           getCssColor("--rainbow-red"),
           getCssColor("--rainbow-maroon"),
           getCssColor("--rainbow-peach"),
@@ -76,7 +77,8 @@ function getRainbowPalette() {
           getCssColor("--rainbow-sky"),
           getCssColor("--rainbow-blue"),
           getCssColor("--rainbow-lavender"),
-          getCssColor("--rainbow-violet")
+          getCssColor("--rainbow-violet"),
+          getCssColor("--rainbow-orchid")
      ].filter(Boolean);
 }
 

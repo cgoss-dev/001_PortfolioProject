@@ -32,8 +32,8 @@ import {
 import {
      updateMenuUiBounds,
      startNewGameRound,
-     decreaseObstaclesLevel,
-     increaseObstaclesLevel,
+     decreaseHarmfulLevel,
+     increaseHarmfulLevel,
      decreaseMusicLevel,
      increaseMusicLevel,
      decreaseSoundEffectsLevel,
@@ -167,12 +167,12 @@ function getMenuButtonAtPoint(x, y) {
      }
 
      if (gameMenuView === "options") {
-          if (isPointInsideRect(x, y, gameMenuUi.obstaclesDecreaseButton)) {
-               return "obstacles_decrease";
+          if (isPointInsideRect(x, y, gameMenuUi.harmfulDecreaseButton)) {
+               return "harmful_decrease";
           }
 
-          if (isPointInsideRect(x, y, gameMenuUi.obstaclesIncreaseButton)) {
-               return "obstacles_increase";
+          if (isPointInsideRect(x, y, gameMenuUi.harmfulIncreaseButton)) {
+               return "harmful_increase";
           }
 
           if (isPointInsideRect(x, y, gameMenuUi.musicDecreaseButton)) {
@@ -360,14 +360,14 @@ function handleMenuClick(x, y) {
           return true;
      }
 
-     if (target === "obstacles_decrease") {
-          decreaseObstaclesLevel();
+     if (target === "harmful_decrease") {
+          decreaseHarmfulLevel();
           updateMenuUiBounds();
           return true;
      }
 
-     if (target === "obstacles_increase") {
-          increaseObstaclesLevel();
+     if (target === "harmful_increase") {
+          increaseHarmfulLevel();
           updateMenuUiBounds();
           return true;
      }
