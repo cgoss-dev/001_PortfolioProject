@@ -33,8 +33,6 @@
           --rainbow-magenta: #f0f;
           --rainbow-rose: #f08;
 
-
-
      /* LAYOUT */
           --page-width-wide: 72rem;
           --page-padding-y: clamp(1rem, 2vw, 1.5rem);
@@ -48,9 +46,9 @@
           --font-body: "Noto Sans Mono", monospace;
           --font-display: "Bungee Shade", monospace;
           --font-color: var(--color-text);
-          --font-size-marquee: clamp(0.25rem, 20vw, 10rem);
-          --font-size-medium: clamp(0.25rem, 7vw, 2rem);
-          --font-size-small: clamp(0.25rem, 3vw, 1rem);
+          --font-size-lg: clamp(5rem, 15vw, 25rem);
+          --font-size-md: clamp(2rem, 2vw, 3rem);
+          --font-size-sm: clamp(1rem, 1.5vw, 1.5rem);
           --font-color-marquee: var(--font-color);
           --font-color-medium: var(--font-color);
           --font-color-small: var(--font-color);
@@ -77,11 +75,9 @@
 
      /* EFFECTS */
           /* GLOW */
-               /* --glow-depth: 0 0.75rem 1.75rem rgba(0, 0, 0, 0.5); */
                --glow-core: 0 0 clamp(0.01rem, 0.04vw, 0.03rem);
                --glow-soft: 0 0 clamp(0.04rem, 0.15vw, 0.12rem);
                --glow-wide: 0 0 clamp(0.08rem, 0.3vw, 0.25rem);
-               /* --glow-max: 0 0 1rem; */
                --glow-text:
                     var(--glow-core) currentColor,
                     var(--glow-soft) currentColor,
@@ -348,7 +344,7 @@ h1 {
      padding: 0;
      min-width: 0;
      flex: 1 1 9rem;
-     font-size: var(--font-size-small);
+     font-size: var(--font-size-sm);
      text-align: center;
 }
 
@@ -426,7 +422,7 @@ h1 {
 }
 
 .nav-label {
-     font-size: var(--font-size-small);
+     font-size: var(--font-size-sm);
      line-height: 1;
      white-space: normal;
      overflow-wrap: normal;
@@ -436,7 +432,7 @@ h1 {
 
 .nav-desc {
      display: none;
-     font-size: var(--font-size-small);
+     font-size: var(--font-size-sm);
      opacity: 0.75;
      white-space: normal;
      overflow-wrap: normal;
@@ -517,7 +513,7 @@ h1 {
      padding: 0;
      text-align: center;
      font-family: var(--font-display);
-     font-size: var(--font-size-marquee);
+     font-size: var(--font-size-lg);
      line-height: 1;
 }
 
@@ -549,7 +545,7 @@ h1 {
      padding-left: 0;
      padding-right: 0;
      color: var(--font-color-small);
-     font-size: var(--font-size-small);
+     font-size: var(--font-size-sm);
      line-height: 1;
      text-align: center;
      white-space: normal;
@@ -593,7 +589,7 @@ h1 {
      .tagline {
           white-space: nowrap;
           overflow-wrap: normal;
-          font-size: var(--font-size-small);
+          font-size: var(--font-size-sm);
      }
 
      .tagline-break {
@@ -627,7 +623,7 @@ h1 {
      .tagline {
           white-space: nowrap;
           overflow-wrap: normal;
-          font-size: var(--font-size-small);
+          font-size: var(--font-size-sm);
      }
 
      .tagline-break {
@@ -667,12 +663,12 @@ h1 {
           word-break: keep-all;
           text-wrap: balance;
           line-height: 1;
-          font-size: var(--font-size-small);
+          font-size: var(--font-size-sm);
      }
 
      .tagline {
           white-space: normal;
-          font-size: var(--font-size-small);
+          font-size: var(--font-size-sm);
           line-height: 1;
      }
 
@@ -721,7 +717,7 @@ h1 {
 
      .tagline {
           white-space: normal;
-          font-size: var(--font-size-small);
+          font-size: var(--font-size-sm);
           line-height: 1;
      }
 
@@ -745,12 +741,12 @@ h1 {
 
 .game-container {
      /* Allow canvas height to vary from 75% to 125% of its width. */
-     --game-canvas-width: min(100%, 40rem);
+     --game-canvas-width: min(100%, 75rem);
 
      width: var(--game-canvas-width);
      height: clamp(
           calc(var(--game-canvas-width) * 0.75),
-          70dvh,
+          75dvh,
           calc(var(--game-canvas-width) * 1.25)
      );
 

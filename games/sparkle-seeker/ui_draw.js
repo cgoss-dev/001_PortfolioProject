@@ -64,7 +64,8 @@ import {
      getHarmfulToggleLabel,
      getMusicToggleLabel,
      getSoundEffectsToggleLabel,
-     getGameOverlayAlpha
+     getGameOverlayAlpha,
+     getGameMenuSpacing
 } from "./ui_mode.js";
 
 // CSS HELPERS
@@ -150,7 +151,7 @@ function getUiTheme() {
           },
 
           sizes: {
-               statusFontSize: getCssPixelSize("--font-size-medium", 16),
+               statusFontSize: getCssPixelSize("--font-size-md", 16),
                statusFontY: 20,
 
                starSize: Math.max(15, Math.min(24, miniGameWidth * 0.055)),
@@ -162,8 +163,9 @@ function getUiTheme() {
                scoreX: 5,
                healthX: 5,
 
-               uiFontMedium: getCssPixelSize("--font-size-medium", 16),
-               uiFontSmall: getCssPixelSize("--font-size-small", 8),
+               uiFontLg: getCssPixelSize("--font-size-lg", 48),
+               uiFontMd: getCssPixelSize("--font-size-md", 16),
+               uiFontSm: getCssPixelSize("--font-size-sm", 10),
 
                controlRadius: getCssNumber("--panel-radius", 15)
           },
@@ -216,14 +218,14 @@ function drawPanelBox(x, y, width, height, theme, lineWidth = 3) {
      miniGameCtx.stroke();
 }
 
-// NOTE: ICON SIZE/Y
+// NOTE: ICON SIZE X/Y
 
 const richTextIcons = {
      iconShield: { char: "\u2B21\uFE0E", scale: 1.5, xOffset: 0, yOffset: 0 },
      iconCure: { char: "\u271A\uFE0E", scale: 1.5, xOffset: 0, yOffset: 0 },
      iconLuck: { char: "\u2618\uFE0E", scale: 1.5, xOffset: 0, yOffset: 0 },
-     iconMagnet: { char: "\u2316\uFE0E", scale: 1.5, xOffset: 0, yOffset: 0 },
-     iconSlowmo: { char: "\u29D6\uFE0E", scale: 1.5, xOffset: 0, yOffset: 0 },
+     iconMagnet: { char: "\u2316\uFE0E", scale: 1.5, xOffset: -5, yOffset: 0 },
+     iconSlowmo: { char: "\u29D6\uFE0E", scale: 1.5, xOffset: -2, yOffset: 0 },
 
      iconFreeze: { char: "\u2744\uFE0E", scale: 1.5, xOffset: 0, yOffset: 0 },
      iconSurge: { char: "\u26A1\uFE0E", scale: 1.5, xOffset: 0, yOffset: 0 },
@@ -517,20 +519,19 @@ function updateTipsTitleColors(title) {
      tipsTitleLastColorCycleTime = now;
 }
 
-// MENU LAYOUT
+// NOTE: GAME MENU MEASUREMENTS
 
 function getMenuScreenLayout(theme) {
      const { sizes } = theme;
+     const { titleGap, rowGap } = getGameMenuSpacing();
 
-     const sidePadding = Math.max(14, miniGameWidth * 0.06);
-     const topPadding = Math.max(14, miniGameHeight * 0.06);
-     const titleFontSize = Math.max(16, sizes.uiFontMedium);
-     const titleGap = Math.max(20, sizes.uiFontMedium * 1.5);
-     const rowGap = Math.max(16, sizes.uiFontSmall * 2.2);
+     const sidePadding = miniGameWidth * 0.05;
+     const topPadding = miniGameHeight * 0.05;
+     const titleFontSize = sizes.uiFontMd * 2;
 
-     const backButtonHeight = gameMenuUi.backButton?.height || 35;
-     const bottomPadding = Math.max(18, miniGameHeight * 0.08);
-     const backButtonY = miniGameHeight - bottomPadding - backButtonHeight;
+     const backButtonSize = Math.max(28, sizes.uiFontMd * 1.6);
+     const backButtonX = sidePadding;
+     const backButtonY = topPadding;
 
      return {
           sidePadding,
@@ -538,16 +539,20 @@ function getMenuScreenLayout(theme) {
           titleFontSize,
           titleGap,
           rowGap,
-          bottomPadding,
+          titleCenterX: miniGameWidth / 2,
+          backButtonSize,
+          backButtonX,
           backButtonY,
           contentTopY: topPadding + titleFontSize + titleGap,
           contentWidth: miniGameWidth - (sidePadding * 2)
      };
 }
 
-function drawMenuScreenTitle(title, theme, x, y) {
+// NOTE: GAME MENU SCREEN TITLES
+
+function drawMenuScreenTitle(title, theme, centerX, y) {
      const { colors, fonts, glow, sizes } = theme;
-     const titleFontSize = Math.max(16, sizes.uiFontMedium);
+     const titleFontSize = sizes.uiFontMd * 2;
 
      miniGameCtx.save();
      miniGameCtx.textAlign = "left";
@@ -556,7 +561,14 @@ function drawMenuScreenTitle(title, theme, x, y) {
 
      updateTipsTitleColors(title);
 
-     let titleX = x;
+     const letterWidths = [];
+
+     for (let i = 0; i < title.length; i += 1) {
+          letterWidths.push(miniGameCtx.measureText(title[i]).width);
+     }
+
+     const totalWidth = letterWidths.reduce((sum, width) => sum + width, 0);
+     let titleX = centerX - (totalWidth / 2);
 
      for (let i = 0; i < title.length; i += 1) {
           const letter = title[i];
@@ -567,7 +579,7 @@ function drawMenuScreenTitle(title, theme, x, y) {
           miniGameCtx.shadowBlur = glow.uiSoftGlow;
           miniGameCtx.fillText(letter, titleX, y);
 
-          titleX += miniGameCtx.measureText(letter).width;
+          titleX += letterWidths[i];
      }
 
      miniGameCtx.restore();
@@ -601,8 +613,39 @@ function drawMenuButton(button, label, theme) {
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
 
-     miniGameCtx.font = `400 ${sizes.uiFontSmall}px ${fonts.body}`;
+     miniGameCtx.font = `400 ${sizes.uiFontSm}px ${fonts.body}`;
      miniGameCtx.fillText(label, centerX, centerY + 1);
+
+     miniGameCtx.restore();
+}
+
+function drawMenuBackButton(button, theme) {
+     if (!miniGameCtx || !button) {
+          return;
+     }
+
+     const { colors, fonts, glow, sizes } = theme;
+     const centerX = button.x + (button.width / 2);
+     const centerY = button.y + (button.height / 2);
+     const radius = Math.min(button.width, button.height) * 0.5;
+
+     miniGameCtx.save();
+     miniGameCtx.fillStyle = colors.controlFill;
+     miniGameCtx.strokeStyle = colors.outlineSoft;
+     miniGameCtx.lineWidth = 3;
+     miniGameCtx.shadowColor = colors.controlGlow;
+     miniGameCtx.shadowBlur = glow.uiSoftGlow;
+
+     miniGameCtx.beginPath();
+     miniGameCtx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+     miniGameCtx.fill();
+     miniGameCtx.stroke();
+
+     miniGameCtx.fillStyle = colors.controlText;
+     miniGameCtx.textAlign = "center";
+     miniGameCtx.textBaseline = "middle";
+     miniGameCtx.font = `400 ${sizes.uiFontMd}px ${fonts.body}`;
+     miniGameCtx.fillText("<", centerX, centerY + 1);
 
      miniGameCtx.restore();
 }
@@ -616,7 +659,7 @@ function drawOptionStepper(row, decreaseButton, increaseButton, label, value, le
      const centerY = row.y + (row.height / 2);
      const decreaseAlpha = levelIndex <= 0 ? 0.28 : 1;
      const increaseAlpha = levelIndex >= maxOptionLevelIndex ? 0.28 : 1;
-     const arrowFontSize = Math.max(sizes.uiFontSmall * 1.55, row.height * 0.72);
+     const arrowFontSize = Math.max(sizes.uiFontSm * 1.55, row.height * 0.72);
 
      miniGameCtx.save();
      miniGameCtx.fillStyle = colors.controlFill;
@@ -644,7 +687,7 @@ function drawOptionStepper(row, decreaseButton, increaseButton, label, value, le
      );
 
      miniGameCtx.globalAlpha = 1;
-     miniGameCtx.font = `400 ${sizes.uiFontSmall}px ${fonts.body}`;
+     miniGameCtx.font = `400 ${sizes.uiFontSm}px ${fonts.body}`;
      miniGameCtx.fillText(
           `${label}: ${value}`,
           row.x + (row.width / 2),
@@ -718,7 +761,7 @@ function drawScore(theme) {
      const levelText = `LVL ${getCurrentLevelNumber()}`;
      const sparkleText = `\u2726\uFE0E ${String(sparkleScore).padStart(3, "0")}`;
      const filledStars = getCurrentLevelProgressStars();
-     const lineGap = Math.max(2, sizes.uiFontSmall * 0.25);
+     const lineGap = sizes.uiFontMd;
 
      let starRow = "";
 
@@ -736,14 +779,14 @@ function drawScore(theme) {
      miniGameCtx.font = `${sizes.starSize}px ${fonts.symbol}`;
      miniGameCtx.fillText(starRow, sizes.scoreX, sizes.starIconY);
 
-     miniGameCtx.font = `${sizes.uiFontSmall}px ${fonts.display}`;
+     miniGameCtx.font = `${sizes.uiFontMd}px ${fonts.display}`;
      miniGameCtx.fillText(levelText, sizes.scoreX, sizes.starIconY + sizes.starSize + lineGap);
 
-     miniGameCtx.font = `400 ${sizes.uiFontSmall}px ${fonts.body}`;
+     miniGameCtx.font = `400 ${sizes.uiFontMd}px ${fonts.body}`;
      miniGameCtx.fillText(
           sparkleText,
           sizes.scoreX,
-          sizes.starIconY + sizes.starSize + sizes.uiFontSmall + (lineGap * 2)
+          sizes.starIconY + sizes.starSize + sizes.uiFontMd + (lineGap * 2)
      );
 
      miniGameCtx.restore();
@@ -776,12 +819,12 @@ function drawHealth(theme) {
      const filledHeart = "\u2665\uFE0E";
      const emptyHeart = "\u2661\uFE0E";
      const maxVisibleHearts = 5;
-     const lineGap = Math.max(2, sizes.uiFontSmall * 0.25);
+     const lineGap = sizes.uiFontMd;
      const statusLabel = activeStatusUi.label || "CLEAR";
      const statusSeconds = getStatusSecondsRemaining();
      const statusIconScale = getStatusIconScale(statusLabel);
      const statusIcon = activeStatusUi.char || "";
-     const statusDetailY = sizes.heartIconY + sizes.heartSize + sizes.uiFontSmall + (lineGap * 2);
+     const statusDetailY = sizes.heartIconY + sizes.heartSize + sizes.uiFontMd + (lineGap * 2);
 
      let heartRow = "";
 
@@ -799,7 +842,7 @@ function drawHealth(theme) {
      miniGameCtx.font = `${sizes.heartSize}px ${fonts.body}`;
      miniGameCtx.fillText(heartRow, miniGameWidth - sizes.healthX, sizes.heartIconY);
 
-     miniGameCtx.font = `${sizes.uiFontSmall}px ${fonts.display}`;
+     miniGameCtx.font = `${sizes.uiFontMd}px ${fonts.display}`;
      miniGameCtx.fillText(
           statusLabel,
           miniGameWidth - sizes.healthX,
@@ -811,16 +854,16 @@ function drawHealth(theme) {
           const statusTimeWidth = statusTimeText
                ? miniGameCtx.measureText(statusTimeText).width
                : 0;
-          const iconFontSize = sizes.uiFontSmall * statusIconScale;
+          const iconFontSize = sizes.uiFontMd * statusIconScale;
           const iconX = miniGameWidth - sizes.healthX - statusTimeWidth;
 
-          miniGameCtx.font = `400 ${sizes.uiFontSmall}px ${fonts.body}`;
+          miniGameCtx.font = `400 ${sizes.uiFontMd}px ${fonts.body}`;
           miniGameCtx.fillText(statusTimeText, miniGameWidth - sizes.healthX, statusDetailY);
 
           miniGameCtx.font = `400 ${iconFontSize}px ${fonts.body}`;
-          miniGameCtx.fillText(statusIcon, iconX, statusDetailY - ((iconFontSize - sizes.uiFontSmall) * 0.35));
+          miniGameCtx.fillText(statusIcon, iconX, statusDetailY - ((iconFontSize - sizes.uiFontMd) * 0.35));
      } else {
-          miniGameCtx.font = `400 ${sizes.uiFontSmall}px ${fonts.body}`;
+          miniGameCtx.font = `400 ${sizes.uiFontMd}px ${fonts.body}`;
           miniGameCtx.fillText(
                "READY",
                miniGameWidth - sizes.healthX,
@@ -851,8 +894,8 @@ function drawFogOverlay() {
      );
 
      gradient.addColorStop(0, "rgba(0, 0, 0, 0)");
-     gradient.addColorStop(0.45, "rgba(0, 0, 0, 0.18)");
-     gradient.addColorStop(1, "rgba(0, 0, 0, 0.9)");
+     gradient.addColorStop(0.5, "rgba(0, 0, 0, 0.2)");
+     gradient.addColorStop(1, "rgba(0, 0, 0, 1)");
 
      miniGameCtx.fillStyle = gradient;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
@@ -866,11 +909,8 @@ function drawTouchButtons(theme) {
      }
 
      const { colors, fonts, glow } = theme;
-     const buttons = [
-          touchControls.pauseButton
-     ];
 
-     buttons.forEach((button) => {
+     [touchControls.pauseButton].forEach((button) => {
           if (!button) {
                return;
           }
@@ -883,14 +923,12 @@ function drawTouchButtons(theme) {
           miniGameCtx.textBaseline = "middle";
           miniGameCtx.shadowColor = colors.controlGlow;
           miniGameCtx.shadowBlur = glow.uiSoftGlow;
-
           miniGameCtx.font = `400 ${button.height * 0.42}px ${fonts.body}`;
           miniGameCtx.fillText(
                button.label,
                button.x + (button.width / 2),
                button.y + (button.height / 2) + 1
           );
-
           miniGameCtx.restore();
      });
 }
@@ -909,16 +947,14 @@ function drawTipsMenuScreen(theme) {
      miniGameCtx.fillStyle = colors.fillTranslucentMedium;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
-     drawMenuScreenTitle("TIPS", theme, layout.sidePadding, layout.topPadding);
+     drawMenuScreenTitle("TIPS", theme, layout.titleCenterX, layout.topPadding);
      drawMenuButton(gameMenuUi.tipsHowToPlayButton, "How to Play", theme);
      drawMenuButton(gameMenuUi.tipsHelpEffectsButton, "Friends", theme);
      drawMenuButton(gameMenuUi.tipsHarmEffectsButton, "Enemies", theme);
-     drawMenuButton(gameMenuUi.backButton, "Back", theme);
+     drawMenuBackButton(gameMenuUi.backButton, theme);
 
      miniGameCtx.restore();
 }
-
-// NOTE: DRAW TIPS DETAIL SCREENS
 
 function drawTipsDetailScreen(theme, title, lines) {
      if (!miniGameCtx) {
@@ -932,20 +968,18 @@ function drawTipsDetailScreen(theme, title, lines) {
      miniGameCtx.fillStyle = colors.fillTranslucentMedium;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
-     let textY = layout.topPadding;
-     const fontSize = Math.max(12, sizes.uiFontSmall);
+     drawMenuScreenTitle(title, theme, layout.titleCenterX, layout.topPadding);
+
+     let textY = layout.contentTopY;
+     const fontSize = Math.max(12, sizes.uiFontSm);
      const lineHeight = fontSize * 1.1;
      const sectionGap = lineHeight * 1.5;
 
-     // NOTE: ICON GUTTER
      const hasIconGutter = lines.some((line) => line.includes("{icon"));
-     const iconGutterWidth = hasIconGutter ? Math.max(34, sizes.uiFontMedium * 2.4) : 0;
-     const iconX = layout.sidePadding + (iconGutterWidth * 0.45);
+     const iconGutterWidth = hasIconGutter ? Math.max(34, sizes.uiFontMd * 3) : 0;
+     const iconX = layout.sidePadding + (iconGutterWidth * 0.25);
      const detailTextX = layout.sidePadding + iconGutterWidth;
      const detailTextWidth = miniGameWidth - detailTextX - layout.sidePadding;
-
-     drawMenuScreenTitle(title, theme, layout.sidePadding, textY);
-     textY = layout.contentTopY;
 
      miniGameCtx.fillStyle = colors.fontColor;
      miniGameCtx.textAlign = "left";
@@ -970,12 +1004,12 @@ function drawTipsDetailScreen(theme, title, lines) {
 
                if (icon) {
                     miniGameCtx.save();
-                    miniGameCtx.font = `400 ${sizes.uiFontMedium * icon.scale}px ${fonts.body}`;
+                    miniGameCtx.font = `400 ${sizes.uiFontMd * icon.scale}px ${fonts.body}`;
                     miniGameCtx.fillStyle = colors.fontColor;
                     miniGameCtx.fillText(
                          icon.char,
                          iconX + (icon.xOffset || 0),
-                         textY + (icon.yOffset || 0) - ((sizes.uiFontMedium * icon.scale - sizes.uiFontMedium) * 0.28)
+                         textY + (icon.yOffset || 0) - ((sizes.uiFontMd * icon.scale - sizes.uiFontMd) * 0.28)
                     );
                     miniGameCtx.restore();
                }
@@ -993,7 +1027,7 @@ function drawTipsDetailScreen(theme, title, lines) {
           ) + sectionGap;
      });
 
-     drawMenuButton(gameMenuUi.backButton, "Back", theme);
+     drawMenuBackButton(gameMenuUi.backButton, theme);
      miniGameCtx.restore();
 }
 
@@ -1009,7 +1043,7 @@ function drawOptionsScreen(theme) {
      miniGameCtx.fillStyle = colors.fillTranslucentMedium;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
-     drawMenuScreenTitle("OPTIONS", theme, layout.sidePadding, layout.topPadding);
+     drawMenuScreenTitle("OPTIONS", theme, layout.titleCenterX, layout.topPadding);
 
      drawOptionStepper(
           gameMenuUi.harmfulRow,
@@ -1041,11 +1075,11 @@ function drawOptionsScreen(theme) {
           theme
      );
 
-     drawMenuButton(gameMenuUi.backButton, "Back", theme);
+     drawMenuBackButton(gameMenuUi.backButton, theme);
      miniGameCtx.restore();
 }
 
-// SCREENS / OVERLAYS
+// NOTE: DRAW GAME WELCOME OVERLAY
 
 function drawGameWelcomeOverlay(theme) {
      if (!miniGameCtx || (!isScreenWelcomeActive() && !isOverlayScreenActive())) {
@@ -1059,7 +1093,7 @@ function drawGameWelcomeOverlay(theme) {
      const titleFontSize = getWelcomeTitleFontSize(theme, titleLines);
      const lineGap = Math.max(12, titleFontSize * 0.012);
 
-     const firstLineY = (miniGameHeight / 2) - ((titleFontSize * 1) + (lineGap * 0.5));
+     const firstLineY = (miniGameHeight / 2) - (titleFontSize + (lineGap * 0.5));
      const secondLineY = firstLineY + titleFontSize + lineGap;
 
      const actionGap = Math.max(18, titleFontSize * 0.5);
@@ -1093,7 +1127,6 @@ function drawGameWelcomeOverlay(theme) {
 
           for (let i = 0; i < line.length; i += 1) {
                const letter = line[i];
-               const letterWidth = letterWidths[i];
                const letterColor = colorsForLine[i] || colors.fontColor;
 
                miniGameCtx.fillStyle = letterColor;
@@ -1101,7 +1134,7 @@ function drawGameWelcomeOverlay(theme) {
                miniGameCtx.shadowBlur = glow.uiStrongGlow;
                miniGameCtx.fillText(letter, x, y);
 
-               x += letterWidth;
+               x += letterWidths[i];
           }
      });
 
@@ -1122,13 +1155,13 @@ function drawGameWelcomeOverlay(theme) {
      welcomeUi.menuButton.width = 0;
      welcomeUi.menuButton.height = 0;
 
-     const buttonPaddingX = 10;
-     const buttonPaddingY = 5;
-     const actionTextSize = Math.max(10, sizes.uiFontSmall * 1.1);
+     const buttonPaddingX = 14;
+     const buttonPaddingY = 10;
+     const actionTextSize = sizes.uiFontMd;
 
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "middle";
-     miniGameCtx.shadowColor = colors.overlayGlow;
+     miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
      miniGameCtx.font = `400 ${actionTextSize}px ${fonts.body}`;
 
@@ -1151,8 +1184,8 @@ function drawGameWelcomeOverlay(theme) {
           const textX = buttonX + (buttonWidth / 2);
 
           miniGameCtx.save();
-          miniGameCtx.fillStyle = "rgba(255, 255, 255, 0.11)";
-          miniGameCtx.strokeStyle = "rgba(255, 255, 255, 0.75)";
+          miniGameCtx.fillStyle = colors.controlFill;
+          miniGameCtx.strokeStyle = colors.outlineSoft;
           miniGameCtx.lineWidth = 3;
           miniGameCtx.shadowColor = colors.controlGlow;
           miniGameCtx.shadowBlur = glow.uiSoftGlow;
@@ -1164,7 +1197,8 @@ function drawGameWelcomeOverlay(theme) {
           miniGameCtx.fillStyle = colors.controlText;
           miniGameCtx.textAlign = "center";
           miniGameCtx.textBaseline = "middle";
-          miniGameCtx.fillText(item.text, textX, actionY);
+          miniGameCtx.font = `400 ${sizes.uiFontMd}px ${fonts.body}`;
+          miniGameCtx.fillText(item.text, textX, actionY + 1);
           miniGameCtx.restore();
 
           if (item.text === "NEW GAME") {
@@ -1249,7 +1283,6 @@ function drawPausedOverlay(theme) {
 
           for (let i = 0; i < line.length; i += 1) {
                const letter = line[i];
-               const letterWidth = letterWidths[i];
                const letterColor = colorsForLine[i] || colors.fontColor;
 
                miniGameCtx.fillStyle = letterColor;
@@ -1257,13 +1290,13 @@ function drawPausedOverlay(theme) {
                miniGameCtx.shadowBlur = glow.uiStrongGlow;
                miniGameCtx.fillText(letter, x, y);
 
-               x += letterWidth;
+               x += letterWidths[i];
           }
      });
 
      const buttonPaddingX = 12;
      const buttonPaddingY = 6;
-     const actionTextSize = Math.max(10, sizes.uiFontSmall * 1.1);
+     const actionTextSize = sizes.uiFontMd;
 
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "middle";
@@ -1353,12 +1386,12 @@ function drawGameStatusOverlay(theme) {
      miniGameCtx.textAlign = "center";
      miniGameCtx.textBaseline = "middle";
 
-     miniGameCtx.font = `${sizes.uiFontMedium}px ${fonts.display}`;
+     miniGameCtx.font = `${sizes.uiFontMd}px ${fonts.display}`;
      const titleWidth = miniGameCtx.measureText(gameOverlayText).width;
 
      let subWidth = 0;
      if (hasSubtext) {
-          miniGameCtx.font = `400 ${sizes.uiFontMedium}px ${fonts.body}`;
+          miniGameCtx.font = `400 ${sizes.uiFontMd}px ${fonts.body}`;
           subWidth = miniGameCtx.measureText(gameOverlaySubtext).width;
      }
 
@@ -1369,12 +1402,12 @@ function drawGameStatusOverlay(theme) {
 
      const panelWidth = Math.max(titleWidth, subWidth) + (horizontalPadding * 2);
      const panelHeight =
-          sizes.uiFontMedium +
-          (hasSubtext ? sizes.uiFontMedium + gapBetweenLines : 0) +
+          sizes.uiFontMd +
+          (hasSubtext ? sizes.uiFontMd + gapBetweenLines : 0) +
           topPadding +
           bottomPadding;
      const panelX = (miniGameWidth - panelWidth) / 2;
-     const panelY = titleY - topPadding - (sizes.uiFontMedium / 2);
+     const panelY = titleY - topPadding - (sizes.uiFontMd / 2);
 
      drawPanelBox(panelX, panelY, panelWidth, panelHeight, theme);
 
@@ -1383,12 +1416,12 @@ function drawGameStatusOverlay(theme) {
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.shadowColor = colors.overlayGlow;
      miniGameCtx.shadowBlur = glow.uiStrongGlow;
-     miniGameCtx.font = `${sizes.uiFontMedium}px ${fonts.display}`;
+     miniGameCtx.font = `${sizes.uiFontMd}px ${fonts.display}`;
      miniGameCtx.fillText(gameOverlayText, miniGameWidth / 2, titleY);
 
      if (hasSubtext) {
           miniGameCtx.shadowBlur = glow.uiSoftGlow;
-          miniGameCtx.font = `400 ${sizes.uiFontMedium}px ${fonts.body}`;
+          miniGameCtx.font = `400 ${sizes.uiFontMd}px ${fonts.body}`;
           miniGameCtx.fillText(gameOverlaySubtext, miniGameWidth / 2, titleY + subtextOffset);
      }
 

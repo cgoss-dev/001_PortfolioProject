@@ -86,6 +86,35 @@ import {
      updateWelcomeTitleColors
 } from "./ui_draw.js";
 
+function getCssPixelSize(variableName, fallback = 16) {
+     if (!document?.body) {
+          return fallback;
+     }
+
+     const probe = document.createElement("span");
+     probe.style.position = "absolute";
+     probe.style.visibility = "hidden";
+     probe.style.pointerEvents = "none";
+     probe.style.fontSize = `var(${variableName})`;
+     probe.textContent = "M";
+
+     document.body.appendChild(probe);
+     const resolved = parseFloat(getComputedStyle(probe).fontSize);
+     document.body.removeChild(probe);
+
+     return Number.isFinite(resolved) ? resolved : fallback;
+}
+
+export function getGameMenuSpacing() {
+     const uiFontMd = getCssPixelSize("--font-size-md", 16);
+     const uiFontSm = getCssPixelSize("--font-size-sm", 10);
+
+     return {
+          titleGap: uiFontMd * 2,
+          rowGap: uiFontSm
+     };
+}
+
 export const startOverlayDuration = 120;
 export const overlayFadeFrames = 30;
 
@@ -429,18 +458,21 @@ function setOptionRowBounds(row, decreaseButton, increaseButton, x, y, width, he
 }
 
 function getMenuLayoutMetrics(panelX, panelY, panelWidth, panelHeight) {
+     const { titleGap, rowGap } = getGameMenuSpacing();
+     const uiFontMd = getCssPixelSize("--font-size-md", 16);
+
      const sidePadding = Math.max(14, panelWidth * 0.06);
      const buttonHeight = 40;
      const buttonX = panelX + sidePadding;
      const buttonWidth = panelWidth - (sidePadding * 2);
 
-     const topPadding = Math.max(14, panelHeight * 0.06);
-     const titleHeight = Math.max(16, Math.min(22, panelWidth * 0.06));
-     const titleGap = Math.max(20, titleHeight * 1.5);
-     const contentTopY = panelY + topPadding + titleHeight + titleGap;
+     const topPadding = Math.max(14, panelHeight * 0.05);
+     const titleHeight = uiFontMd * 2;
+     const backButtonSize = Math.max(28, uiFontMd * 1.6);
+     const backButtonX = buttonX;
+     const backButtonY = panelY + topPadding;
 
-     const bottomPadding = Math.max(18, panelHeight * 0.08);
-     const backButtonY = panelY + panelHeight - buttonHeight - bottomPadding;
+     const contentTopY = panelY + topPadding + titleHeight + titleGap;
 
      return {
           sidePadding,
@@ -450,13 +482,13 @@ function getMenuLayoutMetrics(panelX, panelY, panelWidth, panelHeight) {
           topPadding,
           titleHeight,
           titleGap,
-          contentTopY,
-          bottomPadding,
-          backButtonY
+          rowGap,
+          backButtonSize,
+          backButtonX,
+          backButtonY,
+          contentTopY
      };
 }
-
-// NOTE: UPDATE MENU UI
 
 export function updateMenuUiBounds() {
      const panelX = 0;
@@ -471,6 +503,11 @@ export function updateMenuUiBounds() {
 
      const layout = getMenuLayoutMetrics(panelX, panelY, panelWidth, panelHeight);
 
+     gameMenuUi.backButton.x = layout.backButtonX;
+     gameMenuUi.backButton.y = layout.backButtonY;
+     gameMenuUi.backButton.width = layout.backButtonSize;
+     gameMenuUi.backButton.height = layout.backButtonSize;
+
      if (gameMenuView === "tips") {
           const menuButtons = [
                gameMenuUi.tipsHowToPlayButton,
@@ -478,18 +515,8 @@ export function updateMenuUiBounds() {
                gameMenuUi.tipsHarmEffectsButton
           ];
 
-          const menuAreaTop = layout.contentTopY;
-          const menuAreaBottom = layout.backButtonY - layout.buttonHeight - Math.max(16, panelHeight * 0.04);
-          const availableHeight = Math.max(
-               layout.buttonHeight * menuButtons.length,
-               menuAreaBottom - menuAreaTop
-          );
-          const gap = menuButtons.length > 1
-               ? Math.max(14, (availableHeight - (menuButtons.length * layout.buttonHeight)) / (menuButtons.length - 1))
-               : 0;
-
           menuButtons.forEach((row, index) => {
-               const y = menuAreaTop + (index * (layout.buttonHeight + gap));
+               const y = layout.contentTopY + (index * (layout.buttonHeight + layout.rowGap));
 
                row.x = layout.buttonX;
                row.y = y;
@@ -497,10 +524,6 @@ export function updateMenuUiBounds() {
                row.height = layout.buttonHeight;
           });
 
-          gameMenuUi.backButton.x = layout.buttonX;
-          gameMenuUi.backButton.y = layout.backButtonY;
-          gameMenuUi.backButton.width = layout.buttonWidth;
-          gameMenuUi.backButton.height = layout.buttonHeight;
           return;
      }
 
@@ -509,10 +532,6 @@ export function updateMenuUiBounds() {
           gameMenuView === "tips_help_effects" ||
           gameMenuView === "tips_harm_effects"
      ) {
-          gameMenuUi.backButton.x = layout.buttonX;
-          gameMenuUi.backButton.y = layout.backButtonY;
-          gameMenuUi.backButton.width = layout.buttonWidth;
-          gameMenuUi.backButton.height = layout.buttonHeight;
           return;
      }
 
@@ -538,18 +557,8 @@ export function updateMenuUiBounds() {
           }
      ];
 
-     const optionsAreaTop = layout.contentTopY;
-     const optionsAreaBottom = layout.backButtonY - layout.buttonHeight - Math.max(16, panelHeight * 0.04);
-     const availableHeight = Math.max(
-          layout.buttonHeight * optionRows.length,
-          optionsAreaBottom - optionsAreaTop
-     );
-     const gap = optionRows.length > 1
-          ? Math.max(14, (availableHeight - (optionRows.length * layout.buttonHeight)) / (optionRows.length - 1))
-          : 0;
-
      optionRows.forEach((item, index) => {
-          const y = optionsAreaTop + (index * (layout.buttonHeight + gap));
+          const y = layout.contentTopY + (index * (layout.buttonHeight + layout.rowGap));
 
           setOptionRowBounds(
                item.row,
@@ -561,11 +570,6 @@ export function updateMenuUiBounds() {
                layout.buttonHeight
           );
      });
-
-     gameMenuUi.backButton.x = layout.buttonX;
-     gameMenuUi.backButton.y = layout.backButtonY;
-     gameMenuUi.backButton.width = layout.buttonWidth;
-     gameMenuUi.backButton.height = layout.buttonHeight;
 }
 
 export function isPointInsideMenuPanel(x, y) {
