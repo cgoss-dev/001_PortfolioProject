@@ -65,20 +65,21 @@ function getSparkleSettings() {
 
 function getRainbowPalette() {
      return [
-          getCssColor("--rainbow-pink"),
-          getCssColor("--rainbow-magenta"),
           getCssColor("--rainbow-red"),
-          getCssColor("--rainbow-maroon"),
-          getCssColor("--rainbow-peach"),
-          getCssColor("--rainbow-flamingo"),
+          getCssColor("--rainbow-orange"),
           getCssColor("--rainbow-yellow"),
+
+          getCssColor("--rainbow-lime"),
           getCssColor("--rainbow-green"),
-          getCssColor("--rainbow-teal"),
+          getCssColor("--rainbow-mint"),
+
+          getCssColor("--rainbow-cyan"),
           getCssColor("--rainbow-sky"),
           getCssColor("--rainbow-blue"),
-          getCssColor("--rainbow-lavender"),
+
           getCssColor("--rainbow-violet"),
-          getCssColor("--rainbow-orchid")
+          getCssColor("--rainbow-magenta"),
+          getCssColor("--rainbow-rose")
      ].filter(Boolean);
 }
 
@@ -219,6 +220,71 @@ function createColorEngine(colorsOrFactory) {
 
                     const nextColor = availableColors[colorIndex];
                     colorIndex += 1;
+                    nextColors.push(nextColor);
+               }
+
+               return nextColors;
+          },
+
+          nextCycleForText(text, previousCycleColors = []) {
+               const palette = resolvePalette();
+
+               if (!palette.length || !text) {
+                    return [];
+               }
+
+               if (palette.length === 1) {
+                    return Array(text.length).fill(palette[0]);
+               }
+
+               const nextColors = [];
+               let usedColorsInWord = new Set();
+               let availableColors = shuffleArray(palette);
+               let colorIndex = 0;
+
+               for (let i = 0; i < text.length; i += 1) {
+                    const character = text[i];
+
+                    if (/\s/.test(character)) {
+                         usedColorsInWord.clear();
+                         nextColors.push("");
+                         continue;
+                    }
+
+                    if (usedColorsInWord.size >= palette.length) {
+                         usedColorsInWord.clear();
+                    }
+
+                    let nextColor = null;
+                    const previousColorForSlot = previousCycleColors[i] || null;
+
+                    for (let attempts = 0; attempts < palette.length * 2; attempts += 1) {
+                         if (colorIndex >= availableColors.length) {
+                              availableColors = shuffleArray(palette);
+                              colorIndex = 0;
+                         }
+
+                         avoidImmediateRepeatInBatch(availableColors, previousColorForSlot, colorIndex);
+
+                         const candidateColor = availableColors[colorIndex];
+                         colorIndex += 1;
+
+                         if (!usedColorsInWord.has(candidateColor)) {
+                              nextColor = candidateColor;
+                              break;
+                         }
+                    }
+
+                    if (!nextColor) {
+                         const fallbackColors = palette.filter((color) => !usedColorsInWord.has(color));
+
+                         nextColor = randomItemExcept(
+                              fallbackColors.length ? fallbackColors : palette,
+                              previousColorForSlot
+                         );
+                    }
+
+                    usedColorsInWord.add(nextColor);
                     nextColors.push(nextColor);
                }
 
@@ -370,7 +436,7 @@ const marqueeItems = marqueeElements.map(function (element) {
           lineNodes: lineNodes,
           lineLetterSpans: [],
           visibleSpans: [],
-          previousColors: []
+          previousColorsByLine: []
      };
 });
 
@@ -441,7 +507,7 @@ function buildMarqueeSpans(marqueeItem) {
 
      marqueeItem.lineLetterSpans = [];
      marqueeItem.visibleSpans = [];
-     marqueeItem.previousColors = [];
+     marqueeItem.previousColorsByLine = [];
 
      for (let i = 0; i < marqueeItem.lineNodes.length; i += 1) {
           const lineNode = marqueeItem.lineNodes[i];
@@ -467,11 +533,12 @@ function buildMarqueeSpans(marqueeItem) {
           }
 
           marqueeItem.lineLetterSpans.push(letterSpans);
+          marqueeItem.previousColorsByLine.push([]);
      }
 }
 
 function applyGlowToElement(element, color) {
-     if (!element) {
+     if (!element || !color) {
           return;
      }
 
@@ -484,23 +551,25 @@ function cycleMarqueeColors() {
           for (let i = 0; i < marqueeItems.length; i += 1) {
                const marqueeItem = marqueeItems[i];
 
-               if (!marqueeItem.visibleSpans.length) {
+               if (!marqueeItem.lineLetterSpans.length) {
                     continue;
                }
 
-               const nextColors = marqueeColorEngine.nextCycle(
-                    marqueeItem.visibleSpans.length,
-                    marqueeItem.previousColors
-               );
+               for (let lineIndex = 0; lineIndex < marqueeItem.lineLetterSpans.length; lineIndex += 1) {
+                    const lineSpans = marqueeItem.lineLetterSpans[lineIndex];
+                    const text = lineSpans.map((span) => span.textContent === "\u00A0" ? " " : span.textContent).join("");
+                    const previousColors = marqueeItem.previousColorsByLine[lineIndex] || [];
+                    const nextColors = marqueeColorEngine.nextCycleForText(text, previousColors);
 
-               for (let j = 0; j < marqueeItem.visibleSpans.length; j += 1) {
-                    const span = marqueeItem.visibleSpans[j];
-                    const nextColor = nextColors[j];
+                    for (let j = 0; j < lineSpans.length; j += 1) {
+                         const span = lineSpans[j];
+                         const nextColor = nextColors[j];
 
-                    applyGlowToElement(span, nextColor);
+                         applyGlowToElement(span, nextColor);
+                    }
+
+                    marqueeItem.previousColorsByLine[lineIndex] = nextColors;
                }
-
-               marqueeItem.previousColors = nextColors;
           }
      }
 

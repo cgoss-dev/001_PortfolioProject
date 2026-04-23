@@ -162,7 +162,7 @@ function getUiTheme() {
                scoreX: 5,
                healthX: 5,
 
-               overlayFontTitle: getCssPixelSize("--font-size-medium", 16),
+               uiFontMedium: getCssPixelSize("--font-size-medium", 16),
                uiFontSmall: getCssPixelSize("--font-size-small", 8),
 
                controlRadius: getCssNumber("--panel-radius", 15)
@@ -216,31 +216,193 @@ function drawPanelBox(x, y, width, height, theme, lineWidth = 3) {
      miniGameCtx.stroke();
 }
 
-function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
-     const words = text.split(" ");
-     let line = "";
-     const lines = [];
+// NOTE: ICON SIZE/Y
+const richTextIcons = {
+     iconShield:    { char: "\u2B21\uFE0E", scale: 2.25,    xOffset: -8,        yOffset: -5 },
+     iconCure:      { char: "\u271A\uFE0E", scale: 1.5,     xOffset: -5,        yOffset: -3 },
+     iconLuck:      { char: "\u2618\uFE0E", scale: 2,       xOffset: -5,         yOffset: -2 },
+     iconMagnet:    { char: "\u2316\uFE0E", scale: 2,       xOffset: -10,        yOffset: -2 },
+     iconSlowmo:    { char: "\u29D6\uFE0E", scale: 1.75,    xOffset: 0,         yOffset: -1 },
 
-     for (let i = 0; i < words.length; i += 1) {
-          const testLine = `${line}${words[i]} `;
-          const testWidth = ctx.measureText(testLine).width;
+     iconFreeze:    { char: "\u2744\uFE0E", scale: 2,       xOffset: -4,      yOffset: -4 },
+     iconSurge:     { char: "\u26A1\uFE0E", scale: 1.5,     xOffset: 0,       yOffset: -2 },
+     iconDaze:      { char: "\u2300\uFE0E", scale: 2,       xOffset: -2,      yOffset: -6 },
+     iconGlass:     { char: "\u26A0\uFE0E", scale: 1.5,     xOffset: -6,      yOffset: -2 },
+     iconFog:       { char: "\u224B\uFE0E", scale: 2.5,     xOffset: -6,      yOffset: -8 }
+};
 
-          if (testWidth > maxWidth && i > 0) {
-               lines.push(line.trim());
-               line = `${words[i]} `;
-          } else {
-               line = testLine;
+
+
+function parseRichTextSegments(text) {
+     const segments = [];
+     const tokenPattern = /\{(icon[A-Za-z0-9_]+)\}/g;
+     let lastIndex = 0;
+     let match = tokenPattern.exec(text);
+
+     while (match) {
+          if (match.index > lastIndex) {
+               segments.push({
+                    type: "text",
+                    value: text.slice(lastIndex, match.index)
+               });
           }
+
+          segments.push({
+               type: "icon",
+               value: match[1]
+          });
+
+          lastIndex = tokenPattern.lastIndex;
+          match = tokenPattern.exec(text);
      }
 
-     lines.push(line.trim());
+     if (lastIndex < text.length) {
+          segments.push({
+               type: "text",
+               value: text.slice(lastIndex)
+          });
+     }
 
-     lines.forEach((wrappedLine, index) => {
-          ctx.fillText(wrappedLine, x, y + (index * lineHeight));
+     return segments;
+}
+
+function getRichTextIcon(tokenName) {
+     return richTextIcons[tokenName] || null;
+}
+
+function drawWrappedRichText(ctx, text, x, y, maxWidth, lineHeight, options = {}) {
+     const font = options.font || ctx.font;
+     const iconBaseSize = options.iconBaseSize || options.fontSize || 16;
+     const iconFontFamily = options.iconFontFamily || options.fontFamily || "sans-serif";
+     const iconYOffset = options.iconYOffset || 0;
+     const segments = parseRichTextSegments(text);
+     const tokens = [];
+
+     segments.forEach((segment) => {
+          if (segment.type === "icon") {
+               tokens.push(segment);
+               return;
+          }
+
+          segment.value.split(/(\s+)/).forEach((part) => {
+               if (part) {
+                    tokens.push({
+                         type: "text",
+                         value: part
+                    });
+               }
+          });
      });
+
+     function getTokenFont(token) {
+          if (token.type !== "icon") {
+               return font;
+          }
+
+          const icon = getRichTextIcon(token.value);
+
+          if (!icon) {
+               return font;
+          }
+
+          return `400 ${iconBaseSize * icon.scale}px ${iconFontFamily}`;
+     }
+
+     function getTokenText(token) {
+          if (token.type !== "icon") {
+               return token.value;
+          }
+
+          const icon = getRichTextIcon(token.value);
+
+          return icon ? icon.char : token.value;
+     }
+
+     function getTokenXOffset(token) {
+          if (token.type !== "icon") {
+               return 0;
+          }
+
+          const icon = getRichTextIcon(token.value);
+
+          if (!icon) {
+               return 0;
+          }
+
+          return icon.xOffset || 0;
+     }
+
+     function getTokenYOffset(token) {
+          if (token.type !== "icon") {
+               return 0;
+          }
+
+          const icon = getRichTextIcon(token.value);
+
+          if (!icon) {
+               return 0;
+          }
+
+          const scaleOffset = -((iconBaseSize * icon.scale - iconBaseSize) * 0.28);
+          const customOffset = icon.yOffset || 0;
+
+          return iconYOffset + scaleOffset + customOffset;
+     }
+
+     const lines = [];
+     let currentLine = [];
+     let currentWidth = 0;
+
+     tokens.forEach((token) => {
+          ctx.font = getTokenFont(token);
+
+          const tokenText = getTokenText(token);
+          const tokenXOffset = getTokenXOffset(token);
+          const tokenWidth = ctx.measureText(tokenText).width + tokenXOffset;
+          const shouldWrap = currentWidth + tokenWidth > maxWidth && currentLine.length > 0;
+
+          if (shouldWrap) {
+               lines.push(currentLine);
+               currentLine = [];
+               currentWidth = 0;
+          }
+
+          currentLine.push(token);
+          currentWidth += tokenWidth;
+     });
+
+     if (currentLine.length) {
+          lines.push(currentLine);
+     }
+
+     lines.forEach((lineTokens, lineIndex) => {
+          let currentX = x;
+          const currentY = y + (lineIndex * lineHeight);
+
+          lineTokens.forEach((token) => {
+               ctx.font = getTokenFont(token);
+
+               const tokenText = getTokenText(token);
+               const tokenXOffset = getTokenXOffset(token);
+               const tokenYOffset = getTokenYOffset(token);
+
+               ctx.fillText(tokenText, currentX + tokenXOffset, currentY + tokenYOffset);
+
+               currentX += ctx.measureText(tokenText).width + tokenXOffset;
+          });
+     });
+
+     ctx.font = font;
 
      return lines.length;
 }
+
+
+
+function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
+     return drawWrappedRichText(ctx, text, x, y, maxWidth, lineHeight);
+}
+
 
 // WELCOME COLOR ENGINE
 
@@ -323,6 +485,45 @@ function getWelcomeTitleFontSize(theme, titleLines = getCurrentScreenTitleLines(
 
      return fontSize;
 }
+
+//TIPS COLOR ENGINE
+
+let tipsTitleColorEngine = null;
+let tipsTitlePreviousColors = [];
+let tipsTitleCurrentColors = [];
+let tipsTitleLastColorCycleTime = 0;
+
+function ensureTipsTitleColorEngine() {
+     if (tipsTitleColorEngine || !siteTheme?.createColorEngine || !siteTheme?.getRainbowPalette) {
+          return;
+     }
+
+     tipsTitleColorEngine = siteTheme.createColorEngine(siteTheme.getRainbowPalette);
+}
+
+function updateTipsTitleColors(title) {
+     ensureTipsTitleColorEngine();
+
+     const rainbowCycleSpeed = siteTheme?.getTextSettings?.().rainbowCycleSpeed ?? 900;
+     const now = performance.now();
+
+     if (tipsTitleCurrentColors.length && (now - tipsTitleLastColorCycleTime) < rainbowCycleSpeed) {
+          return;
+     }
+
+     if (!tipsTitleColorEngine?.nextCycleForText) {
+          tipsTitleCurrentColors = Array(title.length).fill(
+               getCssColor("--font-color", getCssColor("--color-text", "#ffffff"))
+          );
+     } else {
+          tipsTitleCurrentColors = tipsTitleColorEngine.nextCycleForText(title, tipsTitlePreviousColors);
+     }
+
+     tipsTitlePreviousColors = [...tipsTitleCurrentColors];
+     tipsTitleLastColorCycleTime = now;
+}
+
+//MENU BUTTONS
 
 function drawMenuButton(button, label, theme) {
      if (!miniGameCtx || !button) {
@@ -657,9 +858,9 @@ function drawTipsMenuScreen(theme) {
      miniGameCtx.fillStyle = colors.fillTranslucentMedium;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
-     drawMenuButton(gameMenuUi.tipsHowToPlayButton, "HOW TO PLAY", theme);
-     drawMenuButton(gameMenuUi.tipsHelpEffectsButton, "HELPFUL EFFECTS", theme);
-     drawMenuButton(gameMenuUi.tipsHarmEffectsButton, "HARMFUL EFFECTS", theme);
+     drawMenuButton(gameMenuUi.tipsHowToPlayButton, "How to Play", theme);
+     drawMenuButton(gameMenuUi.tipsHelpEffectsButton, "Friends", theme);
+     drawMenuButton(gameMenuUi.tipsHarmEffectsButton, "Enemies", theme);
      drawMenuButton(gameMenuUi.backButton, "Back", theme);
 
      miniGameCtx.restore();
@@ -676,12 +877,15 @@ function drawTipsDetailScreen(theme, title, lines) {
      miniGameCtx.fillStyle = colors.fillTranslucentMedium;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
-     const textX = Math.max(24, miniGameWidth * 0.12);
-     let textY = Math.max(28, miniGameHeight * 0.12);
-     const titleFontSize = Math.max(14, sizes.uiFontSmall * 1.2);
-     const fontSize = Math.max(12, sizes.uiFontSmall * Math.min(1, miniGameWidth / 320));
-     const lineHeight = fontSize * 1.15;
-     const sectionGap = lineHeight * 1.15;
+     const textX = Math.max(14, miniGameWidth * 0.06);
+     let textY = Math.max(14, miniGameHeight * 0.06);
+
+     const titleFontSize = Math.max(16, sizes.uiFontMedium);
+     const fontSize = Math.max(12, sizes.uiFontSmall);
+
+     const lineHeight = fontSize * 1.1;
+     const sectionGap = lineHeight * 2;
+
      const maxTextWidth = miniGameWidth - (textX * 2);
 
      miniGameCtx.fillStyle = colors.fontColor;
@@ -689,11 +893,26 @@ function drawTipsDetailScreen(theme, title, lines) {
      miniGameCtx.textBaseline = "top";
      miniGameCtx.shadowColor = colors.overlayGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
+
      miniGameCtx.font = `${titleFontSize}px ${fonts.display}`;
-     miniGameCtx.fillText(title, textX, textY);
+     updateTipsTitleColors(title);
+
+     let titleX = textX;
+
+     for (let i = 0; i < title.length; i += 1) {
+          const letter = title[i];
+          const letterColor = tipsTitleCurrentColors[i] || colors.fontColor;
+
+          miniGameCtx.fillStyle = letterColor;
+          miniGameCtx.shadowColor = letterColor;
+          miniGameCtx.fillText(letter, titleX, textY);
+
+          titleX += miniGameCtx.measureText(letter).width;
+     }
 
      textY += titleFontSize + sectionGap;
 
+     miniGameCtx.fillStyle = colors.fontColor;
      miniGameCtx.shadowBlur = 0;
      miniGameCtx.font = `400 ${fontSize}px ${fonts.body}`;
 
@@ -713,6 +932,7 @@ function drawTipsDetailScreen(theme, title, lines) {
      drawMenuButton(gameMenuUi.backButton, "Back", theme);
      miniGameCtx.restore();
 }
+
 
 function drawOptionsScreen(theme) {
      if (!miniGameCtx) {
@@ -1067,12 +1287,12 @@ function drawGameStatusOverlay(theme) {
      miniGameCtx.textAlign = "center";
      miniGameCtx.textBaseline = "middle";
 
-     miniGameCtx.font = `${sizes.overlayFontTitle}px ${fonts.display}`;
+     miniGameCtx.font = `${sizes.uiFontMedium}px ${fonts.display}`;
      const titleWidth = miniGameCtx.measureText(gameOverlayText).width;
 
      let subWidth = 0;
      if (hasSubtext) {
-          miniGameCtx.font = `400 ${sizes.overlayFontTitle}px ${fonts.body}`;
+          miniGameCtx.font = `400 ${sizes.uiFontMedium}px ${fonts.body}`;
           subWidth = miniGameCtx.measureText(gameOverlaySubtext).width;
      }
 
@@ -1083,12 +1303,12 @@ function drawGameStatusOverlay(theme) {
 
      const panelWidth = Math.max(titleWidth, subWidth) + (horizontalPadding * 2);
      const panelHeight =
-          sizes.overlayFontTitle +
-          (hasSubtext ? sizes.overlayFontTitle + gapBetweenLines : 0) +
+          sizes.uiFontMedium +
+          (hasSubtext ? sizes.uiFontMedium + gapBetweenLines : 0) +
           topPadding +
           bottomPadding;
      const panelX = (miniGameWidth - panelWidth) / 2;
-     const panelY = titleY - topPadding - (sizes.overlayFontTitle / 2);
+     const panelY = titleY - topPadding - (sizes.uiFontMedium / 2);
 
      drawPanelBox(panelX, panelY, panelWidth, panelHeight, theme);
 
@@ -1097,12 +1317,12 @@ function drawGameStatusOverlay(theme) {
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.shadowColor = colors.overlayGlow;
      miniGameCtx.shadowBlur = glow.uiStrongGlow;
-     miniGameCtx.font = `${sizes.overlayFontTitle}px ${fonts.display}`;
+     miniGameCtx.font = `${sizes.uiFontMedium}px ${fonts.display}`;
      miniGameCtx.fillText(gameOverlayText, miniGameWidth / 2, titleY);
 
      if (hasSubtext) {
           miniGameCtx.shadowBlur = glow.uiSoftGlow;
-          miniGameCtx.font = `400 ${sizes.overlayFontTitle}px ${fonts.body}`;
+          miniGameCtx.font = `400 ${sizes.uiFontMedium}px ${fonts.body}`;
           miniGameCtx.fillText(gameOverlaySubtext, miniGameWidth / 2, titleY + subtextOffset);
      }
 
@@ -1142,11 +1362,11 @@ export function drawGame() {
           if (gameMenuView === "tips") {
                drawTipsMenuScreen(theme);
           } else if (gameMenuView === "tips_how_to_play") {
-               drawTipsDetailScreen(theme, "HOW TO PLAY", getHowToPlayLines());
+               drawTipsDetailScreen(theme, "How to Play", getHowToPlayLines());
           } else if (gameMenuView === "tips_help_effects") {
-               drawTipsDetailScreen(theme, "HELPFUL EFFECTS", getHelpfulEffectLines());
+               drawTipsDetailScreen(theme, "Friends", getHelpfulEffectLines());
           } else if (gameMenuView === "tips_harm_effects") {
-               drawTipsDetailScreen(theme, "HARMFUL EFFECTS", getHarmfulEffectLines());
+               drawTipsDetailScreen(theme, "Enemies", getHarmfulEffectLines());
           } else if (gameMenuView === "options") {
                drawOptionsScreen(theme);
           }

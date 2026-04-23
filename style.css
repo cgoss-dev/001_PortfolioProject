@@ -16,21 +16,24 @@
           --opaque-medium: rgba(255, 255, 255, 0.5);
           --opaque-strong: rgba(255, 255, 255, 0.75);
 
-     /* RAINBOW PALETTE */
-          --rainbow-pink: #ea76cb;
-          --rainbow-magenta: #DE4382;
-          --rainbow-red: #d20f39;
-          --rainbow-maroon: #e64553;
-          --rainbow-peach: #fe640b;
-          --rainbow-flamingo: #dd7878;
-          --rainbow-yellow: #df8e1d;
-          --rainbow-green: #40a02b;
-          --rainbow-teal: #179299;
-          --rainbow-sky: #04a5e5;
-          --rainbow-blue: #1e66f5;
-          --rainbow-lavender: #7287fd;
-          --rainbow-violet: #8839ef;
-          --rainbow-orchid: #B958DD;
+     /* RAINBOW PALETTE (KATE MORLEY 12-BIT RAINBOW PALETTE) */
+          --rainbow-red: #f00;
+          --rainbow-orange: #f80;
+          --rainbow-yellow: #ff0;
+
+          --rainbow-lime: #bf0;
+          --rainbow-green: #0f0;  
+          --rainbow-mint: #0fb;
+          
+          --rainbow-cyan: #0ff;
+          --rainbow-sky: #0bf;
+          --rainbow-blue: #00f;
+
+          --rainbow-violet: #80f;
+          --rainbow-magenta: #f0f;
+          --rainbow-rose: #f08;
+
+
 
      /* LAYOUT */
           --page-width-wide: 72rem;
@@ -74,11 +77,11 @@
 
      /* EFFECTS */
           /* GLOW */
-               --glow-depth: 0 0.75rem 1.75rem rgba(0, 0, 0, 0.5);
-               --glow-core: 0 0 clamp(0.02rem, 0.08vw, 0.05rem);
-               --glow-soft: 0 0 clamp(0.08rem, 0.3vw, 0.25rem);
-               --glow-wide: 0 0 clamp(0.25rem, 0.9vw, 0.75rem);
-               --glow-max: 0 0 1rem;
+               /* --glow-depth: 0 0.75rem 1.75rem rgba(0, 0, 0, 0.5); */
+               --glow-core: 0 0 clamp(0.01rem, 0.04vw, 0.03rem);
+               --glow-soft: 0 0 clamp(0.04rem, 0.15vw, 0.12rem);
+               --glow-wide: 0 0 clamp(0.08rem, 0.3vw, 0.25rem);
+               /* --glow-max: 0 0 1rem; */
                --glow-text:
                     var(--glow-core) currentColor,
                     var(--glow-soft) currentColor,

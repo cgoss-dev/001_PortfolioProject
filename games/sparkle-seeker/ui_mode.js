@@ -443,8 +443,8 @@ export function updateMenuUiBounds() {
      gameMenuUi.panel.width = panelWidth;
      gameMenuUi.panel.height = panelHeight;
 
-     const sidePadding = Math.max(24, panelWidth * 0.12);
-     const buttonHeight = 35;
+     const sidePadding = Math.max(14, panelWidth * 0.06);
+     const buttonHeight = 40;
      const buttonX = panelX + sidePadding;
      const buttonWidth = panelWidth - (sidePadding * 2);
 
@@ -557,23 +557,24 @@ export function getHowToPlayLines() {
 
 export function getHelpfulEffectLines() {
      return [
-          "\u2B21\uFE0E Shield: blocks the next harmful pickup.",
-          "\u271A\uFE0E Cure: blocks the next harmful status effect.",
-          "\u2618\uFE0E Luck: doubles sparkle points for a short time.",
-          "\u2316\uFE0E Magnet: pulls nearby sparkles toward you.",
-          "\u29D6\uFE0E Slowmo: slows falling objects."
+          "{iconShield} Shield: blocks the next harmful pickup.",
+          "{iconCure} Cure: blocks the next harmful status effect.",
+          "{iconLuck} Luck: doubles sparkle points for a short time.",
+          "{iconMagnet} Magnet: pulls nearby sparkles toward you.",
+          "{iconSlowmo} Slowmo: slows falling objects."
      ];
 }
 
 export function getHarmfulEffectLines() {
      return [
-          "\u2744\uFE0E Freeze: stops movement briefly.",
-          "\u26A1\uFE0E Surge: speeds falling objects up.",
-          "\u2300\uFE0E Daze: reverses movement.",
-          "\u26A0\uFE0E Glass: makes the next hit hurt more.",
-          "\u224B\uFE0E Fog: limits your visible area."
+          "{iconFreeze} Freeze: stops movement briefly.",
+          "{iconSurge} Surge: speeds falling objects up.",
+          "{iconDaze} Daze: reverses movement.",
+          "{iconGlass} Glass: makes the next hit hurt more.",
+          "{iconFog} Fog: limits your visible area."
      ];
 }
+
 
 // OVERLAY SYSTEM
 
