@@ -217,21 +217,20 @@ function drawPanelBox(x, y, width, height, theme, lineWidth = 3) {
 }
 
 // NOTE: ICON SIZE/Y
+
 const richTextIcons = {
-     iconShield:    { char: "\u2B21\uFE0E", scale: 2.25,    xOffset: -8,        yOffset: -5 },
-     iconCure:      { char: "\u271A\uFE0E", scale: 1.5,     xOffset: -5,        yOffset: -3 },
-     iconLuck:      { char: "\u2618\uFE0E", scale: 2,       xOffset: -5,         yOffset: -2 },
-     iconMagnet:    { char: "\u2316\uFE0E", scale: 2,       xOffset: -10,        yOffset: -2 },
-     iconSlowmo:    { char: "\u29D6\uFE0E", scale: 1.75,    xOffset: 0,         yOffset: -1 },
+     iconShield: { char: "\u2B21\uFE0E", scale: 1.5, xOffset: 0, yOffset: 0 },
+     iconCure: { char: "\u271A\uFE0E", scale: 1.5, xOffset: 0, yOffset: 0 },
+     iconLuck: { char: "\u2618\uFE0E", scale: 1.5, xOffset: 0, yOffset: 0 },
+     iconMagnet: { char: "\u2316\uFE0E", scale: 1.5, xOffset: 0, yOffset: 0 },
+     iconSlowmo: { char: "\u29D6\uFE0E", scale: 1.5, xOffset: 0, yOffset: 0 },
 
-     iconFreeze:    { char: "\u2744\uFE0E", scale: 2,       xOffset: -4,      yOffset: -4 },
-     iconSurge:     { char: "\u26A1\uFE0E", scale: 1.5,     xOffset: 0,       yOffset: -2 },
-     iconDaze:      { char: "\u2300\uFE0E", scale: 2,       xOffset: -2,      yOffset: -6 },
-     iconGlass:     { char: "\u26A0\uFE0E", scale: 1.5,     xOffset: -6,      yOffset: -2 },
-     iconFog:       { char: "\u224B\uFE0E", scale: 2.5,     xOffset: -6,      yOffset: -8 }
+     iconFreeze: { char: "\u2744\uFE0E", scale: 1.5, xOffset: 0, yOffset: 0 },
+     iconSurge: { char: "\u26A1\uFE0E", scale: 1.5, xOffset: 0, yOffset: 0 },
+     iconDaze: { char: "\u2300\uFE0E", scale: 1.5, xOffset: 0, yOffset: 0 },
+     iconGlass: { char: "\u26A0\uFE0E", scale: 1.5, xOffset: 0, yOffset: 0 },
+     iconFog: { char: "\u224B\uFE0E", scale: 1.5, xOffset: 0, yOffset: 0 }
 };
-
-
 
 function parseRichTextSegments(text) {
      const segments = [];
@@ -357,8 +356,7 @@ function drawWrappedRichText(ctx, text, x, y, maxWidth, lineHeight, options = {}
           ctx.font = getTokenFont(token);
 
           const tokenText = getTokenText(token);
-          const tokenXOffset = getTokenXOffset(token);
-          const tokenWidth = ctx.measureText(tokenText).width + tokenXOffset;
+          const tokenWidth = ctx.measureText(tokenText).width;
           const shouldWrap = currentWidth + tokenWidth > maxWidth && currentLine.length > 0;
 
           if (shouldWrap) {
@@ -387,8 +385,7 @@ function drawWrappedRichText(ctx, text, x, y, maxWidth, lineHeight, options = {}
                const tokenYOffset = getTokenYOffset(token);
 
                ctx.fillText(tokenText, currentX + tokenXOffset, currentY + tokenYOffset);
-
-               currentX += ctx.measureText(tokenText).width + tokenXOffset;
+               currentX += ctx.measureText(tokenText).width;
           });
      });
 
@@ -397,12 +394,9 @@ function drawWrappedRichText(ctx, text, x, y, maxWidth, lineHeight, options = {}
      return lines.length;
 }
 
-
-
 function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
      return drawWrappedRichText(ctx, text, x, y, maxWidth, lineHeight);
 }
-
 
 // WELCOME COLOR ENGINE
 
@@ -486,7 +480,7 @@ function getWelcomeTitleFontSize(theme, titleLines = getCurrentScreenTitleLines(
      return fontSize;
 }
 
-//TIPS COLOR ENGINE
+// TIPS COLOR ENGINE
 
 let tipsTitleColorEngine = null;
 let tipsTitlePreviousColors = [];
@@ -523,7 +517,63 @@ function updateTipsTitleColors(title) {
      tipsTitleLastColorCycleTime = now;
 }
 
-//MENU BUTTONS
+// MENU LAYOUT
+
+function getMenuScreenLayout(theme) {
+     const { sizes } = theme;
+
+     const sidePadding = Math.max(14, miniGameWidth * 0.06);
+     const topPadding = Math.max(14, miniGameHeight * 0.06);
+     const titleFontSize = Math.max(16, sizes.uiFontMedium);
+     const titleGap = Math.max(20, sizes.uiFontMedium * 1.5);
+     const rowGap = Math.max(16, sizes.uiFontSmall * 2.2);
+
+     const backButtonHeight = gameMenuUi.backButton?.height || 35;
+     const bottomPadding = Math.max(18, miniGameHeight * 0.08);
+     const backButtonY = miniGameHeight - bottomPadding - backButtonHeight;
+
+     return {
+          sidePadding,
+          topPadding,
+          titleFontSize,
+          titleGap,
+          rowGap,
+          bottomPadding,
+          backButtonY,
+          contentTopY: topPadding + titleFontSize + titleGap,
+          contentWidth: miniGameWidth - (sidePadding * 2)
+     };
+}
+
+function drawMenuScreenTitle(title, theme, x, y) {
+     const { colors, fonts, glow, sizes } = theme;
+     const titleFontSize = Math.max(16, sizes.uiFontMedium);
+
+     miniGameCtx.save();
+     miniGameCtx.textAlign = "left";
+     miniGameCtx.textBaseline = "top";
+     miniGameCtx.font = `${titleFontSize}px ${fonts.display}`;
+
+     updateTipsTitleColors(title);
+
+     let titleX = x;
+
+     for (let i = 0; i < title.length; i += 1) {
+          const letter = title[i];
+          const letterColor = tipsTitleCurrentColors[i] || colors.fontColor;
+
+          miniGameCtx.fillStyle = letterColor;
+          miniGameCtx.shadowColor = letterColor;
+          miniGameCtx.shadowBlur = glow.uiSoftGlow;
+          miniGameCtx.fillText(letter, titleX, y);
+
+          titleX += miniGameCtx.measureText(letter).width;
+     }
+
+     miniGameCtx.restore();
+}
+
+// MENU BUTTONS
 
 function drawMenuButton(button, label, theme) {
      if (!miniGameCtx || !button) {
@@ -537,7 +587,7 @@ function drawMenuButton(button, label, theme) {
      miniGameCtx.save();
      miniGameCtx.fillStyle = colors.controlFill;
      miniGameCtx.strokeStyle = colors.outlineSoft;
-     miniGameCtx.lineWidth = 2;
+     miniGameCtx.lineWidth = 3;
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
 
@@ -571,7 +621,7 @@ function drawOptionStepper(row, decreaseButton, increaseButton, label, value, le
      miniGameCtx.save();
      miniGameCtx.fillStyle = colors.controlFill;
      miniGameCtx.strokeStyle = colors.outlineSoft;
-     miniGameCtx.lineWidth = 2;
+     miniGameCtx.lineWidth = 3;
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
 
@@ -845,7 +895,7 @@ function drawTouchButtons(theme) {
      });
 }
 
-// FULL-SCREEN SCREENS
+// NOTE: MENU SCREENS
 
 function drawTipsMenuScreen(theme) {
      if (!miniGameCtx) {
@@ -853,11 +903,13 @@ function drawTipsMenuScreen(theme) {
      }
 
      const { colors } = theme;
+     const layout = getMenuScreenLayout(theme);
 
      miniGameCtx.save();
      miniGameCtx.fillStyle = colors.fillTranslucentMedium;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
+     drawMenuScreenTitle("TIPS", theme, layout.sidePadding, layout.topPadding);
      drawMenuButton(gameMenuUi.tipsHowToPlayButton, "How to Play", theme);
      drawMenuButton(gameMenuUi.tipsHelpEffectsButton, "Friends", theme);
      drawMenuButton(gameMenuUi.tipsHarmEffectsButton, "Enemies", theme);
@@ -866,64 +918,76 @@ function drawTipsMenuScreen(theme) {
      miniGameCtx.restore();
 }
 
+// NOTE: DRAW TIPS DETAIL SCREENS
+
 function drawTipsDetailScreen(theme, title, lines) {
      if (!miniGameCtx) {
           return;
      }
 
-     const { colors, fonts, sizes, glow } = theme;
+     const { colors, fonts, sizes } = theme;
+     const layout = getMenuScreenLayout(theme);
 
      miniGameCtx.save();
      miniGameCtx.fillStyle = colors.fillTranslucentMedium;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
-     const textX = Math.max(14, miniGameWidth * 0.06);
-     let textY = Math.max(14, miniGameHeight * 0.06);
-
-     const titleFontSize = Math.max(16, sizes.uiFontMedium);
+     let textY = layout.topPadding;
      const fontSize = Math.max(12, sizes.uiFontSmall);
-
      const lineHeight = fontSize * 1.1;
-     const sectionGap = lineHeight * 2;
+     const sectionGap = lineHeight * 1.5;
 
-     const maxTextWidth = miniGameWidth - (textX * 2);
+     // NOTE: ICON GUTTER
+     const hasIconGutter = lines.some((line) => line.includes("{icon"));
+     const iconGutterWidth = hasIconGutter ? Math.max(34, sizes.uiFontMedium * 2.4) : 0;
+     const iconX = layout.sidePadding + (iconGutterWidth * 0.45);
+     const detailTextX = layout.sidePadding + iconGutterWidth;
+     const detailTextWidth = miniGameWidth - detailTextX - layout.sidePadding;
+
+     drawMenuScreenTitle(title, theme, layout.sidePadding, textY);
+     textY = layout.contentTopY;
 
      miniGameCtx.fillStyle = colors.fontColor;
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "top";
-     miniGameCtx.shadowColor = colors.overlayGlow;
-     miniGameCtx.shadowBlur = glow.uiSoftGlow;
-
-     miniGameCtx.font = `${titleFontSize}px ${fonts.display}`;
-     updateTipsTitleColors(title);
-
-     let titleX = textX;
-
-     for (let i = 0; i < title.length; i += 1) {
-          const letter = title[i];
-          const letterColor = tipsTitleCurrentColors[i] || colors.fontColor;
-
-          miniGameCtx.fillStyle = letterColor;
-          miniGameCtx.shadowColor = letterColor;
-          miniGameCtx.fillText(letter, titleX, textY);
-
-          titleX += miniGameCtx.measureText(letter).width;
-     }
-
-     textY += titleFontSize + sectionGap;
-
-     miniGameCtx.fillStyle = colors.fontColor;
      miniGameCtx.shadowBlur = 0;
      miniGameCtx.font = `400 ${fontSize}px ${fonts.body}`;
 
      lines.forEach((line) => {
+          const richSegments = parseRichTextSegments(line);
+          const firstSegment = richSegments[0];
+          const hasLeadingIcon = firstSegment?.type === "icon";
+          const bodyText = hasLeadingIcon
+               ? richSegments
+                    .slice(1)
+                    .map((segment) => segment.value)
+                    .join("")
+                    .trimStart()
+               : line;
+
+          if (hasLeadingIcon) {
+               const icon = getRichTextIcon(firstSegment.value);
+
+               if (icon) {
+                    miniGameCtx.save();
+                    miniGameCtx.font = `400 ${sizes.uiFontMedium * icon.scale}px ${fonts.body}`;
+                    miniGameCtx.fillStyle = colors.fontColor;
+                    miniGameCtx.fillText(
+                         icon.char,
+                         iconX + (icon.xOffset || 0),
+                         textY + (icon.yOffset || 0) - ((sizes.uiFontMedium * icon.scale - sizes.uiFontMedium) * 0.28)
+                    );
+                    miniGameCtx.restore();
+               }
+          }
+
           textY += (
                drawWrappedText(
                     miniGameCtx,
-                    line,
-                    textX,
+                    bodyText,
+                    detailTextX,
                     textY,
-                    maxTextWidth,
+                    detailTextWidth,
                     lineHeight
                ) * lineHeight
           ) + sectionGap;
@@ -933,17 +997,19 @@ function drawTipsDetailScreen(theme, title, lines) {
      miniGameCtx.restore();
 }
 
-
 function drawOptionsScreen(theme) {
      if (!miniGameCtx) {
           return;
      }
 
      const { colors } = theme;
+     const layout = getMenuScreenLayout(theme);
 
      miniGameCtx.save();
      miniGameCtx.fillStyle = colors.fillTranslucentMedium;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
+
+     drawMenuScreenTitle("OPTIONS", theme, layout.sidePadding, layout.topPadding);
 
      drawOptionStepper(
           gameMenuUi.harmfulRow,
@@ -1056,8 +1122,8 @@ function drawGameWelcomeOverlay(theme) {
      welcomeUi.menuButton.width = 0;
      welcomeUi.menuButton.height = 0;
 
-     const buttonPaddingX = 12;
-     const buttonPaddingY = 6;
+     const buttonPaddingX = 10;
+     const buttonPaddingY = 5;
      const actionTextSize = Math.max(10, sizes.uiFontSmall * 1.1);
 
      miniGameCtx.textAlign = "left";
@@ -1087,7 +1153,7 @@ function drawGameWelcomeOverlay(theme) {
           miniGameCtx.save();
           miniGameCtx.fillStyle = "rgba(255, 255, 255, 0.11)";
           miniGameCtx.strokeStyle = "rgba(255, 255, 255, 0.75)";
-          miniGameCtx.lineWidth = 2;
+          miniGameCtx.lineWidth = 3;
           miniGameCtx.shadowColor = colors.controlGlow;
           miniGameCtx.shadowBlur = glow.uiSoftGlow;
 

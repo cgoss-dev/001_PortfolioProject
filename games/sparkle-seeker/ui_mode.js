@@ -1,4 +1,4 @@
-// NOTE: UI MODE / SCREEN FLOW / OVERLAY / STARTUP
+// NOTE: UI MODE
 // Game entry file loaded by page.
 //
 // Owned here:
@@ -11,10 +11,6 @@
 // - canvas drawing
 // - theme/color/font helpers
 // - welcome screen rendering
-//
-// Beginner note:
-// Think of this file as the "brain" for UI state.
-// ui_draw.js is the "paintbrush."
 
 import {
      miniGameCanvas,
@@ -432,6 +428,36 @@ function setOptionRowBounds(row, decreaseButton, increaseButton, x, y, width, he
      increaseButton.height = height;
 }
 
+function getMenuLayoutMetrics(panelX, panelY, panelWidth, panelHeight) {
+     const sidePadding = Math.max(14, panelWidth * 0.06);
+     const buttonHeight = 40;
+     const buttonX = panelX + sidePadding;
+     const buttonWidth = panelWidth - (sidePadding * 2);
+
+     const topPadding = Math.max(14, panelHeight * 0.06);
+     const titleHeight = Math.max(16, Math.min(22, panelWidth * 0.06));
+     const titleGap = Math.max(20, titleHeight * 1.5);
+     const contentTopY = panelY + topPadding + titleHeight + titleGap;
+
+     const bottomPadding = Math.max(18, panelHeight * 0.08);
+     const backButtonY = panelY + panelHeight - buttonHeight - bottomPadding;
+
+     return {
+          sidePadding,
+          buttonHeight,
+          buttonX,
+          buttonWidth,
+          topPadding,
+          titleHeight,
+          titleGap,
+          contentTopY,
+          bottomPadding,
+          backButtonY
+     };
+}
+
+// NOTE: UPDATE MENU UI
+
 export function updateMenuUiBounds() {
      const panelX = 0;
      const panelY = 0;
@@ -443,32 +469,38 @@ export function updateMenuUiBounds() {
      gameMenuUi.panel.width = panelWidth;
      gameMenuUi.panel.height = panelHeight;
 
-     const sidePadding = Math.max(14, panelWidth * 0.06);
-     const buttonHeight = 40;
-     const buttonX = panelX + sidePadding;
-     const buttonWidth = panelWidth - (sidePadding * 2);
+     const layout = getMenuLayoutMetrics(panelX, panelY, panelWidth, panelHeight);
 
      if (gameMenuView === "tips") {
-          const visibleRows = [
+          const menuButtons = [
                gameMenuUi.tipsHowToPlayButton,
                gameMenuUi.tipsHelpEffectsButton,
-               gameMenuUi.tipsHarmEffectsButton,
-               gameMenuUi.backButton
+               gameMenuUi.tipsHarmEffectsButton
           ];
 
-          const totalButtonHeight = visibleRows.length * buttonHeight;
-          const availableHeight = panelHeight - totalButtonHeight;
-          const gap = Math.max(18, availableHeight / (visibleRows.length + 1));
+          const menuAreaTop = layout.contentTopY;
+          const menuAreaBottom = layout.backButtonY - layout.buttonHeight - Math.max(16, panelHeight * 0.04);
+          const availableHeight = Math.max(
+               layout.buttonHeight * menuButtons.length,
+               menuAreaBottom - menuAreaTop
+          );
+          const gap = menuButtons.length > 1
+               ? Math.max(14, (availableHeight - (menuButtons.length * layout.buttonHeight)) / (menuButtons.length - 1))
+               : 0;
 
-          visibleRows.forEach((row, index) => {
-               const y = panelY + gap + (index * (buttonHeight + gap));
+          menuButtons.forEach((row, index) => {
+               const y = menuAreaTop + (index * (layout.buttonHeight + gap));
 
-               row.x = buttonX;
+               row.x = layout.buttonX;
                row.y = y;
-               row.width = buttonWidth;
-               row.height = buttonHeight;
+               row.width = layout.buttonWidth;
+               row.height = layout.buttonHeight;
           });
 
+          gameMenuUi.backButton.x = layout.buttonX;
+          gameMenuUi.backButton.y = layout.backButtonY;
+          gameMenuUi.backButton.width = layout.buttonWidth;
+          gameMenuUi.backButton.height = layout.buttonHeight;
           return;
      }
 
@@ -477,10 +509,10 @@ export function updateMenuUiBounds() {
           gameMenuView === "tips_help_effects" ||
           gameMenuView === "tips_harm_effects"
      ) {
-          gameMenuUi.backButton.x = buttonX;
-          gameMenuUi.backButton.y = panelY + panelHeight - buttonHeight - Math.max(18, panelHeight * 0.08);
-          gameMenuUi.backButton.width = buttonWidth;
-          gameMenuUi.backButton.height = buttonHeight;
+          gameMenuUi.backButton.x = layout.buttonX;
+          gameMenuUi.backButton.y = layout.backButtonY;
+          gameMenuUi.backButton.width = layout.buttonWidth;
+          gameMenuUi.backButton.height = layout.buttonHeight;
           return;
      }
 
@@ -488,7 +520,7 @@ export function updateMenuUiBounds() {
           return;
      }
 
-     const visibleRows = [
+     const optionRows = [
           {
                row: gameMenuUi.harmfulRow,
                decreaseButton: gameMenuUi.harmfulDecreaseButton,
@@ -503,37 +535,37 @@ export function updateMenuUiBounds() {
                row: gameMenuUi.soundEffectsRow,
                decreaseButton: gameMenuUi.soundEffectsDecreaseButton,
                increaseButton: gameMenuUi.soundEffectsIncreaseButton
-          },
-          {
-               row: gameMenuUi.backButton
           }
      ];
 
-     const totalButtonHeight = visibleRows.length * buttonHeight;
-     const availableHeight = panelHeight - totalButtonHeight;
-     const gap = Math.max(18, availableHeight / (visibleRows.length + 1));
+     const optionsAreaTop = layout.contentTopY;
+     const optionsAreaBottom = layout.backButtonY - layout.buttonHeight - Math.max(16, panelHeight * 0.04);
+     const availableHeight = Math.max(
+          layout.buttonHeight * optionRows.length,
+          optionsAreaBottom - optionsAreaTop
+     );
+     const gap = optionRows.length > 1
+          ? Math.max(14, (availableHeight - (optionRows.length * layout.buttonHeight)) / (optionRows.length - 1))
+          : 0;
 
-     visibleRows.forEach((item, index) => {
-          const y = panelY + gap + (index * (buttonHeight + gap));
-
-          if (item.row === gameMenuUi.backButton) {
-               item.row.x = buttonX;
-               item.row.y = y;
-               item.row.width = buttonWidth;
-               item.row.height = buttonHeight;
-               return;
-          }
+     optionRows.forEach((item, index) => {
+          const y = optionsAreaTop + (index * (layout.buttonHeight + gap));
 
           setOptionRowBounds(
                item.row,
                item.decreaseButton,
                item.increaseButton,
-               buttonX,
+               layout.buttonX,
                y,
-               buttonWidth,
-               buttonHeight
+               layout.buttonWidth,
+               layout.buttonHeight
           );
      });
+
+     gameMenuUi.backButton.x = layout.buttonX;
+     gameMenuUi.backButton.y = layout.backButtonY;
+     gameMenuUi.backButton.width = layout.buttonWidth;
+     gameMenuUi.backButton.height = layout.buttonHeight;
 }
 
 export function isPointInsideMenuPanel(x, y) {
@@ -544,6 +576,8 @@ export function isPointInsideMenuPanel(x, y) {
           y <= gameMenuUi.panel.y + gameMenuUi.panel.height
      );
 }
+
+// NOTE: TIPS TEXT
 
 export function getHowToPlayLines() {
      return [
@@ -574,7 +608,6 @@ export function getHarmfulEffectLines() {
           "{iconFog} Fog: limits your visible area."
      ];
 }
-
 
 // OVERLAY SYSTEM
 
@@ -629,7 +662,7 @@ export function getGameOverlayAlpha() {
 // PAUSE SYNC
 
 export function syncPauseOverlay() {
-     // NOTE: Pause uses the dedicated full-screen paused overlay.
+     // Pause uses the dedicated full-screen paused overlay.
 }
 
 // GAME UPDATE
