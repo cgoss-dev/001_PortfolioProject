@@ -47,7 +47,7 @@
           --font-display: "Bungee Shade", monospace;
           --font-color: var(--color-text);
           --font-size-lg: clamp(5rem, 15vw, 25rem);
-          --font-size-md: clamp(2rem, 2vw, 3rem);
+          --font-size-md: clamp(1rem, 2vw, 3rem);
           --font-size-sm: clamp(1rem, 1.5vw, 1.5rem);
           --font-color-marquee: var(--font-color);
           --font-color-medium: var(--font-color);
