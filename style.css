@@ -68,7 +68,7 @@
 
           /* PANEL */
                --panel-radius: 1em;
-               --panel-border-width: 3rem;
+               --panel-border-width: 1rem;
                --panel-border-color: var(--font-color);
                --panel-glow-color: var(--font-color);
                --panel-border: var(--panel-border-width) solid var(--panel-border-color);
