@@ -68,7 +68,7 @@
 
           /* PANEL */
                --panel-radius: 1em;
-               --panel-border-width: 1rem;
+               --panel-border-width: 0.5rem;
                --panel-border-color: var(--font-color);
                --panel-glow-color: var(--font-color);
                --panel-border: var(--panel-border-width) solid var(--panel-border-color);
@@ -200,7 +200,7 @@ header {
      display: flex;
      align-items: center;
      justify-content: center;
-     gap: 1rem;
+     gap: 0.5rem;
      min-width: 0;
      padding-bottom: 0.25em;
 }
@@ -472,7 +472,7 @@ h1 {
      justify-content: center;
      align-items: center;
      gap: 0;
-     padding: 1rem;
+     padding: 0.5rem;
 }
 
 .hero-stack h1 {
@@ -489,14 +489,14 @@ h1 {
      max-width: 100%;
      flex: 0 0 auto;
      margin: 0 auto;
-     padding-inline: 1rem;
+     padding-inline: 0.5rem;
      display: flex;
      align-items: center;
      justify-content: center;
      min-width: 0;
      position: absolute;
      left: 50%;
-     bottom: 1rem;
+     bottom: 0.5rem;
      transform: translateX(-50%);
 }
 
@@ -541,7 +541,7 @@ h1 {
      width: 100%;
      max-width: 100%;
      margin: 0 auto;
-     padding-top: 1rem;
+     padding-top: 0.5rem;
      padding-left: 0;
      padding-right: 0;
      color: var(--font-color-small);
@@ -638,7 +638,7 @@ h1 {
 @media (min-width: 20.0001rem) and (max-width: 40rem) {
      .nav-link {
           gap: 0;
-          padding-inline: 0.1rem;
+          padding-inline: 0.5rem;
           flex-direction: column;
           align-items: center;
      }
