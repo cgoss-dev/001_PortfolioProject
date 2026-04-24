@@ -148,7 +148,7 @@ body {
      max-width: 100%;
      min-height: 100dvh;
      margin: 0 auto;
-     padding: var(--page-padding-y) var(--page-padding-x);
+     padding: var(--font-size-sm);
      position: relative;
      z-index: var(--z-ui);
      display: grid;
@@ -240,7 +240,7 @@ h1 {
      justify-content: center;
      width: 3rem;
      height: 3rem;
-     padding: 0;
+     padding: var(--font-size-sm);
      margin: 0;
      border: var(--panel-border);
      border-radius: 999px;
@@ -332,7 +332,7 @@ h1 {
      display: flex;
      justify-content: center;
      align-items: stretch;
-     gap: var(--nav-pill-gap);
+     gap: var(--font-size-sm);
      width: 100%;
      max-width: 100%;
      flex-wrap: wrap;
@@ -360,7 +360,7 @@ h1 {
      width: 100%;
      max-width: 100%;
      min-width: 0;
-     padding: var(--nav-pill-padding-y) var(--nav-pill-padding-x);
+     padding: var(--font-size-sm);
      color: var(--font-color-medium);
      background: none;
      border-radius: 999px;
@@ -472,7 +472,7 @@ h1 {
      justify-content: center;
      align-items: center;
      gap: 0;
-     padding: 0 0 calc(1rem + var(--page-padding-y));
+     padding: var(--font-size-sm);
 }
 
 .hero-stack h1 {
@@ -489,14 +489,14 @@ h1 {
      max-width: 100%;
      flex: 0 0 auto;
      margin: 0 auto;
-     padding-inline: var(--page-padding-x);
+     padding-inline: var(--font-size-sm);
      display: flex;
      align-items: center;
      justify-content: center;
      min-width: 0;
      position: absolute;
      left: 50%;
-     bottom: var(--page-padding-y);
+     bottom: var(--font-size-sm);
      transform: translateX(-50%);
 }
 
@@ -541,7 +541,7 @@ h1 {
      width: 100%;
      max-width: 100%;
      margin: 0 auto;
-     padding-top: clamp(0.2rem, 0.5vh, 0.25rem);
+     padding-top: var(--font-size-sm);
      padding-left: 0;
      padding-right: 0;
      color: var(--font-color-small);
