@@ -472,7 +472,7 @@ h1 {
      justify-content: center;
      align-items: center;
      gap: 0;
-     padding: var(--font-size-sm);
+     padding: 1rem;
 }
 
 .hero-stack h1 {
@@ -489,14 +489,14 @@ h1 {
      max-width: 100%;
      flex: 0 0 auto;
      margin: 0 auto;
-     padding-inline: var(--font-size-sm);
+     padding-inline: 1rem;
      display: flex;
      align-items: center;
      justify-content: center;
      min-width: 0;
      position: absolute;
      left: 50%;
-     bottom: var(--font-size-sm);
+     bottom: 1rem;
      transform: translateX(-50%);
 }
 
@@ -541,7 +541,7 @@ h1 {
      width: 100%;
      max-width: 100%;
      margin: 0 auto;
-     padding-top: var(--font-size-sm);
+     padding-top: 1rem;
      padding-left: 0;
      padding-right: 0;
      color: var(--font-color-small);
