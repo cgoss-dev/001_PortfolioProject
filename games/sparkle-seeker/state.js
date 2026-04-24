@@ -36,7 +36,7 @@ export const player = {
      // Example: sparkle pickup changes the face briefly, then it returns.
      sparkleFaceTimer: 0,
 
-     hitScale: 1,
+     hitScale: 1.1,
      lowHealthPulseTime: 0
 };
 

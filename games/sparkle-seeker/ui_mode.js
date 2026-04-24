@@ -68,18 +68,27 @@ import {
 import {
      resetPlayerPosition,
      resetEntityColorCycle,
-     updateEffectState,
      updatePlayer,
      updatePlayerFaceState,
-     updatePlayerTrail,
+     updatePlayerTrail
+} from "./entities_player.js";
+
+import {
      updateSparkleSpawns,
      updateSparkles,
+     collectSparkles
+} from "./entities_sparkles.js";
+
+import {
+     updateEffectState,
      updateEffectPickups,
      updateCollisionBursts,
-     collectSparkles,
-     collectEffectPickups,
+     collectEffectPickups
+} from "./entities_effects.js";
+
+import {
      winScore
-} from "./entities.js";
+} from "./entities_level.js";
 
 import {
      drawGame,
