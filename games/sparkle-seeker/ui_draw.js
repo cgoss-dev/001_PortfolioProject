@@ -96,7 +96,7 @@ function drawTipsMenuScreen(theme) {
      const layout = getMenuScreenLayout(theme);
 
      miniGameCtx.save();
-     miniGameCtx.fillStyle = colors.fillTranslucentMedium;
+     miniGameCtx.fillStyle = colors.menuScreenFill;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
      drawMenuScreenTitle("TIPS", theme, layout.titleCenterX, layout.titleY);
@@ -113,25 +113,26 @@ function drawTipsDetailScreen(theme, title, lines) {
           return;
      }
 
-     const { colors, fonts, sizes } = theme;
-     const layout = getMenuScreenLayout(theme);
+     const { colors, fonts, sizes, layout } = theme;
+     const menu = layout.menu;
+     const screenLayout = getMenuScreenLayout(theme);
 
      miniGameCtx.save();
-     miniGameCtx.fillStyle = colors.fillTranslucentMedium;
+     miniGameCtx.fillStyle = colors.menuScreenFill;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
-     drawMenuScreenTitle(title, theme, layout.titleCenterX, layout.titleY);
+     drawMenuScreenTitle(title, theme, screenLayout.titleCenterX, screenLayout.titleY);
 
-     let textY = layout.contentTopY;
-     const fontSize = Math.max(10, sizes.uiFontSm);
-     const lineHeight = fontSize * 1.1;
-     const sectionGap = lineHeight * 1.5;
+     let textY = screenLayout.contentTopY;
+     const fontSize = menu.detailFontSize;
+     const lineHeight = menu.detailLineHeight;
+     const sectionGap = menu.detailSectionGap;
 
      const hasIconGutter = lines.some((line) => line.includes("{icon"));
-     const iconGutterWidth = hasIconGutter ? Math.max(34, sizes.uiFontMd * 3) : 0;
-     const iconX = layout.sidePadding + (iconGutterWidth * 0.25);
-     const detailTextX = layout.sidePadding + iconGutterWidth;
-     const detailTextWidth = miniGameWidth - detailTextX - layout.sidePadding;
+     const iconGutterWidth = hasIconGutter ? menu.detailIconGutterWidth : 0;
+     const iconX = screenLayout.sidePadding + (iconGutterWidth * 0.25);
+     const detailTextX = screenLayout.sidePadding + iconGutterWidth;
+     const detailTextWidth = miniGameWidth - detailTextX - screenLayout.sidePadding;
 
      miniGameCtx.fillStyle = colors.fontColor;
      miniGameCtx.textAlign = "left";
@@ -192,7 +193,7 @@ function drawOptionsScreen(theme) {
      const layout = getMenuScreenLayout(theme);
 
      miniGameCtx.save();
-     miniGameCtx.fillStyle = colors.fillTranslucentMedium;
+     miniGameCtx.fillStyle = colors.menuScreenFill;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
      drawMenuScreenTitle("OPTIONS", theme, layout.titleCenterX, layout.titleY);
@@ -238,46 +239,48 @@ function drawGameWelcomeOverlay(theme) {
           return;
      }
 
-     const { colors, fonts, glow, sizes } = theme;
+     const { colors, fonts, glow, screens } = theme;
+     const isWelcomeScreen = isScreenWelcomeActive();
+     const screenConfig = isWelcomeScreen ? screens.welcome : screens.result;
      const alpha = getGameWelcomeAlpha();
      const titleLines = getCurrentScreenTitleLines();
      const actionTexts = getCurrentScreenActionTexts();
      const titleFontSize = getWelcomeTitleFontSize(theme, titleLines);
 
-     const titleStackGap = 10;
-     const titleBlockYOffset = 0;
-
-     const buttonPaddingX = 20;
-     const buttonPaddingY = 10;
-     const actionTextSize = sizes.uiFontSm;
-
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
-     miniGameCtx.font = `400 ${actionTextSize}px ${fonts.body}`;
+     miniGameCtx.font = `400 ${screenConfig.buttonTextSize}px ${fonts.body}`;
 
      const measuredActions = actionTexts.map((text) => ({
           text,
           textWidth: miniGameCtx.measureText(text).width
      }));
 
-     const actionGap = Math.max(10, titleFontSize * 0.25);
-     const tallestButtonHeight = actionTextSize + (buttonPaddingY * 2);
+     const actionGap = Math.max(
+          screenConfig.buttonGapMin,
+          titleFontSize * screenConfig.buttonGapTitleScale
+     );
+     const tallestButtonHeight = screenConfig.buttonTextSize + (screenConfig.buttonPaddingY * 2);
 
      const totalTitleBlockHeight =
           titleFontSize +
-          titleStackGap +
+          screenConfig.titleStackGap +
           titleFontSize +
-          titleStackGap +
+          screenConfig.titleStackGap +
           tallestButtonHeight;
 
      const stackTopY =
-          ((miniGameHeight - totalTitleBlockHeight) / 2) + titleBlockYOffset;
+          ((miniGameHeight - totalTitleBlockHeight) / 2) + screenConfig.titleBlockYOffset;
 
      const firstLineY = stackTopY + (titleFontSize / 2);
-     const secondLineY = firstLineY + titleFontSize + titleStackGap;
-     const actionY = secondLineY + (titleFontSize / 2) + titleStackGap + (tallestButtonHeight / 2);
+     const secondLineY = firstLineY + titleFontSize + screenConfig.titleStackGap;
+     const actionY =
+          secondLineY +
+          (titleFontSize / 2) +
+          screenConfig.titleStackGap +
+          (tallestButtonHeight / 2);
 
      updateWelcomeTitleColors(titleLines);
      const welcomeCurrentColors = getWelcomeCurrentColors();
@@ -285,8 +288,8 @@ function drawGameWelcomeOverlay(theme) {
      miniGameCtx.save();
      miniGameCtx.globalAlpha = alpha;
 
-     if (!isScreenWelcomeActive()) {
-          miniGameCtx.fillStyle = colors.fillTranslucentMedium;
+     if (!isWelcomeScreen) {
+          miniGameCtx.fillStyle = screenConfig.overlayFill;
           miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
      }
 
@@ -340,17 +343,17 @@ function drawGameWelcomeOverlay(theme) {
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
-     miniGameCtx.font = `400 ${actionTextSize}px ${fonts.body}`;
+     miniGameCtx.font = `400 ${screenConfig.buttonTextSize}px ${fonts.body}`;
 
      const totalActionWidth =
-          measuredActions.reduce((sum, item) => sum + item.textWidth + (buttonPaddingX * 2), 0) +
+          measuredActions.reduce((sum, item) => sum + item.textWidth + (screenConfig.buttonPaddingX * 2), 0) +
           (actionGap * Math.max(0, measuredActions.length - 1));
 
      let currentX = (miniGameWidth - totalActionWidth) / 2;
 
      measuredActions.forEach((item) => {
-          const buttonWidth = item.textWidth + (buttonPaddingX * 2);
-          const buttonHeight = actionTextSize + (buttonPaddingY * 2);
+          const buttonWidth = item.textWidth + (screenConfig.buttonPaddingX * 2);
+          const buttonHeight = screenConfig.buttonTextSize + (screenConfig.buttonPaddingY * 2);
           const buttonX = currentX;
           const buttonY = actionY - (buttonHeight / 2);
           const textX = buttonX + (buttonWidth / 2);
@@ -369,7 +372,7 @@ function drawGameWelcomeOverlay(theme) {
           miniGameCtx.fillStyle = colors.controlText;
           miniGameCtx.textAlign = "center";
           miniGameCtx.textBaseline = "middle";
-          miniGameCtx.font = `400 ${sizes.uiFontSm}px ${fonts.body}`;
+          miniGameCtx.font = `400 ${screenConfig.buttonTextSize}px ${fonts.body}`;
           miniGameCtx.fillText(item.text, textX, actionY + 1);
           miniGameCtx.restore();
 
@@ -405,20 +408,29 @@ function drawPausedOverlay(theme) {
           return;
      }
 
-     const { colors, fonts, glow, sizes } = theme;
+     const { colors, fonts, glow, screens } = theme;
+     const paused = screens.paused;
      const titleLines = ["PAUSED"];
      const actionTexts = getCurrentPausedActionTexts();
-     const titleFontSize = Math.max(40, Math.min(miniGameWidth * 0.16, miniGameHeight * 0.16));
-     const titleY = miniGameHeight * 0.46;
-     const actionGap = Math.max(18, titleFontSize * 0.2);
-     const actionY = titleY + Math.max(52, titleFontSize * 1.05);
+     const titleFontSize = Math.max(
+          paused.titleFontSizeMin,
+          Math.min(
+               miniGameWidth * paused.titleFontSizeWidthScale,
+               miniGameHeight * paused.titleFontSizeHeightScale
+          )
+     );
+     const titleY = miniGameHeight * paused.titleYRatio;
+     const actionGap = Math.max(paused.buttonGapMin, titleFontSize * paused.buttonGapTitleScale);
+     const actionY =
+          titleY +
+          Math.max(paused.buttonYOffsetMin, titleFontSize * paused.buttonYOffsetTitleScale);
 
      updateWelcomeTitleColors(titleLines);
      const welcomeCurrentColors = getWelcomeCurrentColors();
 
      miniGameCtx.save();
 
-     miniGameCtx.fillStyle = colors.fillTranslucentMedium;
+     miniGameCtx.fillStyle = paused.overlayFill;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
      const pausedUi = getPausedActionUi();
@@ -467,15 +479,11 @@ function drawPausedOverlay(theme) {
           }
      });
 
-     const buttonPaddingX = 12;
-     const buttonPaddingY = 6;
-     const actionTextSize = sizes.uiFontMd;
-
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.shadowColor = colors.overlayGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
-     miniGameCtx.font = `400 ${actionTextSize}px ${fonts.body}`;
+     miniGameCtx.font = `400 ${paused.buttonTextSize}px ${fonts.body}`;
 
      const measuredActions = actionTexts.map((text) => ({
           text,
@@ -483,21 +491,21 @@ function drawPausedOverlay(theme) {
      }));
 
      const totalActionWidth =
-          measuredActions.reduce((sum, item) => sum + item.textWidth + (buttonPaddingX * 2), 0) +
+          measuredActions.reduce((sum, item) => sum + item.textWidth + (paused.buttonPaddingX * 2), 0) +
           (actionGap * Math.max(0, measuredActions.length - 1));
 
      let currentX = (miniGameWidth - totalActionWidth) / 2;
 
      measuredActions.forEach((item) => {
-          const buttonWidth = item.textWidth + (buttonPaddingX * 2);
-          const buttonHeight = actionTextSize + (buttonPaddingY * 2);
+          const buttonWidth = item.textWidth + (paused.buttonPaddingX * 2);
+          const buttonHeight = paused.buttonTextSize + (paused.buttonPaddingY * 2);
           const buttonX = currentX;
           const buttonY = actionY - (buttonHeight / 2);
           const textX = buttonX + (buttonWidth / 2);
 
           miniGameCtx.save();
-          miniGameCtx.fillStyle = "rgba(255, 255, 255, 0.11)";
-          miniGameCtx.strokeStyle = "rgba(255, 255, 255, 0.75)";
+          miniGameCtx.fillStyle = paused.buttonFill;
+          miniGameCtx.strokeStyle = paused.buttonStroke;
           miniGameCtx.lineWidth = 2;
           miniGameCtx.shadowColor = colors.controlGlow;
           miniGameCtx.shadowBlur = glow.uiSoftGlow;
@@ -509,6 +517,7 @@ function drawPausedOverlay(theme) {
           miniGameCtx.fillStyle = colors.controlText;
           miniGameCtx.textAlign = "center";
           miniGameCtx.textBaseline = "middle";
+          miniGameCtx.font = `400 ${paused.buttonTextSize}px ${fonts.body}`;
           miniGameCtx.fillText(item.text, textX, actionY);
           miniGameCtx.restore();
 
@@ -544,10 +553,11 @@ function drawGameStatusOverlay(theme) {
           return;
      }
 
-     const { colors, sizes, fonts, glow } = theme;
+     const { colors, sizes, fonts, glow, screens } = theme;
+     const overlay = screens.statusOverlay;
      const alpha = getGameOverlayAlpha();
      const titleY = miniGameHeight / 2;
-     const subtextOffset = 30;
+     const subtextOffset = overlay.subtextOffset;
      const hasSubtext = Boolean(gameOverlaySubtext);
 
      miniGameCtx.save();
@@ -568,10 +578,12 @@ function drawGameStatusOverlay(theme) {
           subWidth = miniGameCtx.measureText(gameOverlaySubtext).width;
      }
 
-     const horizontalPadding = 20;
-     const topPadding = 20;
-     const bottomPadding = hasSubtext ? 22 : 20;
-     const gapBetweenLines = hasSubtext ? 18 : 0;
+     const horizontalPadding = overlay.horizontalPadding;
+     const topPadding = overlay.topPadding;
+     const bottomPadding = hasSubtext
+          ? overlay.bottomPaddingWithSubtext
+          : overlay.bottomPaddingNoSubtext;
+     const gapBetweenLines = hasSubtext ? overlay.gapBetweenLines : 0;
 
      const panelWidth = Math.max(titleWidth, subWidth) + (horizontalPadding * 2);
      const panelHeight =

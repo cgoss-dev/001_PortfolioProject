@@ -30,8 +30,7 @@ import {
 } from "./entities_level.js";
 
 import {
-     getCurrentScreenTitleLines,
-     getGameMenuSpacing
+     getCurrentScreenTitleLines
 } from "./ui_mode.js";
 
 // CSS HELPERS
@@ -78,9 +77,14 @@ export function getCssPixelSize(variableName, fallback = 16) {
 
 export function getUiTheme() {
      const fontColor = getCssColor("--color-text", getCssColor("--color-text", "#ffffff"));
-     const uiFontLg = getCssPixelSize("--font-size-lg"); // FIXME: GOTTA RETURN TO THIS
+     const uiFontLg = getCssPixelSize("--font-size-lg");
      const uiFontMd = getCssPixelSize("--font-size-md");
-     const uiFontSm = getCssPixelSize("--font-size-sm");
+     const uiFontSm = getCssPixelSize("--font-size-sm") * 1.5;
+
+     const menuSidePadding = miniGameWidth * 0.05;
+     const menuTopPadding = miniGameHeight * 0.05;
+     const detailFontSize = Math.max(10, uiFontSm);
+     const detailLineHeight = detailFontSize * 1.1;
 
      return {
           fonts: {
@@ -91,6 +95,18 @@ export function getUiTheme() {
 
           colors: {
                fontColor,
+               controlText: fontColor,
+               controlGlow: fontColor,
+               overlayGlow: fontColor,
+               scoreGlow: fontColor,
+               scoreText: fontColor,
+               scoreTextGlow: fontColor,
+               statusText: fontColor,
+               statusTextGlow: fontColor,
+               starFull: fontColor,
+               starGlow: fontColor,
+               heartFull: fontColor,
+               heartGlow: fontColor,
 
                fillTranslucentNone: getCssColor("--translucent-none", "rgba(0, 0, 0, 0)"),
                fillTranslucentSoft: getCssColor("--translucent-soft", "rgba(0, 0, 0, 0.25)"),
@@ -102,49 +118,122 @@ export function getUiTheme() {
                controlFill: getCssColor("--opaque-soft", "rgba(0, 0, 0, 0.25)"),
                controlFillPressed: getCssColor("--opaque-strong", "rgba(0, 0, 0, 0.75)"),
 
-               controlText: fontColor,
-               controlGlow: fontColor,
-
-               overlayGlow: fontColor,
-               scoreGlow: fontColor,
-
-               starFull: fontColor,
-               starGlow: fontColor,
-               scoreText: fontColor,
-               scoreTextGlow: fontColor,
-
-               heartFull: fontColor,
-               heartGlow: fontColor,
-               statusText: fontColor,
-               statusTextGlow: fontColor
+               menuScreenFill: getCssColor("--translucent-strong", "rgba(0, 0, 0, 0.75)"),
+               menuPanelFill: getCssColor("--translucent-strong", "rgba(0, 0, 0, 0.75)")
           },
 
           sizes: {
-               statusFontSize: uiFontMd,
-               statusFontY: 20,
-
-               starSize: Math.max(15, Math.min(24, miniGameWidth * 0.055)),
-               heartSize: Math.max(13, Math.min(28, miniGameWidth * 0.06)),
-
-               starIconY: 2.5,
-               heartIconY: 2,
-
-               scoreX: 5,
-               healthX: 5,
-               statusLabelFontSize: uiFontMd * 2,
-
-               starGap: uiFontSm * 0.5,
-               heartGap: uiFontSm * 0.5,
-               levelGapAbove: uiFontSm * 0.5,
-               scoreGapBelowLevel: uiFontSm * 0.5, // FIXME: RETURN TO THIS, VARIABLE NAME DOESNT MAKE SENSE
-               statusGapAbove: uiFontSm * 0.4, // TODO: CHECK GAP ABOVE STATUS
-               statusGapBelow: uiFontSm * 0.5,
-
                uiFontLg,
                uiFontMd,
                uiFontSm,
 
-               controlRadius: getCssNumber("--panel-radius", 15)
+               controlRadius: getCssNumber("--panel-radius", 15),
+
+               statusFontSize: uiFontMd,
+               statusLabelFontSize: uiFontMd * 1.5,
+
+               starSize: Math.max(15, Math.min(24, miniGameWidth * 0.055)),
+               heartSize: Math.max(13, Math.min(28, miniGameWidth * 0.06)),
+               starIconY: 4,
+               heartIconY: 3,
+
+               scoreX: 5,
+               healthX: 5,
+               statusFontY: 20,
+
+               starGap: uiFontSm * 0.5,
+               heartGap: uiFontSm * 0.5,
+               levelGapAbove: uiFontSm * 0.75,
+               levelGapBelow: uiFontSm * 0.5,
+               statusGapAbove: uiFontSm * 0.25,
+               statusGapBelow: uiFontSm * 0.5,
+
+               touchButtonFontScale: 0.5
+          },
+
+          layout: {
+               menu: {
+                    sidePadding: menuSidePadding,
+                    topPadding: menuTopPadding,
+
+                    titleFontSize: uiFontLg * 2,
+                    titleLetterSpacing: 3,
+                    titleOffsetFromTop: 12,
+                    titleGapBelow: uiFontMd * 2,
+
+                    contentRowGap: uiFontSm * 2,
+                    contentBottomPadding: menuTopPadding,
+
+                    backButtonSize: 50,
+                    backButtonBottomOffset: 0,
+                    backButtonFontSize: uiFontMd,
+
+                    buttonHeight: 50,
+                    buttonFontSize: uiFontSm,
+                    optionLabelFontSize: uiFontSm,
+                    arrowFontSize: uiFontMd,
+
+                    detailFontSize,
+                    detailLineHeight,
+                    detailSectionGap: detailLineHeight * 1.5,
+                    detailIconGutterMin: 34,
+                    detailIconGutterWidth: Math.max(34, uiFontMd * 3)
+               }
+          },
+
+          screens: {
+               welcome: {
+                    titleStackGap: 10,
+                    titleBlockYOffset: 0,
+
+                    buttonPaddingX: 20,
+                    buttonPaddingY: 10,
+                    buttonTextSize: uiFontSm,
+                    buttonGapMin: 10,
+                    buttonGapTitleScale: 0.25
+               },
+
+               paused: {
+                    overlayFill: getCssColor("--translucent-strong", "rgba(0, 0, 0, 0.75)"),
+
+                    titleFontSizeMin: 40,
+                    titleFontSizeWidthScale: 0.16,
+                    titleFontSizeHeightScale: 0.16,
+                    titleYRatio: 0.46,
+
+                    buttonPaddingX: 12,
+                    buttonPaddingY: 6,
+                    buttonTextSize: uiFontMd,
+                    buttonGapMin: 10,
+                    buttonGapTitleScale: 0.25,
+                    buttonYOffsetMin: 52,
+                    buttonYOffsetTitleScale: 1,
+
+                    buttonFill: "rgba(255, 255, 255, 0.1)",
+                    buttonStroke: "rgba(255, 255, 255, 0.75)"
+               },
+
+               result: {
+                    overlayFill: getCssColor("--translucent-strong", "rgba(0, 0, 0, 0.75)"),
+
+                    titleStackGap: 10,
+                    titleBlockYOffset: 0,
+
+                    buttonPaddingX: 20,
+                    buttonPaddingY: 10,
+                    buttonTextSize: uiFontSm,
+                    buttonGapMin: 10,
+                    buttonGapTitleScale: 0.25
+               },
+
+               statusOverlay: {
+                    subtextOffset: 30,
+                    horizontalPadding: 20,
+                    topPadding: 20,
+                    bottomPaddingNoSubtext: 20,
+                    bottomPaddingWithSubtext: 22,
+                    gapBetweenLines: 18
+               }
           },
 
           glow: {
@@ -184,7 +273,7 @@ export function drawPanelBox(x, y, width, height, theme, lineWidth = 3) {
      miniGameCtx.shadowBlur = glow.uiStrongGlow;
 
      drawRoundedRect(x, y, width, height, sizes.controlRadius);
-     miniGameCtx.fillStyle = colors.fillTranslucentStrong;
+     miniGameCtx.fillStyle = colors.menuPanelFill;
      miniGameCtx.fill();
 
      miniGameCtx.shadowBlur = 0;
@@ -195,27 +284,25 @@ export function drawPanelBox(x, y, width, height, theme, lineWidth = 3) {
      miniGameCtx.stroke();
 }
 
-function getUiArrowFont(sizeRef, theme) {
-     const { sizes, fonts } = theme;
-     const arrowFontSize = Math.max(sizes.uiFontMd); // TODO: arrow size
-
-     return `700 ${arrowFontSize}px ${fonts.body}`;
+function getUiArrowFont(theme) {
+     const { layout, fonts } = theme;
+     return `700 ${layout.menu.arrowFontSize}px ${fonts.body}`;
 }
 
 // NOTE: Icon Size/Scale
 
 const richTextIcons = {
-     iconShield: { char: "\u2B21\uFE0E", scale: 1.5, xOffset: 0, yOffset: 0 },
-     iconCure: { char: "\u271A\uFE0E", scale: 1.5, xOffset: 0, yOffset: 0 },
-     iconLuck: { char: "\u2618\uFE0E", scale: 1.5, xOffset: 0, yOffset: 0 },
-     iconMagnet: { char: "\u2316\uFE0E", scale: 1.5, xOffset: -5, yOffset: 0 },
-     iconSlowmo: { char: "\u29D6\uFE0E", scale: 1.5, xOffset: -2, yOffset: 0 },
+     iconShield: { char: "\u2B21\uFE0E", scale: 1.5, xOffset: 0, yOffset: -6 },
+     iconCure: { char: "\u271A\uFE0E", scale: 1.5, xOffset: 0, yOffset: -7 },
+     iconLuck: { char: "\u2618\uFE0E", scale: 1.5, xOffset: 0, yOffset: -6 },
+     iconMagnet: { char: "\u2316\uFE0E", scale: 1.5, xOffset: -3, yOffset: -7 },
+     iconSlowmo: { char: "\u29D6\uFE0E", scale: 1.5, xOffset: -1, yOffset: -5 },
 
-     iconFreeze: { char: "\u2744\uFE0E", scale: 1.5, xOffset: 0, yOffset: 0 },
-     iconSurge: { char: "\u26A1\uFE0E", scale: 1.5, xOffset: 0, yOffset: 0 },
-     iconDaze: { char: "\u2300\uFE0E", scale: 1.5, xOffset: 0, yOffset: 0 },
-     iconGlass: { char: "\u26A0\uFE0E", scale: 1.5, xOffset: 0, yOffset: 0 },
-     iconFog: { char: "\u224B\uFE0E", scale: 1.5, xOffset: 0, yOffset: 0 }
+     iconFreeze: { char: "\u2744\uFE0E", scale: 1.5, xOffset: 1, yOffset: -6 },
+     iconSurge: { char: "\u26A1\uFE0E", scale: 1.5, xOffset: 0, yOffset: -6 },
+     iconDaze: { char: "\u2300\uFE0E", scale: 1.5, xOffset: 0, yOffset: -6 },
+     iconGlass: { char: "\u26A0\uFE0E", scale: 1.5, xOffset: 0, yOffset: -6 },
+     iconFog: { char: "\u224B\uFE0E", scale: 1.5, xOffset: 0, yOffset: -4 }
 };
 
 export function parseRichTextSegments(text) {
@@ -508,40 +595,45 @@ export function updateTipsTitleColors(title) {
 // MENU LAYOUT / MENU HELPERS
 
 export function getMenuScreenLayout(theme) {
-     const { sizes } = theme;
-     const { titleGap, rowGap } = getGameMenuSpacing();
+     const { layout } = theme;
+     const menu = layout.menu;
 
-     const sidePadding = miniGameWidth * 0.05;
-     const topPadding = miniGameHeight * 0.05;
-     const titleFontSize = sizes.uiFontLg; // TODO: title font size
+     const sidePadding = menu.sidePadding;
+     const topPadding = menu.topPadding;
+     const titleFontSize = menu.titleFontSize;
 
-     const backButtonSize = 50; //FIXME: BACK BUTTON SIZE, CLAMP OR PX?
+     const backButtonSize = menu.backButtonSize;
      const backButtonX = (miniGameWidth - backButtonSize) / 2;
-     const backButtonY = miniGameHeight - backButtonSize - topPadding;
+     const backButtonY =
+          miniGameHeight -
+          backButtonSize -
+          topPadding -
+          menu.backButtonBottomOffset;
+
      const titleCenterX = miniGameWidth / 2;
-     const titleYOffset = 12;
-     const titleY = topPadding + titleYOffset;
+     const titleY = topPadding + menu.titleOffsetFromTop;
 
      return {
           sidePadding,
           topPadding,
           titleFontSize,
-          titleGap,
-          rowGap,
+          titleGap: menu.titleGapBelow,
+          rowGap: menu.contentRowGap,
           titleCenterX,
           titleY,
           backButtonSize,
           backButtonX,
           backButtonY,
-          contentTopY: titleY + titleFontSize + titleGap,
-          contentWidth: miniGameWidth - (sidePadding * 2)
+          contentTopY: titleY + titleFontSize + menu.titleGapBelow,
+          contentWidth: miniGameWidth - (sidePadding * 2),
+          contentBottomY: miniGameHeight - topPadding - backButtonSize - menu.contentBottomPadding
      };
 }
 
 export function drawMenuScreenTitle(title, theme, centerX, y) {
-     const { colors, fonts, glow, sizes } = theme;
-     const titleFontSize = sizes.uiFontMd * 2;
-     const letterSpacing = 3;
+     const { colors, fonts, glow, layout } = theme;
+     const titleFontSize = layout.menu.titleFontSize;
+     const letterSpacing = layout.menu.titleLetterSpacing;
 
      miniGameCtx.save();
      miniGameCtx.textAlign = "left";
@@ -582,7 +674,7 @@ export function drawMenuButton(button, label, theme) {
           return;
      }
 
-     const { colors, sizes, fonts, glow } = theme;
+     const { colors, sizes, fonts, glow, layout } = theme;
      const centerX = button.x + (button.width / 2);
      const centerY = button.y + (button.height / 2);
 
@@ -602,7 +694,7 @@ export function drawMenuButton(button, label, theme) {
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
-     miniGameCtx.font = `400 ${sizes.uiFontSm}px ${fonts.body}`;
+     miniGameCtx.font = `400 ${layout.menu.buttonFontSize}px ${fonts.body}`;
      miniGameCtx.fillText(label, centerX, centerY + 1);
 
      miniGameCtx.restore();
@@ -613,7 +705,7 @@ export function drawMenuBackButton(button, theme) {
           return;
      }
 
-     const { colors, glow } = theme;
+     const { colors, glow, fonts, layout } = theme;
      const centerX = button.x + (button.width / 2);
      const centerY = button.y + (button.height / 2);
      const radius = Math.min(button.width, button.height) * 0.5;
@@ -633,7 +725,7 @@ export function drawMenuBackButton(button, theme) {
      miniGameCtx.fillStyle = colors.controlText;
      miniGameCtx.textAlign = "center";
      miniGameCtx.textBaseline = "middle";
-     miniGameCtx.font = getUiArrowFont(button.height, theme);
+     miniGameCtx.font = `700 ${layout.menu.backButtonFontSize}px ${fonts.body}`;
      miniGameCtx.fillText("<", centerX, centerY + 1);
 
      miniGameCtx.restore();
@@ -644,11 +736,11 @@ export function drawOptionStepper(row, decreaseButton, increaseButton, label, va
           return;
      }
 
-     const { colors, sizes, fonts, glow } = theme;
+     const { colors, sizes, fonts, glow, layout } = theme;
      const centerY = row.y + (row.height / 2);
      const decreaseAlpha = levelIndex <= 0 ? 0.28 : 1;
      const increaseAlpha = levelIndex >= maxOptionLevelIndex ? 0.28 : 1;
-     const arrowFont = getUiArrowFont(row.height, theme);
+     const arrowFont = getUiArrowFont(theme);
 
      miniGameCtx.save();
      miniGameCtx.fillStyle = colors.controlFill;
@@ -676,7 +768,7 @@ export function drawOptionStepper(row, decreaseButton, increaseButton, label, va
      );
 
      miniGameCtx.globalAlpha = 1;
-     miniGameCtx.font = `400 ${sizes.uiFontSm}px ${fonts.body}`;
+     miniGameCtx.font = `400 ${layout.menu.optionLabelFontSize}px ${fonts.body}`;
      miniGameCtx.fillText(
           `${label}: ${value}`,
           row.x + (row.width / 2),
@@ -749,7 +841,7 @@ export function drawScore(theme) {
      }
 
      const { colors, sizes, fonts, glow } = theme;
-     const { starGap, levelGapAbove, scoreGapBelowLevel, statusLabelFontSize } = sizes;
+     const { starGap, levelGapAbove, levelGapBelow, statusLabelFontSize } = sizes;
      const levelText = `LVL ${getCurrentLevelNumber()}`;
      const sparkleText = `\u2726\uFE0E ${String(sparkleScore).padStart(3, "0")}`;
      const filledStars = getCurrentLevelProgressStars();
@@ -778,7 +870,7 @@ export function drawScore(theme) {
      miniGameCtx.font = `${statusLabelFontSize}px ${fonts.display}`;
      miniGameCtx.fillText(levelText, sizes.scoreX, levelY);
 
-     const sparkleY = levelY + statusLabelFontSize + scoreGapBelowLevel;
+     const sparkleY = levelY + statusLabelFontSize + levelGapBelow;
      miniGameCtx.font = `400 ${sizes.uiFontMd}px ${fonts.body}`;
      miniGameCtx.fillText(sparkleText, sizes.scoreX, sparkleY);
 
@@ -905,7 +997,7 @@ export function drawTouchButtons(theme) {
           return;
      }
 
-     const { colors, fonts, glow } = theme;
+     const { colors, fonts, glow, sizes } = theme;
 
      [touchControls.pauseButton].forEach((button) => {
           if (!button) {
@@ -920,7 +1012,7 @@ export function drawTouchButtons(theme) {
           miniGameCtx.textBaseline = "middle";
           miniGameCtx.shadowColor = colors.controlGlow;
           miniGameCtx.shadowBlur = glow.uiSoftGlow;
-          miniGameCtx.font = `400 ${button.height * 0.42}px ${fonts.body}`;
+          miniGameCtx.font = `400 ${button.height * sizes.touchButtonFontScale}px ${fonts.body}`;
           miniGameCtx.fillText(
                button.label,
                button.x + (button.width / 2),
