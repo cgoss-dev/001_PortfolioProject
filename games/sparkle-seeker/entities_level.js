@@ -16,15 +16,16 @@ import {
 // Score controls the current level here.
 // Keeping this in one place makes balancing much easier later.
 export const levelRules = [
-     { level: 1, minScore: 0, maxScore: 49 },
-     { level: 2, minScore: 50, maxScore: 149 },
-     { level: 3, minScore: 150, maxScore: 249 },
-     { level: 4, minScore: 250, maxScore: 449 },
-     { level: 5, minScore: 450, maxScore: 999 }
+     { level: 1, minScore: 0, maxScore: 99 },
+     { level: 2, minScore: 100, maxScore: 249 },
+     { level: 3, minScore: 250, maxScore: 449 },
+     { level: 4, minScore: 450, maxScore: 699 },
+     { level: 5, minScore: 700, maxScore: 999 }
 ];
 
-// WIN SCORE: 1000+ ends the run in a win state.
-export const winScore = 1000;
+
+// WIN SCORE: 999+ ends the run in a win state.
+export const winScore = 999;
 
 // NOTE: LEVEL LOOKUP
 // This helper reads the current score and returns the matching level rule.
@@ -41,7 +42,7 @@ export function getCurrentLevelData() {
      // This keeps the function safe even if it gets called right before win cleanup happens.
      return {
           level: 5,
-          minScore: 450,
+          minScore: 700,
           maxScore: winScore - 1
      };
 }

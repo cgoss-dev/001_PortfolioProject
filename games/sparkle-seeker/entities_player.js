@@ -42,8 +42,8 @@ export const playerFaces = {
 };
 
 export const playerBaseHealth = 3;
-export const playerBaseSpeed = 3;
-export const playerSpeedPerHeart = 1;
+export const playerBaseSpeed = 2;
+export const playerSpeedPerHeart = 0.5;
 
 // PLAYER BASE SIZE
 // These are the player's normal visual/collision values.
@@ -61,7 +61,7 @@ export const playerTrailCountMax = 2;
 export const playerTrailCountMin = 0;
 
 export const playerTrailLifeMax = 64;
-export const playerTrailLifeMin = 12;
+export const playerTrailLifeMin = 16;
 
 export const playerTrailWidthMax = 10;
 export const playerTrailWidthMin = 2;
@@ -70,7 +70,7 @@ export const playerTrailOffsetMax = 25;
 export const playerTrailOffsetMin = -25;
 
 export const playerTrailLengthMax = 32;
-export const playerTrailLengthMin = 2;
+export const playerTrailLengthMin = 8;
 
 // Negative raises the ribbon anchor above the player center; positive lowers it.
 export const playerTrailAnchorYOffset = -4;
@@ -86,7 +86,7 @@ const playerTrail = [];
 const siteTheme = window.SiteTheme;
 
 function getGameGlowBlur() {
-     return siteTheme?.getGlowSettings?.().gameParticleBlur ?? 16;
+     return siteTheme?.getGlowSettings?.().gameParticleBlur ?? 18;
 }
 
 function getRainbowPalette() {

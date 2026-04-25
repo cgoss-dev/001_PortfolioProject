@@ -251,7 +251,7 @@ function drawGameWelcomeOverlay(theme) {
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
-     miniGameCtx.font = `400 ${screenConfig.buttonTextSize}px ${fonts.body}`;
+     miniGameCtx.font = `400 ${screenConfig.buttonFontSize}px ${fonts.body}`;
 
      const measuredActions = actionTexts.map((text) => ({
           text,
@@ -262,7 +262,7 @@ function drawGameWelcomeOverlay(theme) {
           screenConfig.buttonGapMin,
           titleFontSize * screenConfig.buttonGapTitleScale
      );
-     const tallestButtonHeight = screenConfig.buttonTextSize + (screenConfig.buttonPaddingY * 2);
+     const tallestButtonHeight = screenConfig.buttonFontSize + (screenConfig.buttonPaddingY * 2);
 
      const totalTitleBlockHeight =
           titleFontSize +
@@ -343,7 +343,7 @@ function drawGameWelcomeOverlay(theme) {
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
-     miniGameCtx.font = `400 ${screenConfig.buttonTextSize}px ${fonts.body}`;
+     miniGameCtx.font = `400 ${screenConfig.buttonFontSize}px ${fonts.body}`;
 
      const totalActionWidth =
           measuredActions.reduce((sum, item) => sum + item.textWidth + (screenConfig.buttonPaddingX * 2), 0) +
@@ -353,14 +353,14 @@ function drawGameWelcomeOverlay(theme) {
 
      measuredActions.forEach((item) => {
           const buttonWidth = item.textWidth + (screenConfig.buttonPaddingX * 2);
-          const buttonHeight = screenConfig.buttonTextSize + (screenConfig.buttonPaddingY * 2);
+          const buttonHeight = screenConfig.buttonFontSize + (screenConfig.buttonPaddingY * 2);
           const buttonX = currentX;
           const buttonY = actionY - (buttonHeight / 2);
           const textX = buttonX + (buttonWidth / 2);
 
           miniGameCtx.save();
           miniGameCtx.fillStyle = colors.controlFill;
-          miniGameCtx.strokeStyle = colors.outlineSoft;
+          miniGameCtx.strokeStyle = colors.outlineStrong;
           miniGameCtx.lineWidth = 3;
           miniGameCtx.shadowColor = colors.controlGlow;
           miniGameCtx.shadowBlur = glow.uiSoftGlow;
@@ -372,7 +372,7 @@ function drawGameWelcomeOverlay(theme) {
           miniGameCtx.fillStyle = colors.controlText;
           miniGameCtx.textAlign = "center";
           miniGameCtx.textBaseline = "middle";
-          miniGameCtx.font = `400 ${screenConfig.buttonTextSize}px ${fonts.body}`;
+          miniGameCtx.font = `400 ${screenConfig.buttonFontSize}px ${fonts.body}`;
           miniGameCtx.fillText(item.text, textX, actionY + 1);
           miniGameCtx.restore();
 
@@ -483,7 +483,7 @@ function drawPausedOverlay(theme) {
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.shadowColor = colors.overlayGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
-     miniGameCtx.font = `400 ${paused.buttonTextSize}px ${fonts.body}`;
+     miniGameCtx.font = `400 ${paused.buttonFontSize}px ${fonts.body}`;
 
      const measuredActions = actionTexts.map((text) => ({
           text,
@@ -498,13 +498,13 @@ function drawPausedOverlay(theme) {
 
      measuredActions.forEach((item) => {
           const buttonWidth = item.textWidth + (paused.buttonPaddingX * 2);
-          const buttonHeight = paused.buttonTextSize + (paused.buttonPaddingY * 2);
+          const buttonHeight = paused.buttonFontSize + (paused.buttonPaddingY * 2);
           const buttonX = currentX;
           const buttonY = actionY - (buttonHeight / 2);
           const textX = buttonX + (buttonWidth / 2);
 
           miniGameCtx.save();
-          miniGameCtx.fillStyle = paused.buttonFill;
+          miniGameCtx.fillStyle = colors.controlFill;
           miniGameCtx.strokeStyle = paused.buttonStroke;
           miniGameCtx.lineWidth = 2;
           miniGameCtx.shadowColor = colors.controlGlow;
@@ -517,7 +517,7 @@ function drawPausedOverlay(theme) {
           miniGameCtx.fillStyle = colors.controlText;
           miniGameCtx.textAlign = "center";
           miniGameCtx.textBaseline = "middle";
-          miniGameCtx.font = `400 ${paused.buttonTextSize}px ${fonts.body}`;
+          miniGameCtx.font = `400 ${paused.buttonFontSize}px ${fonts.body}`;
           miniGameCtx.fillText(item.text, textX, actionY);
           miniGameCtx.restore();
 
@@ -563,7 +563,7 @@ function drawGameStatusOverlay(theme) {
      miniGameCtx.save();
      miniGameCtx.globalAlpha = alpha;
 
-     miniGameCtx.fillStyle = colors.fillTranslucentSoft;
+     miniGameCtx.fillStyle = colors.controlFill;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
      miniGameCtx.textAlign = "center";

@@ -110,15 +110,16 @@ export function getUiTheme() {
           controlRadius: getCssNumber("--panel-radius", 15)
      };
 
-     // NOTE: HUD = top-left / top-right in-game info.
+     // NOTE: HUD
+     // top-left / top-right in-game info.
      // This controls score, stars, hearts, level label, status label, READY text, etc.
      const hud = {
           statusLabelFontSize: uiFontLg * 1.5,
           scoreDetailFontSize: uiFontLg,
           statusDetailFontSize: uiFontLg,
 
-          starSize: uiFontLg,
-          heartSize: uiFontLg * 1.25,
+          starSize: uiFontLg * 1.5,
+          heartSize: uiFontLg * 2,
           starIconY: 3,
           heartIconY: 2,
 
@@ -128,7 +129,7 @@ export function getUiTheme() {
           starGap: uiFontSm * 0.25,
           heartGap: uiFontSm * 0.5,
 
-          levelGapAbove: uiFontSm * 0.5,
+          levelGapAbove: uiFontSm * 0.25,
           levelGapBelow: uiFontSm * 0.5,
 
           statusGapAbove: uiFontSm * 0.01,
@@ -148,11 +149,11 @@ export function getUiTheme() {
      // `detailFontSize` is for paragraph-like help text.
      const menu = {
           sidePadding: uiFontLg,
-          topPadding: uiFontLg,
+          topPadding: uiFontLg * 2,
 
-          titleFontSize: uiFontLg * 2, //TODO eval ttl font size
+          titleFontSize: uiFontLg * 3, //TODO eval ttl font size
           titleLetterSpacing: uiFontSm / 2,
-          titleGapBelow: uiFontLg,
+          titleGapBelow: uiFontLg * 2,
 
           contentRowGap: uiFontMd,
           contentBottomPadding: uiFontSm,
@@ -162,12 +163,12 @@ export function getUiTheme() {
           arrowFontSize: uiFontLg * 2,
 
           buttonHeight: uiFontLg,
-          buttonFontSize: uiFontLg, // TODO eval btn font size
+          buttonFontSize: uiFontLg, // TODO menu btn font size
           optionLabelFontSize: uiFontLg,
 
-          detailFontSize: uiFontMd, // TODO eval dtl font size
-          detailLineHeight: uiFontSm,
-          detailSectionGap: uiFontLg,
+          detailFontSize: uiFontMd, // TODO dtl font size
+          detailLineHeight: uiFontLg, // space betweens lines within the same paragraph
+          detailSectionGap: uiFontLg, // space between paragraphs
           detailIconGutterWidth: uiFontLg * 2
      };
 
@@ -179,9 +180,9 @@ export function getUiTheme() {
      // That lets us "spread" this object directly into each screen with `...sharedScreenButtons`
      // instead of rewriting the same lines over and over.
      const sharedScreenButtons = {
-          buttonPaddingX: 20,
+          buttonPaddingX: 10,
           buttonPaddingY: 10,
-          buttonTextSize: uiFontLg,
+          buttonFontSize: uiFontLg, // TODO: w btn font size
           buttonGapMin: uiFontMd,
           buttonGapTitleScale: 0.25
      };
@@ -272,13 +273,9 @@ export function getUiTheme() {
                starFull: fontColor,
                starGlow: fontColor,
 
-               fillTranslucentSoft: getCssColor("--translucent-soft", "rgba(0, 0, 0, 0.25)"),
-               fillTranslucentMedium: getCssColor("--translucent-medium", "rgba(0, 0, 0, 0.5)"),
-
+               controlFill: getCssColor("--opaque-soft", "rgba(0, 0, 0, 0.25)"),
                outlineSoft: getCssColor("--opaque-soft", "rgba(0, 0, 0, 0.25)"),
                outlineStrong: getCssColor("--opaque-strong", "rgba(0, 0, 0, 0.75)"),
-               controlFill: getCssColor("--opaque-soft", "rgba(0, 0, 0, 0.25)"),
-               controlFillPressed: getCssColor("--opaque-strong", "rgba(0, 0, 0, 0.75)"),
 
                // `menuScreenFill` = full-screen background wash
                // `menuPanelFill` = box/panel fill used by panel components
@@ -757,7 +754,7 @@ export function drawMenuButton(button, label, theme) {
 
      miniGameCtx.save();
      miniGameCtx.fillStyle = colors.controlFill;
-     miniGameCtx.strokeStyle = colors.outlineSoft;
+     miniGameCtx.strokeStyle = colors.outlineStrong;
      miniGameCtx.lineWidth = 3;
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
@@ -789,7 +786,7 @@ export function drawMenuBackButton(button, theme) {
 
      miniGameCtx.save();
      miniGameCtx.fillStyle = colors.controlFill;
-     miniGameCtx.strokeStyle = colors.outlineSoft;
+     miniGameCtx.strokeStyle = colors.outlineStrong;
      miniGameCtx.lineWidth = 3;
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
@@ -821,7 +818,7 @@ export function drawOptionStepper(row, decreaseButton, increaseButton, label, va
 
      miniGameCtx.save();
      miniGameCtx.fillStyle = colors.controlFill;
-     miniGameCtx.strokeStyle = colors.outlineSoft;
+     miniGameCtx.strokeStyle = colors.outlineStrong;
      miniGameCtx.lineWidth = 3;
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
@@ -880,7 +877,7 @@ export function drawControlButton(button, isPressed, theme) {
      miniGameCtx.beginPath();
      miniGameCtx.arc(centerX, centerY, radius * 1.5, 0, Math.PI * 2);
 
-     miniGameCtx.fillStyle = isPressed ? colors.controlFillPressed : colors.controlFill;
+     miniGameCtx.fillStyle = isPressed ? colors.controlFill : colors.controlFill;
      miniGameCtx.fill();
 
      miniGameCtx.lineWidth = 2;

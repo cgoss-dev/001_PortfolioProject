@@ -49,23 +49,23 @@ const siteTheme = window.SiteTheme;
 // These are game rules, so they belong in JS.
 // ==================================================
 
-export const sparkleSpawnDelay = 25;
-export const sparkleSpawnCap = 60;
+export const sparkleSpawnDelay = 20;
+export const sparkleSpawnCap = 75;
 
 // ==================================================
 // SHARED VISUAL HELPERS
 // ==================================================
 
 function getGameGlowBlur() {
-     return siteTheme?.getGlowSettings?.().gameParticleBlur ?? 16;
+     return siteTheme?.getGlowSettings?.().gameParticleBlur ?? 18; // FIXME gameParticleBlur?
 }
 
 function getGameParticleSizeMin() {
-     return siteTheme?.getSparkleSettings?.().sizeMin ?? 20;
+     return siteTheme?.getSparkleSettings?.().sizeMin ?? 25;
 }
 
 function getGameParticleSizeMax() {
-     return siteTheme?.getSparkleSettings?.().sizeMax ?? 25;
+     return siteTheme?.getSparkleSettings?.().sizeMax ?? 30;
 }
 
 function getRainbowPalette() {
@@ -134,26 +134,36 @@ function applyMagnetEffectToSparkle(sparkle) {
      const dx = player.x - sparkle.x;
      const dy = player.y - sparkle.y;
      const distance = Math.hypot(dx, dy);
-     const magnetRadius = Math.max(120, Math.min(220, miniGameWidth * 0.45));
+     const magnetRadius = Math.max(120, Math.min(220, miniGameWidth * 0.75));
 
      if (distance <= 0 || distance > magnetRadius) {
           return;
      }
 
-     const pullStrength = 1 - (distance / magnetRadius);
-     const pullSpeed = 0.45 + (pullStrength * 1.8);
+     // Stronger when closer to the player.
+     const strength = 1 - (distance / magnetRadius);
 
-     sparkle.x += (dx / distance) * pullSpeed;
-     sparkle.y += (dy / distance) * pullSpeed;
+     // Make sideways pull feel more obvious than vertical pull.
+     const pullX = (dx / distance) * (2 + (strength * 3.5));
+     const pullY = (dy / distance) * (0.75 + (strength * 2));
+
+     sparkle.x += pullX;
+     sparkle.y += pullY;
+
+     // Optional: slow the normal falling motion a bit while magnetized.
+     if (typeof sparkle.speed === "number") {
+          sparkle.speed *= 0.9;
+     }
 }
+
 
 function getObjectFallSpeedMultiplier() {
      if (isEffectActive("surge")) {
-          return 2;
+          return 3;
      }
 
      if (isEffectActive("slowmo")) {
-          return 0.5;
+          return 0.25;
      }
 
      return 1;

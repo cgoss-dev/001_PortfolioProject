@@ -79,20 +79,20 @@ export const helpfulEffectTypes = [
 
 export const harmfulEffectTypes = [
      { name: "freeze", label: "FREEZE", char: "\u2744\uFE0E", effect: "freezePlayerMovement", durationSeconds: 3, lastsUntilUsed: false, penalty: 1 },
-     { name: "surge", label: "SURGE", char: "\u26A1\uFE0E", effect: "doubleObjectFallSpeed", durationSeconds: 5, lastsUntilUsed: false, penalty: 1 },
+     { name: "surge", label: "SURGE", char: "\u26A1\uFE0E", effect: "doubleObjectFallSpeed", durationSeconds: 8, lastsUntilUsed: false, penalty: 1 },
      { name: "daze", label: "DAZE", char: "\u2300\uFE0E", effect: "reversePlayerMovement", durationSeconds: 8, lastsUntilUsed: false, penalty: 1 },
      { name: "glass", label: "GLASS", char: "\u26A0\uFE0E", effect: "nextHitExtraDamage", durationSeconds: 10, lastsUntilUsed: false, penalty: 1 },
-     { name: "fog", label: "FOG", char: "\u224B\uFE0E", effect: "limitVisionAroundPlayer", durationSeconds: 6, lastsUntilUsed: false, penalty: 1 }
+     { name: "fog", label: "FOG", char: "\u224B\uFE0E", effect: "limitVisionAroundPlayer", durationSeconds: 8, lastsUntilUsed: false, penalty: 1 }
 ];
 
 // Harmful effects are spawned as a ratio of successful sparkle spawns:
-// Off 0:1, Min 1:10, Low 1:8, Med 1:6, Max 1:4.
+// Off 1:0, Min 1:8, Low 1:6, Med 1:4, Max 1:2.
 export const harmfulEffectSpawnRatios = [
      0,
-     1 / 10,
      1 / 8,
      1 / 6,
-     1 / 4
+     1 / 4,
+     1 / 2
 ];
 
 // ==================================================
@@ -100,19 +100,19 @@ export const harmfulEffectSpawnRatios = [
 // ==================================================
 
 function getGameGlowBlur() {
-     return siteTheme?.getGlowSettings?.().gameParticleBlur ?? 16;
+     return siteTheme?.getGlowSettings?.().gameParticleBlur ?? 18;
 }
 
 function getGameParticleSizeMin() {
-     return siteTheme?.getSparkleSettings?.().sizeMin ?? 20;
+     return siteTheme?.getSparkleSettings?.().sizeMin ?? 25;
 }
 
 function getGameParticleSizeMax() {
-     return siteTheme?.getSparkleSettings?.().sizeMax ?? 25;
+     return siteTheme?.getSparkleSettings?.().sizeMax ?? 30;
 }
 
 function getRainbowPalette() {
-     return siteTheme?.getRainbowPalette?.() ?? [
+     return siteTheme?.getRainbowPalette?.() ?? [ //FIXME: calling wrong rainbow
           "#ea76cb",
           "#d20f39",
           "#fe640b",
@@ -190,7 +190,7 @@ function setSingleTimedEffect(effectName, durationFrames) {
 }
 
 function syncScoreMultiplierFromEffects() {
-     const nextMultiplier = isEffectActive("luck") ? 2 : 1;
+     const nextMultiplier = isEffectActive("luck") ? 3 : 1;
 
      if (scoreMultiplier !== nextMultiplier) {
           setScoreMultiplier(nextMultiplier);
