@@ -10,6 +10,15 @@
 // - menu layout helpers
 // - rich text helpers
 // - title color engines
+//
+// Newbie note:
+// - If a visual size/spacing change "does nothing", the value may be controlled in
+//   `ui_draw.js` instead of here.
+// - This file is the main source-of-truth for shared UI knobs.
+// - Try changing values in the JS Root first before hunting through draw functions.
+// - Most "what size is this text/button/gap?" questions are answered in `getUiTheme()`.
+// - `theme` is just a plain object full of numbers/colors/fonts that other draw
+//   functions read from.
 
 import {
      miniGameCtx,
@@ -34,6 +43,8 @@ import {
 } from "./ui_mode.js";
 
 // CSS HELPERS
+// These helpers read values from CSS custom properties like `--font-size-lg`.
+// That lets you keep visual design tokens in CSS, but still use them in canvas JS.
 
 const siteTheme = window.SiteTheme;
 
@@ -59,6 +70,10 @@ export function getCssPixelSize(variableName, fallback = 16) {
           return fallback;
      }
 
+     // Canvas text APIs want real pixel sizes.
+     // CSS variables may contain `rem`, `vw`, `clamp(...)`, etc.
+     // So we briefly create a hidden DOM element, let the browser resolve the size,
+     // then read back the final pixel value.
      const probe = document.createElement("span");
      probe.style.position = "absolute";
      probe.style.visibility = "hidden";
@@ -74,6 +89,8 @@ export function getCssPixelSize(variableName, fallback = 16) {
 }
 
 // NOTE: JS Root
+// This is the main "tuning panel" for the shared canvas UI.
+// Most text size / spacing / opacity changes should start here.
 
 export function getUiTheme() {
      const fontColor = getCssColor("--color-text", getCssColor("--color-text", "#ffffff"));
@@ -81,6 +98,11 @@ export function getUiTheme() {
      const uiFontMd = getCssPixelSize("--font-size-md");
      const uiFontSm = getCssPixelSize("--font-size-sm");
 
+     // One master screen overlay fill for Tips / Options / detail screens /
+     // Paused / You Win / Try Again backgrounds.
+     const menuOverlayFill = "rgba(0, 0, 0, 0.9)";
+
+     // "base" holds generic shared sizes used in many places.
      const base = {
           uiFontLg,
           uiFontMd,
@@ -88,32 +110,47 @@ export function getUiTheme() {
           controlRadius: getCssNumber("--panel-radius", 15)
      };
 
+     // NOTE: HUD = top-left / top-right in-game info.
+     // This controls score, stars, hearts, level label, status label, READY text, etc.
      const hud = {
-          statusLabelFontSize: uiFontLg,
+          statusLabelFontSize: uiFontLg * 1.5,
+          scoreDetailFontSize: uiFontLg,
+          statusDetailFontSize: uiFontLg,
 
-          starSize: Math.max(15, Math.min(24, miniGameWidth * 0.05)),
-          heartSize: Math.max(13, Math.min(28, miniGameWidth * 0.05)),
-          starIconY: 4,
-          heartIconY: 3,
+          starSize: uiFontLg,
+          heartSize: uiFontLg * 1.25,
+          starIconY: 3,
+          heartIconY: 2,
 
           scoreX: 5,
           healthX: 5,
-          statusFontY: 20,
 
           starGap: uiFontSm * 0.25,
           heartGap: uiFontSm * 0.5,
 
-          levelGapAbove: uiFontSm * 0.75,
+          levelGapAbove: uiFontSm * 0.5,
           levelGapBelow: uiFontSm * 0.5,
 
-          statusGapAbove: uiFontSm * 0.25,
+          statusGapAbove: uiFontSm * 0.01,
           statusGapBelow: uiFontSm * 0.5
      };
 
+     // NOTE: Menu text controls are collocated here:
+     // - menu title text
+     // - menu row button text
+     // - options row text
+     // - detail / instructions text
+     //
+     // Newbie note:
+     // `titleFontSize` is for labels like "TIPS" / "OPTIONS" / "FRIENDS".
+     // `buttonFontSize` is for menu buttons inside those screens.
+     // `optionLabelFontSize` is for rows like "Difficulty: Normal".
+     // `detailFontSize` is for paragraph-like help text.
      const menu = {
-          sidePadding: uiFontLg * 2,
-          topPadding: uiFontLg * 1.5,
-          titleFontSize: uiFontLg * 2,
+          sidePadding: uiFontLg,
+          topPadding: uiFontLg,
+
+          titleFontSize: uiFontLg * 2, //TODO eval ttl font size
           titleLetterSpacing: uiFontSm / 2,
           titleGapBelow: uiFontLg,
 
@@ -122,62 +159,87 @@ export function getUiTheme() {
 
           backButtonSize: 50,
           backButtonBottomOffset: 0,
-          arrowFontSize: uiFontLg * 1.5,
+          arrowFontSize: uiFontLg * 2,
 
-          buttonHeight: 50,
-          buttonFontSize: uiFontMd,
-          optionLabelFontSize: uiFontMd,
+          buttonHeight: uiFontLg,
+          buttonFontSize: uiFontLg, // TODO eval btn font size
+          optionLabelFontSize: uiFontLg,
 
-          detailFontSize: uiFontMd,
-          detailLineHeight: uiFontMd,
+          detailFontSize: uiFontMd, // TODO eval dtl font size
+          detailLineHeight: uiFontSm,
           detailSectionGap: uiFontLg,
-          detailIconGutterMin: uiFontLg,
           detailIconGutterWidth: uiFontLg * 2
      };
 
+     // NOTE: Shared button format for welcome / paused / result overlays.
+     // This is where NEW GAME / TIPS / OPTIONS / RESUME / TRY AGAIN / etc. stay in sync.
+     //
+     // Newbie note:
+     // We use the *same property names* that the screens expect.
+     // That lets us "spread" this object directly into each screen with `...sharedScreenButtons`
+     // instead of rewriting the same lines over and over.
+     const sharedScreenButtons = {
+          buttonPaddingX: 20,
+          buttonPaddingY: 10,
+          buttonTextSize: uiFontLg,
+          buttonGapMin: uiFontMd,
+          buttonGapTitleScale: 0.25
+     };
+
+     // NOTE: Shared title sizing for SPARKLE SEEKER / YOU WIN / TRY AGAIN.
+     // `getWelcomeTitleFontSize()` reads these values.
+     //
+     // Newbie note:
+     // `titleWidthScale` and `titleHeightScale` make the title responsive.
+     // `titleMinSize` stops it from getting too small.
+     // `titleMaxSizeFloor` means "never let the max calculation start below this."
+     const sharedScreenTitle = {
+          titleMinSize: 20,
+          titleMaxSizeFloor: 50,
+          titleWidthScale: 0.2,
+          titleHeightScale: 0.2,
+          titleSidePadding: 50
+     };
+
+     // Screen-specific config.
+     // Each screen can inherit shared settings and still override a few values if needed.
      const screens = {
           welcome: {
+               ...sharedScreenTitle,
+
                titleStackGap: 10,
                titleBlockYOffset: 0,
 
-               buttonPaddingX: 20,
-               buttonPaddingY: 10,
-               buttonTextSize: uiFontMd,
-               buttonGapMin: uiFontMd,
-               buttonGapTitleScale: 0.25
+               ...sharedScreenButtons
           },
 
           paused: {
-               overlayFill: getCssColor("--translucent-strong", "rgba(0, 0, 0, 0.75)"),
+               overlayFill: menuOverlayFill,
 
                titleFontSizeMin: 40,
                titleFontSizeWidthScale: 0.1,
                titleFontSizeHeightScale: 0.1,
                titleYRatio: 0.5,
 
-               buttonPaddingX: uiFontSm * 2,
-               buttonPaddingY: uiFontSm,
-               buttonTextSize: uiFontMd,
-               buttonGapMin: 10,
-               buttonGapTitleScale: 0.25,
+               ...sharedScreenButtons,
+
                buttonYOffsetMin: 50,
                buttonYOffsetTitleScale: 1,
 
-               buttonFill: "rgba(255, 255, 255, 0.1)",
+               // This is the button box fill, not the full-screen background.
+               buttonFill: getCssColor("--translucent-soft", "rgba(0, 0, 0, 0.25)"),
                buttonStroke: "rgba(255, 255, 255, 0.75)"
           },
 
           result: {
-               overlayFill: getCssColor("--translucent-strong", "rgba(0, 0, 0, 0.75)"),
+               overlayFill: menuOverlayFill,
+
+               ...sharedScreenTitle,
 
                titleStackGap: uiFontSm,
                titleBlockYOffset: 0,
 
-               buttonPaddingX: 20,
-               buttonPaddingY: 10,
-               buttonTextSize: uiFontSm,
-               buttonGapMin: uiFontSm,
-               buttonGapTitleScale: 0.25
+               ...sharedScreenButtons
           },
 
           statusOverlay: {
@@ -192,6 +254,9 @@ export function getUiTheme() {
 
      return {
           fonts: {
+               // `display` = decorative title font
+               // `body` = readable UI font
+               // `symbol` = safe fallback stack for stars/hearts/special glyphs
                display: getCssString("--font-display", '"Bungee Shade", cursive'),
                body: getCssString("--font-body", '"Noto Sans Mono", monospace'),
                symbol: '"Segoe UI Symbol", "Apple Color Emoji", "Noto Color Emoji", sans-serif'
@@ -202,28 +267,24 @@ export function getUiTheme() {
                controlText: fontColor,
                controlGlow: fontColor,
                overlayGlow: fontColor,
-               scoreGlow: fontColor,
-               scoreText: fontColor,
-               scoreTextGlow: fontColor,
                statusText: fontColor,
                statusTextGlow: fontColor,
                starFull: fontColor,
                starGlow: fontColor,
-               heartFull: fontColor,
-               heartGlow: fontColor,
 
-               fillTranslucentNone: getCssColor("--translucent-none", "rgba(0, 0, 0, 0)"),
                fillTranslucentSoft: getCssColor("--translucent-soft", "rgba(0, 0, 0, 0.25)"),
                fillTranslucentMedium: getCssColor("--translucent-medium", "rgba(0, 0, 0, 0.5)"),
-               fillTranslucentStrong: getCssColor("--translucent-strong", "rgba(0, 0, 0, 0.75)"),
 
                outlineSoft: getCssColor("--opaque-soft", "rgba(0, 0, 0, 0.25)"),
                outlineStrong: getCssColor("--opaque-strong", "rgba(0, 0, 0, 0.75)"),
                controlFill: getCssColor("--opaque-soft", "rgba(0, 0, 0, 0.25)"),
                controlFillPressed: getCssColor("--opaque-strong", "rgba(0, 0, 0, 0.75)"),
 
-               menuScreenFill: getCssColor("--translucent-strong", "rgba(0, 0, 0, 0.75)"),
-               menuPanelFill: getCssColor("--translucent-strong", "rgba(0, 0, 0, 0.75)")
+               // `menuScreenFill` = full-screen background wash
+               // `menuPanelFill` = box/panel fill used by panel components
+               // They currently match, but are kept separate in case you want them different later.
+               menuScreenFill: menuOverlayFill,
+               menuPanelFill: menuOverlayFill
           },
 
           sizes: {
@@ -253,6 +314,8 @@ export function drawRoundedRect(x, y, width, height, radius) {
           return;
      }
 
+     // Canvas has no built-in "draw rounded rectangle" helper with exactly the behavior
+     // we want, so we build the shape manually with lines + curves.
      const r = Math.min(radius, width / 2, height / 2);
 
      miniGameCtx.beginPath();
@@ -292,6 +355,8 @@ function getUiArrowFont(theme) {
 }
 
 // NOTE: Icon Size/Scale
+// These map tokens like `{iconShield}` in help text to actual glyphs and offsets.
+// Offsets are hand-tuned because symbol fonts rarely align perfectly by default.
 
 const richTextIcons = {
      iconShield: { char: "\u2B21\uFE0E", scale: 1.5, xOffset: 0, yOffset: -6 },
@@ -352,6 +417,7 @@ export function drawWrappedRichText(ctx, text, x, y, maxWidth, lineHeight, optio
      const segments = parseRichTextSegments(text);
      const tokens = [];
 
+     // NOTE: We split text into a flat stream of text/icon tokens so they can wrap together.
      segments.forEach((segment) => {
           if (segment.type === "icon") {
                tokens.push(segment);
@@ -427,6 +493,7 @@ export function drawWrappedRichText(ctx, text, x, y, maxWidth, lineHeight, optio
      let currentLine = [];
      let currentWidth = 0;
 
+     // NOTE: first pass - measure and decide where line breaks should happen.
      tokens.forEach((token) => {
           ctx.font = getTokenFont(token);
 
@@ -448,6 +515,7 @@ export function drawWrappedRichText(ctx, text, x, y, maxWidth, lineHeight, optio
           lines.push(currentLine);
      }
 
+     // NOTE: second pass - actually draw the prepared lines.
      lines.forEach((lineTokens, lineIndex) => {
           let currentX = x;
           const currentY = y + (lineIndex * lineHeight);
@@ -474,6 +542,7 @@ export function drawWrappedText(ctx, text, x, y, maxWidth, lineHeight) {
 }
 
 // TITLE COLOR HELPERS
+// These manage rainbow-style title coloring for the welcome screen and menu titles.
 
 let welcomeColorEngine = null;
 let welcomePreviousColors = [];
@@ -523,15 +592,20 @@ export function getWelcomeCurrentColors() {
 }
 
 export function getWelcomeTitleFontSize(theme, titleLines = getCurrentScreenTitleLines()) {
-     const { fonts } = theme;
-     const baseSize = Math.min(miniGameWidth * 0.2, miniGameHeight * 0.2);
-     const maxSize = Math.max(50, baseSize);
-     const minSize = 20;
-     const sidePadding = 50;
+     const { fonts, screens } = theme;
+     const config = screens.welcome;
+     const baseSize = Math.min(
+          miniGameWidth * config.titleWidthScale,
+          miniGameHeight * config.titleHeightScale
+     );
+     const maxSize = Math.max(config.titleMaxSizeFloor, baseSize);
+     const minSize = config.titleMinSize;
+     const sidePadding = config.titleSidePadding;
      let fontSize = maxSize;
 
      miniGameCtx.save();
 
+     // NOTE: We shrink the title until the widest line fits the canvas with side padding.
      while (fontSize > minSize) {
           miniGameCtx.font = `${fontSize}px ${fonts.display}`;
 
@@ -615,6 +689,7 @@ export function getMenuScreenLayout(theme) {
      const titleCenterX = miniGameWidth / 2;
      const titleY = topPadding;
 
+     // NOTE: Returning a layout object avoids recalculating these same positions in multiple files.
      return {
           sidePadding,
           topPadding,
@@ -843,7 +918,7 @@ export function drawScore(theme) {
      }
 
      const { colors, sizes, fonts, glow } = theme;
-     const { starGap, levelGapAbove, levelGapBelow, statusLabelFontSize } = sizes;
+     const { starGap, levelGapAbove, levelGapBelow, statusLabelFontSize, scoreDetailFontSize } = sizes;
      const levelText = `LVL ${getCurrentLevelNumber()}`;
      const sparkleText = `\u2726\uFE0E ${String(sparkleScore).padStart(3, "0")}`;
      const filledStars = getCurrentLevelProgressStars();
@@ -873,7 +948,7 @@ export function drawScore(theme) {
      miniGameCtx.fillText(levelText, sizes.scoreX, levelY);
 
      const sparkleY = levelY + statusLabelFontSize + levelGapBelow;
-     miniGameCtx.font = `400 ${sizes.uiFontLg}px ${fonts.body}`;
+     miniGameCtx.font = `400 ${scoreDetailFontSize}px ${fonts.body}`;
      miniGameCtx.fillText(sparkleText, sizes.scoreX, sparkleY);
 
      miniGameCtx.restore();
@@ -905,7 +980,13 @@ export function drawHealth(theme) {
      }
 
      const { colors, sizes, fonts, glow } = theme;
-     const { heartGap, statusGapAbove, statusGapBelow, statusLabelFontSize } = sizes;
+     const {
+          heartGap,
+          statusGapAbove,
+          statusGapBelow,
+          statusLabelFontSize,
+          statusDetailFontSize
+     } = sizes;
      const filledHeart = "\u2665\uFE0E";
      const emptyHeart = "\u2661\uFE0E";
      const maxVisibleHearts = 5;
@@ -946,7 +1027,7 @@ export function drawHealth(theme) {
 
      if (statusIcon) {
           const statusTimeText = statusSeconds ? ` ${statusSeconds}` : "";
-          miniGameCtx.font = `400 ${sizes.uiFontLg}px ${fonts.body}`;
+          miniGameCtx.font = `400 ${statusDetailFontSize}px ${fonts.body}`;
           const statusTimeWidth = statusTimeText
                ? miniGameCtx.measureText(statusTimeText).width
                : 0;
@@ -958,7 +1039,7 @@ export function drawHealth(theme) {
           miniGameCtx.font = `400 ${iconFontSize}px ${fonts.body}`;
           miniGameCtx.fillText(statusIcon, iconX, statusDetailY - ((iconFontSize - sizes.uiFontMd) * 0.35));
      } else {
-          miniGameCtx.font = `400 ${sizes.uiFontLg}px ${fonts.body}`;
+          miniGameCtx.font = `400 ${statusDetailFontSize}px ${fonts.body}`;
           miniGameCtx.fillText("READY", miniGameWidth - sizes.healthX, statusDetailY);
      }
 
@@ -975,6 +1056,8 @@ export function drawFogOverlay() {
 
      miniGameCtx.save();
 
+     // NOTE:
+     // Radial gradient gives a "visible around player, hidden elsewhere" fog effect.
      const gradient = miniGameCtx.createRadialGradient(
           player.x,
           player.y,

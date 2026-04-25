@@ -579,7 +579,7 @@ function drawGameStatusOverlay(theme) {
      }
 
      const horizontalPadding = overlay.horizontalPadding;
-     const menuTopPadding = overlay.menuTopPadding;
+     const topPadding = overlay.topPadding;
      const bottomPadding = hasSubtext
           ? overlay.bottomPaddingWithSubtext
           : overlay.bottomPaddingNoSubtext;
@@ -589,10 +589,10 @@ function drawGameStatusOverlay(theme) {
      const panelHeight =
           sizes.uiFontMd +
           (hasSubtext ? sizes.uiFontMd + gapBetweenLines : 0) +
-          menuTopPadding +
+          topPadding +
           bottomPadding;
      const panelX = (miniGameWidth - panelWidth) / 2;
-     const panelY = titleY - menuTopPadding - (sizes.uiFontMd / 2);
+     const panelY = titleY - topPadding - (sizes.uiFontMd / 2);
 
      drawPanelBox(panelX, panelY, panelWidth, panelHeight, theme);
 

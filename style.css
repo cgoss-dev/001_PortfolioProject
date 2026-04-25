@@ -42,10 +42,10 @@
      /* TYPOGRAPHY */
           --font-body: "Noto Sans Mono", monospace;
           --font-display: "Bungee Shade", monospace;
-          --font-size-marquee: clamp(5rem, 15vw, 25rem); /*gotta make a separate one for the marquee*/
-          --font-size-lg: 20px;
-          --font-size-md: 15px;
-          --font-size-sm: 10px;
+          --font-size-marquee: clamp(6.00rem, 15.00vw, 25.00rem);
+          --font-size-lg: clamp(1.25rem, 4.00vw, 1.50rem);
+          --font-size-md: clamp(0.75rem, 3.00vw, 1.00rem);
+          --font-size-sm: clamp(0.75rem, 2.50vw, 1.25rem);
 
      /* COMPONENTS */
           /* MENU */
