@@ -489,7 +489,7 @@ function getMenuLayoutMetrics(panelX, panelY, panelWidth, panelHeight) {
           buttonHeight,
           buttonX,
           buttonWidth,
-          topPadding: sharedLayout.topPadding,
+          menuTopPadding: sharedLayout.menuTopPadding,
           titleHeight: sharedLayout.titleFontSize,
           titleGap: sharedLayout.titleGap,
           rowGap: sharedLayout.rowGap,
