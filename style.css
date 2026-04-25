@@ -43,9 +43,9 @@
           --font-body: "Noto Sans Mono", monospace;
           --font-display: "Bungee Shade", monospace;
           --font-size-marquee: clamp(5rem, 15vw, 25rem); /*gotta make a separate one for the marquee*/
-          --font-size-lg: 25px;
-          --font-size-md: 20px;
-          --font-size-sm: 15px;
+          --font-size-lg: 20px;
+          --font-size-md: 15px;
+          --font-size-sm: 10px;
 
      /* COMPONENTS */
           /* MENU */
