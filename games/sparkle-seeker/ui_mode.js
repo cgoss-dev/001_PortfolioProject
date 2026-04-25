@@ -95,6 +95,8 @@ import {
 } from "./ui_draw.js";
 
 import {
+     getUiTheme,
+     getMenuScreenLayout,
      updateWelcomeTitleColors
 } from "./ui_draw_shared.js";
 
@@ -120,7 +122,7 @@ function getCssPixelSize(variableName, fallback = 16) {
 // NOTE: GAME MENU SPACING
 
 export function getGameMenuSpacing() {
-     const uiFontMd = getCssPixelSize("--font-size-md", 16);
+     const uiFontMd = getCssPixelSize("--font-size-md", 15);
      const uiFontSm = getCssPixelSize("--font-size-sm", 10);
 
      return {
@@ -474,35 +476,27 @@ function setOptionRowBounds(row, decreaseButton, increaseButton, x, y, width, he
 // NOTE: GAME MENU SIZING
 
 function getMenuLayoutMetrics(panelX, panelY, panelWidth, panelHeight) {
-     const { titleGap, rowGap } = getGameMenuSpacing();
-     const uiFontMd = getCssPixelSize("--font-size-md", 15);
+     const theme = getUiTheme();
+     const sharedLayout = getMenuScreenLayout(theme);
 
-     const sidePadding = Math.max(10, panelWidth * 0.05);
+     const sidePadding = sharedLayout.sidePadding;
      const buttonHeight = 50;
      const buttonX = panelX + sidePadding;
      const buttonWidth = panelWidth - (sidePadding * 2);
-
-     const topPadding = Math.max(10, panelHeight * 0.05);
-     const titleHeight = uiFontMd * 2;
-     const backButtonSize = Math.max(50);
-     const backButtonX = buttonX;
-     const backButtonY = panelY + topPadding;
-
-     const contentTopY = panelY + topPadding + titleHeight + titleGap;
 
      return {
           sidePadding,
           buttonHeight,
           buttonX,
           buttonWidth,
-          topPadding,
-          titleHeight,
-          titleGap,
-          rowGap,
-          backButtonSize,
-          backButtonX,
-          backButtonY,
-          contentTopY
+          topPadding: sharedLayout.topPadding,
+          titleHeight: sharedLayout.titleFontSize,
+          titleGap: sharedLayout.titleGap,
+          rowGap: sharedLayout.rowGap,
+          backButtonSize: sharedLayout.backButtonSize,
+          backButtonX: sharedLayout.backButtonX,
+          backButtonY: sharedLayout.backButtonY,
+          contentTopY: sharedLayout.contentTopY
      };
 }
 

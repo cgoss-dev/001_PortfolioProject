@@ -78,9 +78,9 @@ export function getCssPixelSize(variableName, fallback = 16) {
 
 export function getUiTheme() {
      const fontColor = getCssColor("--color-text", getCssColor("--color-text", "#ffffff"));
-     const uiFontSm = getCssPixelSize("--font-size-sm", 10);
-     const uiFontMd = getCssPixelSize("--font-size-md", 16);
-     const uiFontLg = getCssPixelSize("--font-size-lg", 48);
+     const uiFontLg = getCssPixelSize("--font-size-lg", 25); // FIXME: GOTTA RETURN TO THIS
+     const uiFontMd = getCssPixelSize("--font-size-md", 20);
+     const uiFontSm = getCssPixelSize("--font-size-sm", 15);
 
      return {
           fonts: {
@@ -131,11 +131,12 @@ export function getUiTheme() {
 
                scoreX: 5,
                healthX: 5,
+               statusLabelFontSize: uiFontMd * 2,
 
                starGap: uiFontSm * 0.5,
                heartGap: uiFontSm * 0.5,
                levelGapAbove: uiFontSm * 0.5,
-               scoreGapBelowLevel: uiFontSm * 0.5,
+               scoreGapBelowLevel: uiFontSm * 0.5, // FIXME: RETURN TO THIS, VARIABLE NAME DOESNT MAKE SENSE
                statusGapAbove: uiFontSm * 0.5,
                statusGapBelow: uiFontSm * 0.5,
 
@@ -514,12 +515,12 @@ export function getMenuScreenLayout(theme) {
      const topPadding = miniGameHeight * 0.05;
      const titleFontSize = sizes.uiFontMd * 2;
 
-     const backButtonSize = Math.max(28, sizes.uiFontMd * 1.6);
-     const backButtonX = sidePadding;
-     const backButtonY = topPadding;
+     const backButtonSize = 50; //FIXME: BACK BUTTON SIZE, CLAMP OR PX?
+     const backButtonX = (miniGameWidth - backButtonSize) / 2;
+     const backButtonY = miniGameHeight - backButtonSize - topPadding;
      const titleCenterX = miniGameWidth / 2;
      const titleYOffset = 12;
-     const titleY = backButtonY + (backButtonSize / 2) - (titleFontSize / 2) + titleYOffset;
+     const titleY = topPadding + titleYOffset;
 
      return {
           sidePadding,
@@ -748,7 +749,7 @@ export function drawScore(theme) {
      }
 
      const { colors, sizes, fonts, glow } = theme;
-     const { starGap, levelGapAbove, scoreGapBelowLevel } = sizes;
+     const { starGap, levelGapAbove, scoreGapBelowLevel, statusLabelFontSize } = sizes;
      const levelText = `LVL ${getCurrentLevelNumber()}`;
      const sparkleText = `\u2726\uFE0E ${String(sparkleScore).padStart(3, "0")}`;
      const filledStars = getCurrentLevelProgressStars();
@@ -774,10 +775,10 @@ export function drawScore(theme) {
      }
 
      const levelY = sizes.starIconY + sizes.starSize + levelGapAbove;
-     miniGameCtx.font = `${sizes.uiFontMd}px ${fonts.display}`;
+     miniGameCtx.font = `${statusLabelFontSize}px ${fonts.display}`;
      miniGameCtx.fillText(levelText, sizes.scoreX, levelY);
 
-     const sparkleY = levelY + sizes.uiFontMd + scoreGapBelowLevel;
+     const sparkleY = levelY + statusLabelFontSize + scoreGapBelowLevel;
      miniGameCtx.font = `400 ${sizes.uiFontMd}px ${fonts.body}`;
      miniGameCtx.fillText(sparkleText, sizes.scoreX, sparkleY);
 
@@ -810,7 +811,7 @@ export function drawHealth(theme) {
      }
 
      const { colors, sizes, fonts, glow } = theme;
-     const { heartGap, statusGapAbove, statusGapBelow } = sizes;
+     const { heartGap, statusGapAbove, statusGapBelow, statusLabelFontSize } = sizes;
      const filledHeart = "\u2665\uFE0E";
      const emptyHeart = "\u2661\uFE0E";
      const maxVisibleHearts = 5;
@@ -840,14 +841,14 @@ export function drawHealth(theme) {
 
      const statusLabelY = sizes.heartIconY + sizes.heartSize + statusGapAbove;
 
-     miniGameCtx.font = `${sizes.uiFontMd}px ${fonts.display}`;
+     miniGameCtx.font = `${statusLabelFontSize}px ${fonts.display}`;
      miniGameCtx.fillText(
           statusLabel,
           miniGameWidth - sizes.healthX,
           statusLabelY
      );
 
-     const statusDetailY = statusLabelY + sizes.uiFontMd + statusGapBelow;
+     const statusDetailY = statusLabelY + statusLabelFontSize + statusGapBelow;
 
      if (statusIcon) {
           const statusTimeText = statusSeconds ? ` ${statusSeconds}` : "";

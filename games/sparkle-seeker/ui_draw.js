@@ -249,7 +249,7 @@ function drawGameWelcomeOverlay(theme) {
 
      const buttonPaddingX = 20;
      const buttonPaddingY = 10;
-     const actionTextSize = sizes.uiFontMd;
+     const actionTextSize = sizes.uiFontSm;
 
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "middle";
@@ -369,7 +369,7 @@ function drawGameWelcomeOverlay(theme) {
           miniGameCtx.fillStyle = colors.controlText;
           miniGameCtx.textAlign = "center";
           miniGameCtx.textBaseline = "middle";
-          miniGameCtx.font = `400 ${sizes.uiFontMd}px ${fonts.body}`;
+          miniGameCtx.font = `400 ${sizes.uiFontSm}px ${fonts.body}`;
           miniGameCtx.fillText(item.text, textX, actionY + 1);
           miniGameCtx.restore();
 
