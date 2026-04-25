@@ -78,9 +78,9 @@ export function getCssPixelSize(variableName, fallback = 16) {
 
 export function getUiTheme() {
      const fontColor = getCssColor("--color-text", getCssColor("--color-text", "#ffffff"));
-     const uiFontLg = getCssPixelSize("--font-size-lg", 25); // FIXME: GOTTA RETURN TO THIS
-     const uiFontMd = getCssPixelSize("--font-size-md", 20);
-     const uiFontSm = getCssPixelSize("--font-size-sm", 15);
+     const uiFontLg = getCssPixelSize("--font-size-lg"); // FIXME: GOTTA RETURN TO THIS
+     const uiFontMd = getCssPixelSize("--font-size-md");
+     const uiFontSm = getCssPixelSize("--font-size-sm");
 
      return {
           fonts: {
@@ -137,7 +137,7 @@ export function getUiTheme() {
                heartGap: uiFontSm * 0.5,
                levelGapAbove: uiFontSm * 0.5,
                scoreGapBelowLevel: uiFontSm * 0.5, // FIXME: RETURN TO THIS, VARIABLE NAME DOESNT MAKE SENSE
-               statusGapAbove: uiFontSm * 0.5,
+               statusGapAbove: uiFontSm * 0.4, // TODO: CHECK GAP ABOVE STATUS
                statusGapBelow: uiFontSm * 0.5,
 
                uiFontLg,
@@ -197,7 +197,7 @@ export function drawPanelBox(x, y, width, height, theme, lineWidth = 3) {
 
 function getUiArrowFont(sizeRef, theme) {
      const { sizes, fonts } = theme;
-     const arrowFontSize = Math.max(sizes.uiFontSm * 1.55, sizeRef * 0.72);
+     const arrowFontSize = Math.max(sizes.uiFontMd); // TODO: arrow size
 
      return `700 ${arrowFontSize}px ${fonts.body}`;
 }
@@ -513,7 +513,7 @@ export function getMenuScreenLayout(theme) {
 
      const sidePadding = miniGameWidth * 0.05;
      const topPadding = miniGameHeight * 0.05;
-     const titleFontSize = sizes.uiFontMd * 2;
+     const titleFontSize = sizes.uiFontLg; // TODO: title font size
 
      const backButtonSize = 50; //FIXME: BACK BUTTON SIZE, CLAMP OR PX?
      const backButtonX = (miniGameWidth - backButtonSize) / 2;
