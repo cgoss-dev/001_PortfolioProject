@@ -1,8 +1,5 @@
 /* NOTE: MAIN ROOT CSS */
 
-@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Mono:wght@400;600&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Bungee+Shade&display=swap");
-
 :root {
      /* THEME COLORS */
           --color-bg: #000;
@@ -34,20 +31,20 @@
           --rainbow-rose: #f08;
 
      /* LAYOUT */
-          --page-width-wide: 72rem;
-          --page-padding-y: clamp(1rem, 2vw, 1.5rem);
+          --page-width-wide: 75rem;
+          --page-padding-y: 1rem;
           --page-padding-x: var(--page-padding-y);
           --page-section-gap: var(--page-padding-y);
-          --nav-height: clamp(3rem, 8vh, 4rem);
+          --nav-height: clamp(2rem, 4vh, 4rem);
           --hero-gap: clamp(1rem, 4vh, 2rem);
           --content-width: min(100%, 40rem);
 
      /* TYPOGRAPHY */
           --font-body: "Noto Sans Mono", monospace;
           --font-display: "Bungee Shade", monospace;
-          --font-size-lg: clamp(5rem, 15vw, 25rem);
-          --font-size-md: clamp(1rem, 2vw, 3rem);
-          --font-size-sm: clamp(0.75rem, 1.5vw, 1.5rem);
+          --font-size-lg: clamp(5rem, 15vw, 25rem); /*gotta make a separate one for the marquee*/
+          --font-size-md: 20px;
+          --font-size-sm: 10px;
 
      /* COMPONENTS */
           /* MENU */
@@ -109,7 +106,6 @@
           --z-sparkle: -1;
           --z-ui: 2;
           --z-menu: 20;
-
 }
 
 /* NON-ROOT CORE */
@@ -144,11 +140,11 @@ body {
      max-width: 100%;
      min-height: 100dvh;
      margin: 0 auto;
-     padding: 1rem 0.5rem 2rem;
+     padding: 1rem 0.5rem 3rem;
      position: relative;
      z-index: var(--z-ui);
      display: grid;
-     grid-template-rows: auto 1fr;
+     grid-template-rows: auto 1fr auto;
      overflow: visible;
 }
 
@@ -184,7 +180,7 @@ header {
 
 .site-header {
      width: 100%;
-     max-width: 1000px;
+     max-width: 50rem;
      margin: 0 auto;
      z-index: var(--z-menu);
      min-width: 0;
@@ -252,9 +248,6 @@ h1 {
      transform: none;
      filter: none;
      box-shadow: var(--glow-panel);
-
-     /* NOTE: SIMPLE HOVER RESPONSE
-     Color and glow are eased here. Scale motion is intentionally omitted here. */
      transition:
           color 0.2s ease-in-out,
           text-shadow 0.2s ease-in-out,
@@ -393,8 +386,6 @@ h1 {
      border: none;
      box-shadow: none;
      outline: none;
-
-     /* Hover glow is matched to label glow here. */
      transition:
           filter 0.2s ease-in-out,
           opacity 0.2s ease-in-out,
@@ -450,30 +441,28 @@ h1 {
      max-width: 100%;
      min-width: 0;
      margin: 0 auto;
+     padding: 1rem 0;
      flex: 1;
      min-height: 0;
      display: flex;
-     flex-direction: column;
-     padding: 0;
+     align-items: center;
+     justify-content: center;
 }
 
 .hero-stack {
      width: 100%;
      max-width: 100%;
-     margin: 0 auto;
-     flex: 1;
-     min-height: 0;
      min-width: 0;
-     display: grid;
-     grid-template-rows: 1fr auto auto 1fr auto;
-     justify-items: center;
-     align-items: start;
-     row-gap: 0.2rem;
+     margin: 0 auto;
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     justify-content: center;
+     gap: 0;
      padding: 0;
 }
 
 .hero-stack h1 {
-     grid-row: 2;
      margin: 0;
      width: 100%;
      max-width: 100%;
@@ -483,8 +472,6 @@ h1 {
 }
 
 .hero-blurb {
-     grid-row: 5;
-     align-self: end;
      width: 100%;
      max-width: 100%;
      margin: 0 auto;
@@ -736,17 +723,14 @@ h1 {
 /* SPARKLE SEEKER */
 
 .game-container {
-     --game-canvas-width: min(100%, 75rem);
-
-     grid-row: 3;
-     width: var(--game-canvas-width);
+     width: min(92vw, 75rem);
      height: clamp(
-          calc(var(--game-canvas-width) * 0.75),
+          calc(min(100vw, 75rem) * 0.75),
           75dvh,
-          calc(var(--game-canvas-width) * 1.25)
+          calc(min(100vw, 75rem) * 1.25)
      );
 
-     margin: 0;
+     margin: 0 auto;
      border: var(--panel-border);
      border-radius: var(--panel-radius);
      box-shadow: var(--glow-panel);

@@ -78,6 +78,9 @@ export function getCssPixelSize(variableName, fallback = 16) {
 
 export function getUiTheme() {
      const fontColor = getCssColor("--color-text", getCssColor("--color-text", "#ffffff"));
+     const uiFontSm = getCssPixelSize("--font-size-sm", 10);
+     const uiFontMd = getCssPixelSize("--font-size-md", 16);
+     const uiFontLg = getCssPixelSize("--font-size-lg", 48);
 
      return {
           fonts: {
@@ -117,7 +120,7 @@ export function getUiTheme() {
           },
 
           sizes: {
-               statusFontSize: getCssPixelSize("--font-size-md", 16),
+               statusFontSize: uiFontMd,
                statusFontY: 20,
 
                starSize: Math.max(15, Math.min(24, miniGameWidth * 0.055)),
@@ -129,9 +132,16 @@ export function getUiTheme() {
                scoreX: 5,
                healthX: 5,
 
-               uiFontLg: getCssPixelSize("--font-size-lg", 48),
-               uiFontMd: getCssPixelSize("--font-size-md", 16),
-               uiFontSm: getCssPixelSize("--font-size-sm", 10),
+               starGap: uiFontSm * 0.5,
+               heartGap: uiFontSm * 0.5,
+               levelGapAbove: uiFontSm * 0.5,
+               scoreGapBelowLevel: uiFontSm * 0.5,
+               statusGapAbove: uiFontSm * 0.5,
+               statusGapBelow: uiFontSm * 0.5,
+
+               uiFontLg,
+               uiFontMd,
+               uiFontSm,
 
                controlRadius: getCssNumber("--panel-radius", 15)
           },
@@ -182,6 +192,13 @@ export function drawPanelBox(x, y, width, height, theme, lineWidth = 3) {
 
      drawRoundedRect(x, y, width, height, sizes.controlRadius);
      miniGameCtx.stroke();
+}
+
+function getUiArrowFont(sizeRef, theme) {
+     const { sizes, fonts } = theme;
+     const arrowFontSize = Math.max(sizes.uiFontSm * 1.55, sizeRef * 0.72);
+
+     return `700 ${arrowFontSize}px ${fonts.body}`;
 }
 
 // NOTE: Icon Size/Scale
@@ -500,6 +517,9 @@ export function getMenuScreenLayout(theme) {
      const backButtonSize = Math.max(28, sizes.uiFontMd * 1.6);
      const backButtonX = sidePadding;
      const backButtonY = topPadding;
+     const titleCenterX = miniGameWidth / 2;
+     const titleYOffset = 12;
+     const titleY = backButtonY + (backButtonSize / 2) - (titleFontSize / 2) + titleYOffset;
 
      return {
           sidePadding,
@@ -507,11 +527,12 @@ export function getMenuScreenLayout(theme) {
           titleFontSize,
           titleGap,
           rowGap,
-          titleCenterX: miniGameWidth / 2,
+          titleCenterX,
+          titleY,
           backButtonSize,
           backButtonX,
           backButtonY,
-          contentTopY: topPadding + titleFontSize + titleGap,
+          contentTopY: titleY + titleFontSize + titleGap,
           contentWidth: miniGameWidth - (sidePadding * 2)
      };
 }
@@ -519,6 +540,7 @@ export function getMenuScreenLayout(theme) {
 export function drawMenuScreenTitle(title, theme, centerX, y) {
      const { colors, fonts, glow, sizes } = theme;
      const titleFontSize = sizes.uiFontMd * 2;
+     const letterSpacing = 3;
 
      miniGameCtx.save();
      miniGameCtx.textAlign = "left";
@@ -533,7 +555,10 @@ export function drawMenuScreenTitle(title, theme, centerX, y) {
           letterWidths.push(miniGameCtx.measureText(title[i]).width);
      }
 
-     const totalWidth = letterWidths.reduce((sum, width) => sum + width, 0);
+     const totalWidth =
+          letterWidths.reduce((sum, width) => sum + width, 0) +
+          (letterSpacing * Math.max(0, title.length - 1));
+
      let titleX = centerX - (totalWidth / 2);
 
      for (let i = 0; i < title.length; i += 1) {
@@ -545,7 +570,7 @@ export function drawMenuScreenTitle(title, theme, centerX, y) {
           miniGameCtx.shadowBlur = glow.uiSoftGlow;
           miniGameCtx.fillText(letter, titleX, y);
 
-          titleX += letterWidths[i];
+          titleX += letterWidths[i] + letterSpacing;
      }
 
      miniGameCtx.restore();
@@ -587,7 +612,7 @@ export function drawMenuBackButton(button, theme) {
           return;
      }
 
-     const { colors, fonts, glow, sizes } = theme;
+     const { colors, glow } = theme;
      const centerX = button.x + (button.width / 2);
      const centerY = button.y + (button.height / 2);
      const radius = Math.min(button.width, button.height) * 0.5;
@@ -607,7 +632,7 @@ export function drawMenuBackButton(button, theme) {
      miniGameCtx.fillStyle = colors.controlText;
      miniGameCtx.textAlign = "center";
      miniGameCtx.textBaseline = "middle";
-     miniGameCtx.font = `400 ${sizes.uiFontMd}px ${fonts.body}`;
+     miniGameCtx.font = getUiArrowFont(button.height, theme);
      miniGameCtx.fillText("<", centerX, centerY + 1);
 
      miniGameCtx.restore();
@@ -622,7 +647,7 @@ export function drawOptionStepper(row, decreaseButton, increaseButton, label, va
      const centerY = row.y + (row.height / 2);
      const decreaseAlpha = levelIndex <= 0 ? 0.28 : 1;
      const increaseAlpha = levelIndex >= maxOptionLevelIndex ? 0.28 : 1;
-     const arrowFontSize = Math.max(sizes.uiFontSm * 1.55, row.height * 0.72);
+     const arrowFont = getUiArrowFont(row.height, theme);
 
      miniGameCtx.save();
      miniGameCtx.fillStyle = colors.controlFill;
@@ -642,7 +667,7 @@ export function drawOptionStepper(row, decreaseButton, increaseButton, label, va
 
      miniGameCtx.fillStyle = colors.controlText;
      miniGameCtx.globalAlpha = decreaseAlpha;
-     miniGameCtx.font = `700 ${arrowFontSize}px ${fonts.body}`;
+     miniGameCtx.font = arrowFont;
      miniGameCtx.fillText(
           "<",
           decreaseButton.x + (decreaseButton.width / 2),
@@ -658,7 +683,7 @@ export function drawOptionStepper(row, decreaseButton, increaseButton, label, va
      );
 
      miniGameCtx.globalAlpha = increaseAlpha;
-     miniGameCtx.font = `700 ${arrowFontSize}px ${fonts.body}`;
+     miniGameCtx.font = arrowFont;
      miniGameCtx.fillText(
           ">",
           increaseButton.x + (increaseButton.width / 2),
@@ -723,13 +748,10 @@ export function drawScore(theme) {
      }
 
      const { colors, sizes, fonts, glow } = theme;
+     const { starGap, levelGapAbove, scoreGapBelowLevel } = sizes;
      const levelText = `LVL ${getCurrentLevelNumber()}`;
      const sparkleText = `\u2726\uFE0E ${String(sparkleScore).padStart(3, "0")}`;
      const filledStars = getCurrentLevelProgressStars();
-
-     const starGap = sizes.uiFontSm;
-     const levelGapAbove = sizes.uiFontSm;
-     const scoreGapBelowLevel = sizes.uiFontSm;
 
      miniGameCtx.save();
      miniGameCtx.textAlign = "left";
@@ -762,7 +784,6 @@ export function drawScore(theme) {
      miniGameCtx.restore();
 }
 
-
 function getStatusIconScale(statusLabel) {
      if (
           statusLabel === "SHIELD" ||
@@ -789,12 +810,10 @@ export function drawHealth(theme) {
      }
 
      const { colors, sizes, fonts, glow } = theme;
+     const { heartGap, statusGapAbove, statusGapBelow } = sizes;
      const filledHeart = "\u2665\uFE0E";
      const emptyHeart = "\u2661\uFE0E";
      const maxVisibleHearts = 5;
-     const heartGap = sizes.uiFontSm;
-     const statusGapAbove = sizes.uiFontSm;
-     const statusGapBelow = sizes.uiFontSm;
      const statusLabel = activeStatusUi.label || "CLEAR";
      const statusSeconds = getStatusSecondsRemaining();
      const statusIconScale = getStatusIconScale(statusLabel);
@@ -810,15 +829,13 @@ export function drawHealth(theme) {
      miniGameCtx.font = `${sizes.heartSize}px ${fonts.body}`;
 
      const heartGlyphWidth = miniGameCtx.measureText(filledHeart).width;
-     const totalHeartWidth = (heartGlyphWidth * maxVisibleHearts) + (heartGap * (maxVisibleHearts - 1));
-     let currentX = miniGameWidth - sizes.healthX - totalHeartWidth;
+     let currentX = miniGameWidth - sizes.healthX;
 
      for (let i = 0; i < maxVisibleHearts; i += 1) {
-          const heartIndex = maxVisibleHearts - 1 - i;
-          const heartChar = heartIndex < playerHealth ? filledHeart : emptyHeart;
+          const heartChar = i < playerHealth ? filledHeart : emptyHeart;
 
           miniGameCtx.fillText(heartChar, currentX, sizes.heartIconY);
-          currentX += heartGlyphWidth + heartGap;
+          currentX -= heartGlyphWidth + heartGap;
      }
 
      const statusLabelY = sizes.heartIconY + sizes.heartSize + statusGapAbove;

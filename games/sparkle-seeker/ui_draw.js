@@ -99,7 +99,7 @@ function drawTipsMenuScreen(theme) {
      miniGameCtx.fillStyle = colors.fillTranslucentMedium;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
-     drawMenuScreenTitle("TIPS", theme, layout.titleCenterX, layout.topPadding);
+     drawMenuScreenTitle("TIPS", theme, layout.titleCenterX, layout.titleY);
      drawMenuButton(gameMenuUi.tipsHowToPlayButton, "How to Play", theme);
      drawMenuButton(gameMenuUi.tipsHelpEffectsButton, "Friends", theme);
      drawMenuButton(gameMenuUi.tipsHarmEffectsButton, "Enemies", theme);
@@ -120,10 +120,10 @@ function drawTipsDetailScreen(theme, title, lines) {
      miniGameCtx.fillStyle = colors.fillTranslucentMedium;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
-     drawMenuScreenTitle(title, theme, layout.titleCenterX, layout.topPadding);
+     drawMenuScreenTitle(title, theme, layout.titleCenterX, layout.titleY);
 
      let textY = layout.contentTopY;
-     const fontSize = Math.max(12, sizes.uiFontSm);
+     const fontSize = Math.max(10, sizes.uiFontSm);
      const lineHeight = fontSize * 1.1;
      const sectionGap = lineHeight * 1.5;
 
@@ -195,7 +195,7 @@ function drawOptionsScreen(theme) {
      miniGameCtx.fillStyle = colors.fillTranslucentMedium;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
-     drawMenuScreenTitle("OPTIONS", theme, layout.titleCenterX, layout.topPadding);
+     drawMenuScreenTitle("OPTIONS", theme, layout.titleCenterX, layout.titleY);
 
      drawOptionStepper(
           gameMenuUi.harmfulRow,
@@ -243,13 +243,41 @@ function drawGameWelcomeOverlay(theme) {
      const titleLines = getCurrentScreenTitleLines();
      const actionTexts = getCurrentScreenActionTexts();
      const titleFontSize = getWelcomeTitleFontSize(theme, titleLines);
-     const lineGap = Math.max(10, titleFontSize * 0.1);
 
-     const firstLineY = (miniGameHeight / 2) - (titleFontSize + (lineGap * 0.25));
-     const secondLineY = firstLineY + titleFontSize + lineGap;
+     const titleStackGap = 10;
+     const titleBlockYOffset = 0;
+
+     const buttonPaddingX = 20;
+     const buttonPaddingY = 10;
+     const actionTextSize = sizes.uiFontMd;
+
+     miniGameCtx.textAlign = "left";
+     miniGameCtx.textBaseline = "middle";
+     miniGameCtx.shadowColor = colors.controlGlow;
+     miniGameCtx.shadowBlur = glow.uiSoftGlow;
+     miniGameCtx.font = `400 ${actionTextSize}px ${fonts.body}`;
+
+     const measuredActions = actionTexts.map((text) => ({
+          text,
+          textWidth: miniGameCtx.measureText(text).width
+     }));
 
      const actionGap = Math.max(10, titleFontSize * 0.25);
-     const actionY = secondLineY + Math.max(20, titleFontSize * 1);
+     const tallestButtonHeight = actionTextSize + (buttonPaddingY * 2);
+
+     const totalTitleBlockHeight =
+          titleFontSize +
+          titleStackGap +
+          titleFontSize +
+          titleStackGap +
+          tallestButtonHeight;
+
+     const stackTopY =
+          ((miniGameHeight - totalTitleBlockHeight) / 2) + titleBlockYOffset;
+
+     const firstLineY = stackTopY + (titleFontSize / 2);
+     const secondLineY = firstLineY + titleFontSize + titleStackGap;
+     const actionY = secondLineY + (titleFontSize / 2) + titleStackGap + (tallestButtonHeight / 2);
 
      updateWelcomeTitleColors(titleLines);
      const welcomeCurrentColors = getWelcomeCurrentColors();
@@ -308,20 +336,11 @@ function drawGameWelcomeOverlay(theme) {
      welcomeUi.menuButton.width = 0;
      welcomeUi.menuButton.height = 0;
 
-     const buttonPaddingX = 14;
-     const buttonPaddingY = 10;
-     const actionTextSize = sizes.uiFontMd;
-
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
      miniGameCtx.font = `400 ${actionTextSize}px ${fonts.body}`;
-
-     const measuredActions = actionTexts.map((text) => ({
-          text,
-          textWidth: miniGameCtx.measureText(text).width
-     }));
 
      const totalActionWidth =
           measuredActions.reduce((sum, item) => sum + item.textWidth + (buttonPaddingX * 2), 0) +

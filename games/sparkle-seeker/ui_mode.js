@@ -117,13 +117,15 @@ function getCssPixelSize(variableName, fallback = 16) {
      return Number.isFinite(resolved) ? resolved : fallback;
 }
 
+// NOTE: GAME MENU SPACING
+
 export function getGameMenuSpacing() {
      const uiFontMd = getCssPixelSize("--font-size-md", 16);
      const uiFontSm = getCssPixelSize("--font-size-sm", 10);
 
      return {
           titleGap: uiFontMd * 2,
-          rowGap: uiFontSm
+          rowGap: uiFontSm * 2
      };
 }
 
@@ -227,7 +229,7 @@ export function dismissScreenWelcomeToTipsMenu() {
      resetTouchControls();
      resetEntityColorCycle();
 
-     updateMiniGameCanvasSize();
+     syncCanvasResolutionAndUiBounds();
      resetPlayerPosition();
      updateTouchControlBounds();
 
@@ -251,7 +253,7 @@ export function dismissScreenWelcomeToOptionsMenu() {
      resetTouchControls();
      resetEntityColorCycle();
 
-     updateMiniGameCanvasSize();
+     syncCanvasResolutionAndUiBounds();
      resetPlayerPosition();
      updateTouchControlBounds();
 
@@ -345,7 +347,7 @@ export function getGameWelcomeAlpha() {
 
 // CANVAS
 
-export function resizeMiniGameCanvasFromCss() {
+export function syncCanvasResolutionFromCssSize() {
      if (!miniGameCanvas || !miniGameCtx) {
           return;
      }
@@ -360,8 +362,8 @@ export function resizeMiniGameCanvasFromCss() {
      setMiniGameSize(rect.width, rect.height);
 }
 
-export function updateMiniGameCanvasSize() {
-     resizeMiniGameCanvasFromCss();
+export function syncCanvasResolutionAndUiBounds() {
+     syncCanvasResolutionFromCssSize();
      updateTouchControlBounds();
      updateMenuUiBounds();
 }
@@ -373,7 +375,7 @@ export function startNewGameRound() {
      resetTouchControls();
      resetEntityColorCycle();
 
-     updateMiniGameCanvasSize();
+     syncCanvasResolutionAndUiBounds();
      resetPlayerPosition();
      updateTouchControlBounds();
      updateMenuUiBounds();
@@ -469,18 +471,20 @@ function setOptionRowBounds(row, decreaseButton, increaseButton, x, y, width, he
      increaseButton.height = height;
 }
 
+// NOTE: GAME MENU SIZING
+
 function getMenuLayoutMetrics(panelX, panelY, panelWidth, panelHeight) {
      const { titleGap, rowGap } = getGameMenuSpacing();
-     const uiFontMd = getCssPixelSize("--font-size-md", 16);
+     const uiFontMd = getCssPixelSize("--font-size-md", 15);
 
-     const sidePadding = Math.max(14, panelWidth * 0.06);
-     const buttonHeight = 40;
+     const sidePadding = Math.max(10, panelWidth * 0.05);
+     const buttonHeight = 50;
      const buttonX = panelX + sidePadding;
      const buttonWidth = panelWidth - (sidePadding * 2);
 
-     const topPadding = Math.max(14, panelHeight * 0.05);
+     const topPadding = Math.max(10, panelHeight * 0.05);
      const titleHeight = uiFontMd * 2;
-     const backButtonSize = Math.max(28, uiFontMd * 1.6);
+     const backButtonSize = Math.max(50);
      const backButtonX = buttonX;
      const backButtonY = panelY + topPadding;
 
@@ -752,7 +756,7 @@ export function startSparkleSeeker() {
      resetTouchControls();
      resetEntityColorCycle();
 
-     updateMiniGameCanvasSize();
+     syncCanvasResolutionAndUiBounds();
      resetPlayerPosition();
      updateTouchControlBounds();
      updateMenuUiBounds();
@@ -794,7 +798,7 @@ export function startSparkleSeeker() {
 
      bindKeyboardInput();
      bindPointerInput();
-     bindResizeHandler(updateMiniGameCanvasSize);
+     bindResizeHandler(syncCanvasResolutionAndUiBounds);
 
      gameLoop();
 }
