@@ -335,7 +335,7 @@ function syncNavButtonGlow() {
 
      const currentColor = getCssColor(
           "--menu-button-color",
-          getCssColor("--font-color", getCssColor("--color-text", "#ffffff"))
+          getCssColor("--color-text", getCssColor("--color-text", "#ffffff"))
      );
 
      navButton.style.color = currentColor;
@@ -577,7 +577,7 @@ function cycleMarqueeColors() {
           const nextAccentColor = accentColorEngine.next();
 
           if (nextAccentColor) {
-               document.documentElement.style.setProperty("--color-accent", nextAccentColor);
+               document.documentElement.style.setProperty("--color-rainbow", nextAccentColor);
                syncNavButtonGlow();
           }
      }
@@ -664,7 +664,7 @@ function createBgParticle(startAboveScreen = false) {
                ? sparkleSettings.respawnOffsetTop
                : Math.random() * bgHeight,
           char: Math.random() < 0.5 ? "✦" : "✧",
-          color: sparkleColorEngine.next() || getCssColor("--font-color", getCssColor("--color-text", "#ffffff")),
+          color: sparkleColorEngine.next() || getCssColor("--color-rainbow", getCssColor("--color-text", "#ffffff")),
           size: randomNumber(sparkleSettings.sizeMin, sparkleSettings.sizeMax),
           speed: randomNumber(sparkleSettings.speedMin, sparkleSettings.speedMax),
           wobbleOffset: randomNumber(0, Math.PI * 2),

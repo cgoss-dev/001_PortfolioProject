@@ -77,7 +77,7 @@ export function getCssPixelSize(variableName, fallback = 16) {
 // NOTE: JS Root
 
 export function getUiTheme() {
-     const fontColor = getCssColor("--font-color", getCssColor("--color-text", "#ffffff"));
+     const fontColor = getCssColor("--color-text", getCssColor("--color-text", "#ffffff"));
 
      return {
           fonts: {
@@ -396,7 +396,7 @@ export function updateWelcomeTitleColors(titleLines = getCurrentScreenTitleLines
      }
 
      if (!welcomeColorEngine?.nextCycle) {
-          const fallbackColor = getCssColor("--font-color", getCssColor("--color-text", "#ffffff"));
+          const fallbackColor = getCssColor("--color-rainbow", getCssColor("--color-rainbow", "#ffffff"));
           welcomeCurrentColors = titleLines.map((line) => Array(line.length).fill(fallbackColor));
           welcomePreviousColors = welcomeCurrentColors.map((colors) => [...colors]);
           welcomeLastColorCycleTime = now;
@@ -417,10 +417,10 @@ export function getWelcomeCurrentColors() {
 
 export function getWelcomeTitleFontSize(theme, titleLines = getCurrentScreenTitleLines()) {
      const { fonts } = theme;
-     const baseSize = Math.min(miniGameWidth * 0.18, miniGameHeight * 0.16);
-     const maxSize = Math.max(48, baseSize);
-     const minSize = 28;
-     const sidePadding = 32;
+     const baseSize = Math.min(miniGameWidth * 0.2, miniGameHeight * 0.2);
+     const maxSize = Math.max(50, baseSize);
+     const minSize = 20;
+     const sidePadding = 50;
      let fontSize = maxSize;
 
      miniGameCtx.save();
@@ -477,7 +477,7 @@ export function updateTipsTitleColors(title) {
 
      if (!tipsTitleColorEngine?.nextCycleForText) {
           tipsTitleCurrentColors = Array(title.length).fill(
-               getCssColor("--font-color", getCssColor("--color-text", "#ffffff"))
+               getCssColor("--color-rainbow", getCssColor("--color-rainbow", "#ffffff"))
           );
      } else {
           tipsTitleCurrentColors = tipsTitleColorEngine.nextCycleForText(title, tipsTitlePreviousColors);

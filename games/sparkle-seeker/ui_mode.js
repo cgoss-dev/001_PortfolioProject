@@ -91,9 +91,12 @@ import {
 } from "./entities_level.js";
 
 import {
-     drawGame,
-     updateWelcomeTitleColors
+     drawGame
 } from "./ui_draw.js";
+
+import {
+     updateWelcomeTitleColors
+} from "./ui_draw_shared.js";
 
 function getCssPixelSize(variableName, fallback = 16) {
      if (!document?.body) {

@@ -5,9 +5,9 @@
 
 :root {
      /* THEME COLORS */
-          --color-bg: #000000;
-          --color-text: #ffffff;
-          --color-accent: #ea76cb;
+          --color-bg: #000;
+          --color-text: #fff;
+          --color-rainbow: #fff; /*this is given the rainbow effect in the root js file*/
           --translucent-none: rgba(0, 0, 0, 0);
           --translucent-soft: rgba(0, 0, 0, 0.25);
           --translucent-medium: rgba(0, 0, 0, 0.5);
@@ -22,7 +22,7 @@
           --rainbow-yellow: #ff0;
 
           --rainbow-lime: #bf0;
-          --rainbow-green: #0f0;  
+          --rainbow-green: #0f0;
           --rainbow-mint: #0fb;
           
           --rainbow-cyan: #0ff;
@@ -45,23 +45,19 @@
      /* TYPOGRAPHY */
           --font-body: "Noto Sans Mono", monospace;
           --font-display: "Bungee Shade", monospace;
-          --font-color: var(--color-text);
           --font-size-lg: clamp(5rem, 15vw, 25rem);
           --font-size-md: clamp(1rem, 2vw, 3rem);
           --font-size-sm: clamp(0.75rem, 1.5vw, 1.5rem);
-          --font-color-marquee: var(--font-color);
-          --font-color-medium: var(--font-color);
-          --font-color-small: var(--font-color);
 
      /* COMPONENTS */
           /* MENU */
-               --menu-button-color: var(--font-color);
+               --menu-button-color: var(--color-text);
                --menu-panel-min-width: 10em;
                --menu-item-padding: 0.25em;
 
           /* NAV */
                --nav-panel-width: 100%;
-               --nav-pill-gap: clamp(1.5rem, 1vw, 2rem);
+               --nav-pill-gap: clamp(0.4rem, 0.7vw, 0.8rem);
                --nav-pill-padding-y: 0.5rem;
                --nav-pill-padding-x: 0.5rem;
                --nav-icon-size: clamp(2rem, 5vw, 3rem);
@@ -69,8 +65,8 @@
           /* PANEL */
                --panel-radius: 1em;
                --panel-border-width: 0.5rem;
-               --panel-border-color: var(--font-color);
-               --panel-glow-color: var(--font-color);
+               --panel-border-color: var(--color-text);
+               --panel-glow-color: var(--color-text);
                --panel-border: var(--panel-border-width) solid var(--panel-border-color);
 
      /* EFFECTS */
@@ -136,7 +132,7 @@ body {
      text-align: left;
      min-height: 100dvh;
      background: var(--color-bg);
-     color: var(--font-color);
+     color: var(--color-text);
      font-family: var(--font-body);
      position: relative;
      overflow-x: hidden;
@@ -148,7 +144,7 @@ body {
      max-width: 100%;
      min-height: 100dvh;
      margin: 0 auto;
-     padding: var(--font-size-sm);
+     padding: 1rem 0.5rem 2rem;
      position: relative;
      z-index: var(--z-ui);
      display: grid;
@@ -202,7 +198,7 @@ header {
      justify-content: center;
      gap: 0.5rem;
      min-width: 0;
-     padding-bottom: 0.25em;
+     padding-bottom: 0;
 }
 
 h1 {
@@ -238,9 +234,9 @@ h1 {
      display: none;
      align-items: center;
      justify-content: center;
-     width: 3rem;
-     height: 3rem;
-     padding: var(--font-size-sm);
+     width: 1rem;
+     height: 1rem;
+     padding: 0;
      margin: 0;
      border: var(--panel-border);
      border-radius: 999px;
@@ -248,7 +244,7 @@ h1 {
      cursor: pointer;
      font-family: var(--font-display);
      font-size: 1rem;
-     line-height: 1.25;
+     line-height: 1;
      color: var(--menu-button-color);
      -webkit-text-fill-color: currentColor;
      text-shadow: var(--glow-text);
@@ -332,7 +328,7 @@ h1 {
      display: flex;
      justify-content: center;
      align-items: stretch;
-     gap: var(--font-size-sm);
+     gap: var(--nav-pill-gap);
      width: 100%;
      max-width: 100%;
      flex-wrap: wrap;
@@ -343,7 +339,7 @@ h1 {
      margin: 0;
      padding: 0;
      min-width: 0;
-     flex: 1 1 9rem;
+     flex: 1 5rem;
      font-size: var(--font-size-sm);
      text-align: center;
 }
@@ -360,14 +356,14 @@ h1 {
      width: 100%;
      max-width: 100%;
      min-width: 0;
-     padding: var(--font-size-sm);
-     color: var(--font-color-medium);
+     padding: 0.4rem;
+     color: var(--color-text);
      background: none;
      border-radius: 999px;
      cursor: pointer;
      text-align: center;
      white-space: normal;
-     gap: clamp(0rem, 0.5vw, 0.7rem);
+     gap: 0.35rem;
      transition:
           background-color 0.2s ease-in-out,
           color 0.2s ease-in-out,
@@ -378,7 +374,7 @@ h1 {
 .nav-link:hover,
 .nav-link:active,
 .nav-link:focus-visible {
-     color: var(--font-color);
+     color: var(--color-text);
      text-shadow: var(--glow-text);
 }
 
@@ -455,8 +451,10 @@ h1 {
      min-width: 0;
      margin: 0 auto;
      flex: 1;
+     min-height: 0;
      display: flex;
      flex-direction: column;
+     padding: 0;
 }
 
 .hero-stack {
@@ -466,16 +464,16 @@ h1 {
      flex: 1;
      min-height: 0;
      min-width: 0;
-     position: relative;
-     display: flex;
-     flex-direction: column;
-     justify-content: center;
-     align-items: center;
-     gap: 0;
-     padding: 0.5rem;
+     display: grid;
+     grid-template-rows: 1fr auto auto 1fr auto;
+     justify-items: center;
+     align-items: start;
+     row-gap: 0.2rem;
+     padding: 0;
 }
 
 .hero-stack h1 {
+     grid-row: 2;
      margin: 0;
      width: 100%;
      max-width: 100%;
@@ -485,19 +483,19 @@ h1 {
 }
 
 .hero-blurb {
+     grid-row: 5;
+     align-self: end;
      width: 100%;
      max-width: 100%;
-     flex: 0 0 auto;
      margin: 0 auto;
-     padding-inline: 0.5rem;
      display: flex;
      align-items: center;
      justify-content: center;
      min-width: 0;
-     position: absolute;
-     left: 50%;
-     bottom: 0.5rem;
-     transform: translateX(-50%);
+     position: static;
+     left: auto;
+     bottom: auto;
+     transform: none;
 }
 
 /* NOTE: MARQUEE */
@@ -541,10 +539,8 @@ h1 {
      width: 100%;
      max-width: 100%;
      margin: 0 auto;
-     padding-top: 0.5rem;
-     padding-left: 0;
-     padding-right: 0;
-     color: var(--font-color-small);
+     padding: 0;
+     color: var(--color-text);
      font-size: var(--font-size-sm);
      line-height: 1;
      text-align: center;
@@ -569,9 +565,9 @@ h1 {
 @media (min-width: 60rem) {
      .nav-link {
           flex-direction: column;
-          gap: clamp(0rem, 0.35vw, 0.35rem);
-          padding-top: 0.8rem;
-          padding-bottom: 0.8rem;
+          gap: 0.25rem;
+          padding-top: 0.7rem;
+          padding-bottom: 0.7rem;
      }
 
      .nav-menu li {
@@ -603,7 +599,7 @@ h1 {
 
 @media (min-width: 40.0001rem) and (max-width: 59.9999rem) {
      .nav-link {
-          gap: clamp(0rem, 0.5vw, 0.6rem);
+          gap: 0.3rem;
           flex-direction: column;
           align-items: center;
      }
@@ -638,7 +634,7 @@ h1 {
 @media (min-width: 20.0001rem) and (max-width: 40rem) {
      .nav-link {
           gap: 0;
-          padding-inline: 0.5rem;
+          padding-inline: 0.35rem;
           flex-direction: column;
           align-items: center;
      }
@@ -695,7 +691,7 @@ h1 {
 
      .nav-list {
           justify-content: center;
-          gap: clamp(0.2rem, 1vw, 0.4rem);
+          gap: clamp(0.1rem, 0.6vw, 0.25rem);
      }
 
      .nav-menu li {
@@ -740,9 +736,9 @@ h1 {
 /* SPARKLE SEEKER */
 
 .game-container {
-     /* Allow canvas height to vary from 75% to 125% of its width. */
      --game-canvas-width: min(100%, 75rem);
 
+     grid-row: 3;
      width: var(--game-canvas-width);
      height: clamp(
           calc(var(--game-canvas-width) * 0.75),
@@ -750,7 +746,7 @@ h1 {
           calc(var(--game-canvas-width) * 1.25)
      );
 
-     margin: 0 auto;
+     margin: 0;
      border: var(--panel-border);
      border-radius: var(--panel-radius);
      box-shadow: var(--glow-panel);
