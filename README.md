@@ -1,4 +1,4 @@
-<img width="1200" height="1200" alt="vaporwaveNyanCat" src="https://github.com/user-attachments/assets/2f3542e5-44c4-47fa-be76-f0c3d847d47f" />
+<img width="1200" height="1000" alt="vaporwaveNyanCat" src="https://github.com/user-attachments/assets/2f3542e5-44c4-47fa-be76-f0c3d847d47f" />
 
 # 💖 PORTFOLIO PROJECT
 Digital footprint, games, resources.
