@@ -7,33 +7,33 @@ Digital footprint, games, resources.
 -    https://medium.com/@ruthieee/5-big-ideas-for-designing-accessible-video-games-e403a2c5d4d7
 -    https://www.w3.org/TR/wcag-3.0/
 -    https://guides.lib.umich.edu/c.php?g=282989&p=7652278
-
 <br><br>
 
 ### MASSIVE REFACTOR
-**game_engine.js**
-Main game loop, startup flow, state transitions, and top-level orchestration.<br>
+-    <ins>game_engine.js</ins><br>
+Main game loop, startup flow, state transitions, and top-level orchestration.<p>
 
-**ui.js**
-All HUD, menus, overlays, menu layout, and menu click/touch handling.<br>
+-    <ins>ui.js</ins><br>
+All HUD, menus, overlays, menu layout, and menu click/touch handling.<p>
 
-**config.js**
-Player-facing settings, game options, accessibility toggles, audio settings, and shared tunables.<br>
+-    <ins>config.js</ins><br>
+Player-facing settings, game options, accessibility toggles, audio settings, and shared tunables.<p>
 
-**input.js**
-Player movement input only, including keyboard, pointer, and touch movement controls.<br>
+-    <ins>input.js</ins><br>
+Player movement input only, including keyboard, pointer, and touch movement controls.<p>
 
-**particle_engine.js**
-Spawning, updating, collecting, and drawing sparkles, friends, enemies, and bursts.<br>
+-    <ins>particle_engine.js</ins><br>
+Spawning, updating, collecting, and drawing sparkles, friends, enemies, and bursts.<p>
 
-**player.js**
-Player state helpers, movement/update behavior, and player rendering.<br>
+-    <ins>player.js</ins><br>
+Player state helpers, movement/update behavior, and player rendering.<p>
 
-**vars.js**
-Shared runtime data, canvas references, mutable arrays/flags, and simple setters only.<br>
+-    <ins>vars.js</ins><br>
+Shared runtime data, canvas references, mutable arrays/flags, and simple setters only.<p>
 
-**win_rules_conditions.js**
-Win logic, level/progression rules, score thresholds, and progression-related screen/help copy.<br>
+-    <ins>win_rules_conditions.js</ins><br>
+Win logic, level/progression rules, score thresholds, and progression-related screen/help copy.<p>
+<br><br>
 
 ### A11Y OPTIONS
 -    Sound: music/sfx (off-min-low-med-max).
