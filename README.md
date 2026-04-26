@@ -10,29 +10,21 @@ Digital footprint, games, resources.
 <br><br>
 
 ### MASSIVE REFACTOR
--    <ins>game_engine.js</ins><br>
-Main game loop, startup flow, state transitions, and top-level orchestration.<p>
+-    <ins>game_engine.js</ins>: Main game loop, startup flow, state transitions, and top-level orchestration.<p>
 
--    <ins>ui.js</ins><br>
-All HUD, menus, overlays, menu layout, and menu click/touch handling.<p>
+-    <ins>ui.js</ins>: All HUD, menus, overlays, menu layout, and menu click/touch handling.<p>
 
--    <ins>config.js</ins><br>
-Player-facing settings, game options, accessibility toggles, audio settings, and shared tunables.<p>
+-    <ins>config.js</ins>: Player-facing settings, game options, accessibility toggles, audio settings, and shared tunables.<p>
 
--    <ins>input.js</ins><br>
-Player movement input only, including keyboard, pointer, and touch movement controls.<p>
+-    <ins>input.js</ins>: Player movement input only, including keyboard, pointer, and touch movement controls.<p>
 
--    <ins>particle_engine.js</ins><br>
-Spawning, updating, collecting, and drawing sparkles, friends, enemies, and bursts.<p>
+-    <ins>particle_engine.js</ins>: Spawning, updating, collecting, and drawing sparkles, friends, enemies, and bursts.<p>
 
--    <ins>player.js</ins><br>
-Player state helpers, movement/update behavior, and player rendering.<p>
+-    <ins>player.js</ins>: Player state helpers, movement/update behavior, and player rendering.<p>
 
--    <ins>vars.js</ins><br>
-Shared runtime data, canvas references, mutable arrays/flags, and simple setters only.<p>
+-    <ins>vars.js</ins>: Shared runtime data, canvas references, mutable arrays/flags, and simple setters only.<p>
 
--    <ins>win_rules_conditions.js</ins><br>
-Win logic, level/progression rules, score thresholds, and progression-related screen/help copy.<p>
+-    <ins>win_rules_conditions.js</ins>: Win logic, level/progression rules, score thresholds, and progression-related screen/help copy.
 <br><br>
 
 ### A11Y OPTIONS
