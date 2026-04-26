@@ -72,7 +72,7 @@ export const defaultOptionLevelIndex = 2;
 
 // ==================================================
 // NOTE: EFFECT STATE
-// Runtime storage only. Effect rules live in entities.js.
+// Runtime storage only. Effect rules live in gameplay systems.
 // Timers are frame counts, so 60 frames is roughly 1 second.
 // ==================================================
 
@@ -107,12 +107,12 @@ export const activeStatusUi = {
 export let gameStarted = false;
 export let gamePaused = true;
 
-// Transitional screen-routing state.
-// These can be removed later once the menu layer is fully collapsed.
+// Menu state for menu screens like Tips / Options.
+// Closed menus use an empty view string.
 export let gameMenuOpen = false;
-export let gameMenuView = "main";
+export let gameMenuView = "";
 
-// Compatibility booleans for gameplay/audio systems that still expect simple flags.
+// Compatibility booleans for systems that still expect simple flags.
 export let musicEnabled = true;
 export let soundEffectsEnabled = true;
 export let harmfulEnabled = true;
@@ -136,16 +136,13 @@ export let gameOverlayTimer = 0;
 export let gameOverlayDuration = 0;
 
 // ==================================================
-// NOTE: SCREEN UI HIT BOXES
-// These are layout bounds used by pointer/touch input.
+// NOTE: MENU UI HIT BOXES
+// These are layout bounds for menu screens that pointer/touch input can read.
+// Welcome / paused action hitboxes now live in `ui_mode.js`.
 // ==================================================
 
 export const gameMenuUi = {
      panel: { x: 0, y: 0, width: 0, height: 0 },
-
-     newGameButton: { x: 0, y: 0, width: 0, height: 0 },
-     tipsButton: { x: 0, y: 0, width: 0, height: 0 },
-     optionsButton: { x: 0, y: 0, width: 0, height: 0 },
 
      tipsHowToPlayButton: { x: 0, y: 0, width: 0, height: 0 },
      tipsHelpEffectsButton: { x: 0, y: 0, width: 0, height: 0 },
@@ -513,7 +510,7 @@ export function resetGameState() {
      gamePaused = true;
 
      gameMenuOpen = false;
-     gameMenuView = "main";
+     gameMenuView = "";
 
      // Options are intentionally NOT reset here.
      // They persist across rounds until the player changes them.

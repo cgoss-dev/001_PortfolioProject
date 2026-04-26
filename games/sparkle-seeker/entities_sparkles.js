@@ -68,21 +68,6 @@ function getGameParticleSizeMax() {
      return siteTheme?.getSparkleSettings?.().sizeMax ?? 30;
 }
 
-function getRainbowPalette() {
-     return siteTheme?.getRainbowPalette?.() ?? [
-          "#ea76cb",
-          "#d20f39",
-          "#fe640b",
-          "#df8e1d",
-          "#40a02b",
-          "#179299",
-          "#04a5e5",
-          "#1e66f5",
-          "#7287fd",
-          "#8839ef"
-     ];
-}
-
 // ==================================================
 // COLOR ROTATION
 // Uses the shared root color engine instead of a local duplicate.

@@ -11,7 +11,17 @@
 // - screen state transitions
 // - game update loop
 // - hitbox state storage
-// - shared draw helpers / theme helpers / HUD primitives
+// - screen copy / menu bounds state
+// - reusable components
+// - theme/color/font token creation
+//
+// Newbie note:
+// - This file should mostly answer "how do we draw this screen?"
+// - If code is about button hitboxes, menu bounds, or screen text content,
+//   it probably belongs in `ui_mode.js` or `entities_level.js`.
+// - If code is about visual config, fonts, colors, or shared title behavior,
+//   it probably belongs in `ui_config.js`.
+// - If code is about reusable drawing pieces, it probably belongs in `ui_components.js`.
 
 import {
      miniGameCtx,
@@ -46,17 +56,20 @@ import {
 } from "./entities_effects.js";
 
 import {
+     getCurrentScreenActionTexts,
+     getCurrentPausedActionTexts,
+     getHowToPlayLines,
+     getHelpfulEffectLines,
+     getHarmfulEffectLines
+} from "./entities_level.js";
+
+import {
      isScreenWelcomeActive,
      isOverlayScreenActive,
      getScreenActionUi,
      getPausedActionUi,
      getCurrentScreenTitleLines,
-     getCurrentScreenActionTexts,
-     getCurrentPausedActionTexts,
      getGameWelcomeAlpha,
-     getHowToPlayLines,
-     getHelpfulEffectLines,
-     getHarmfulEffectLines,
      getHarmfulToggleLabel,
      getMusicToggleLabel,
      getSoundEffectsToggleLabel,
@@ -65,16 +78,19 @@ import {
 
 import {
      getUiTheme,
+     updateWelcomeTitleColors,
+     getWelcomeCurrentColors,
+     getWelcomeMarqueeFontSize,
+     getMenuScreenLayout,
+     drawMenuScreenTitle
+} from "./ui_config.js";
+
+import {
      drawRoundedRect,
      drawPanelBox,
      drawWrappedText,
      parseRichTextSegments,
      getRichTextIcon,
-     updateWelcomeTitleColors,
-     getWelcomeCurrentColors,
-     getWelcomeTitleFontSize,
-     getMenuScreenLayout,
-     drawMenuScreenTitle,
      drawMenuButton,
      drawMenuBackButton,
      drawOptionStepper,
@@ -83,9 +99,25 @@ import {
      drawHealth,
      drawFogOverlay,
      drawTouchButtons
-} from "./ui_draw_shared.js";
+} from "./ui_components.js";
 
-// NOTE: MENU SCREENS
+// ==================================================
+// TITLE COLOR UPDATE
+// Called by `ui_mode.updateGame()` so animated title colors
+// keep ticking even before the next draw.
+// ==================================================
+
+export function updateScreenTitleColorState() {
+     if (!isScreenWelcomeActive() && !isOverlayScreenActive()) {
+          return;
+     }
+
+     updateWelcomeTitleColors(getCurrentScreenTitleLines());
+}
+
+// ==================================================
+// MENU SCREENS
+// ==================================================
 
 function drawTipsMenuScreen(theme) {
      if (!miniGameCtx) {
@@ -232,7 +264,9 @@ function drawOptionsScreen(theme) {
      miniGameCtx.restore();
 }
 
-// NOTE: DRAW GAME WELCOME OVERLAY
+// ==================================================
+// SCREEN OVERLAYS
+// ==================================================
 
 function drawGameWelcomeOverlay(theme) {
      if (!miniGameCtx || (!isScreenWelcomeActive() && !isOverlayScreenActive())) {
@@ -245,13 +279,13 @@ function drawGameWelcomeOverlay(theme) {
      const alpha = getGameWelcomeAlpha();
      const titleLines = getCurrentScreenTitleLines();
      const actionTexts = getCurrentScreenActionTexts();
-     const titleFontSize = getWelcomeTitleFontSize(theme, titleLines);
+     const titleFontSize = getWelcomeMarqueeFontSize(theme, titleLines);
 
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
-     miniGameCtx.font = `400 ${screenConfig.buttonFontSize}px ${fonts.body}`;
+     miniGameCtx.font = `400 ${screenConfig.buttonTextSize}px ${fonts.body}`;
 
      const measuredActions = actionTexts.map((text) => ({
           text,
@@ -262,7 +296,7 @@ function drawGameWelcomeOverlay(theme) {
           screenConfig.buttonGapMin,
           titleFontSize * screenConfig.buttonGapTitleScale
      );
-     const tallestButtonHeight = screenConfig.buttonFontSize + (screenConfig.buttonPaddingY * 2);
+     const tallestButtonHeight = screenConfig.buttonTextSize + (screenConfig.buttonPaddingY * 2);
 
      const totalTitleBlockHeight =
           titleFontSize +
@@ -283,7 +317,7 @@ function drawGameWelcomeOverlay(theme) {
           (tallestButtonHeight / 2);
 
      updateWelcomeTitleColors(titleLines);
-     const welcomeCurrentColors = getWelcomeCurrentColors();
+     const colorsForWelcomeTitle = getWelcomeCurrentColors();
 
      miniGameCtx.save();
      miniGameCtx.globalAlpha = alpha;
@@ -295,11 +329,11 @@ function drawGameWelcomeOverlay(theme) {
 
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "middle";
-     miniGameCtx.font = `${titleFontSize}px ${fonts.display}`;
+     miniGameCtx.font = `${titleFontSize}px ${fonts.marquee}`;
 
      titleLines.forEach((line, lineIndex) => {
           const y = lineIndex === 0 ? firstLineY : secondLineY;
-          const colorsForLine = welcomeCurrentColors[lineIndex] || [];
+          const colorsForLine = colorsForWelcomeTitle[lineIndex] || [];
           const letterWidths = [];
 
           for (let i = 0; i < line.length; i += 1) {
@@ -343,7 +377,7 @@ function drawGameWelcomeOverlay(theme) {
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
-     miniGameCtx.font = `400 ${screenConfig.buttonFontSize}px ${fonts.body}`;
+     miniGameCtx.font = `400 ${screenConfig.buttonTextSize}px ${fonts.body}`;
 
      const totalActionWidth =
           measuredActions.reduce((sum, item) => sum + item.textWidth + (screenConfig.buttonPaddingX * 2), 0) +
@@ -353,7 +387,7 @@ function drawGameWelcomeOverlay(theme) {
 
      measuredActions.forEach((item) => {
           const buttonWidth = item.textWidth + (screenConfig.buttonPaddingX * 2);
-          const buttonHeight = screenConfig.buttonFontSize + (screenConfig.buttonPaddingY * 2);
+          const buttonHeight = screenConfig.buttonTextSize + (screenConfig.buttonPaddingY * 2);
           const buttonX = currentX;
           const buttonY = actionY - (buttonHeight / 2);
           const textX = buttonX + (buttonWidth / 2);
@@ -372,7 +406,7 @@ function drawGameWelcomeOverlay(theme) {
           miniGameCtx.fillStyle = colors.controlText;
           miniGameCtx.textAlign = "center";
           miniGameCtx.textBaseline = "middle";
-          miniGameCtx.font = `400 ${screenConfig.buttonFontSize}px ${fonts.body}`;
+          miniGameCtx.font = `400 ${screenConfig.buttonTextSize}px ${fonts.body}`;
           miniGameCtx.fillText(item.text, textX, actionY + 1);
           miniGameCtx.restore();
 
@@ -426,10 +460,9 @@ function drawPausedOverlay(theme) {
           Math.max(paused.buttonYOffsetMin, titleFontSize * paused.buttonYOffsetTitleScale);
 
      updateWelcomeTitleColors(titleLines);
-     const welcomeCurrentColors = getWelcomeCurrentColors();
+     const colorsForPausedTitle = getWelcomeCurrentColors();
 
      miniGameCtx.save();
-
      miniGameCtx.fillStyle = paused.overlayFill;
      miniGameCtx.fillRect(0, 0, miniGameWidth, miniGameHeight);
 
@@ -452,11 +485,11 @@ function drawPausedOverlay(theme) {
 
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "middle";
-     miniGameCtx.font = `${titleFontSize}px ${fonts.display}`;
+     miniGameCtx.font = `${titleFontSize}px ${fonts.marquee}`;
 
      titleLines.forEach((line, lineIndex) => {
           const y = titleY + (lineIndex * titleFontSize);
-          const colorsForLine = welcomeCurrentColors[lineIndex] || [];
+          const colorsForLine = colorsForPausedTitle[lineIndex] || [];
           const letterWidths = [];
 
           for (let i = 0; i < line.length; i += 1) {
@@ -483,7 +516,7 @@ function drawPausedOverlay(theme) {
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.shadowColor = colors.overlayGlow;
      miniGameCtx.shadowBlur = glow.uiSoftGlow;
-     miniGameCtx.font = `400 ${paused.buttonFontSize}px ${fonts.body}`;
+     miniGameCtx.font = `400 ${paused.buttonTextSize}px ${fonts.body}`;
 
      const measuredActions = actionTexts.map((text) => ({
           text,
@@ -498,7 +531,7 @@ function drawPausedOverlay(theme) {
 
      measuredActions.forEach((item) => {
           const buttonWidth = item.textWidth + (paused.buttonPaddingX * 2);
-          const buttonHeight = paused.buttonFontSize + (paused.buttonPaddingY * 2);
+          const buttonHeight = paused.buttonTextSize + (paused.buttonPaddingY * 2);
           const buttonX = currentX;
           const buttonY = actionY - (buttonHeight / 2);
           const textX = buttonX + (buttonWidth / 2);
@@ -517,7 +550,7 @@ function drawPausedOverlay(theme) {
           miniGameCtx.fillStyle = colors.controlText;
           miniGameCtx.textAlign = "center";
           miniGameCtx.textBaseline = "middle";
-          miniGameCtx.font = `400 ${paused.buttonFontSize}px ${fonts.body}`;
+          miniGameCtx.font = `400 ${paused.buttonTextSize}px ${fonts.body}`;
           miniGameCtx.fillText(item.text, textX, actionY);
           miniGameCtx.restore();
 
@@ -569,7 +602,7 @@ function drawGameStatusOverlay(theme) {
      miniGameCtx.textAlign = "center";
      miniGameCtx.textBaseline = "middle";
 
-     miniGameCtx.font = `${sizes.uiFontMd}px ${fonts.display}`;
+     miniGameCtx.font = `${sizes.uiFontMd}px ${fonts.marquee}`;
      const titleWidth = miniGameCtx.measureText(gameOverlayText).width;
 
      let subWidth = 0;
@@ -601,7 +634,7 @@ function drawGameStatusOverlay(theme) {
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.shadowColor = colors.overlayGlow;
      miniGameCtx.shadowBlur = glow.uiStrongGlow;
-     miniGameCtx.font = `${sizes.uiFontMd}px ${fonts.display}`;
+     miniGameCtx.font = `${sizes.uiFontMd}px ${fonts.marquee}`;
      miniGameCtx.fillText(gameOverlayText, miniGameWidth / 2, titleY);
 
      if (hasSubtext) {
@@ -613,7 +646,9 @@ function drawGameStatusOverlay(theme) {
      miniGameCtx.restore();
 }
 
-// NOTE: MASTER DRAW ENTRY
+// ==================================================
+// MASTER DRAW ENTRY
+// ==================================================
 
 export function drawGame() {
      const theme = getUiTheme();

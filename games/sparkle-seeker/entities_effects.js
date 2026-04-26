@@ -78,7 +78,7 @@ export const helpfulEffectTypes = [
 ];
 
 export const harmfulEffectTypes = [
-     { name: "freeze", label: "FREEZE", char: "\u2744\uFE0E", effect: "freezePlayerMovement", durationSeconds: 3, lastsUntilUsed: false, penalty: 1 },
+     { name: "freeze", label: "FREEZE", char: "\u2744\uFE0E", effect: "freezePlayerMovement", durationSeconds: 4, lastsUntilUsed: false, penalty: 1 },
      { name: "surge", label: "SURGE", char: "\u26A1\uFE0E", effect: "doubleObjectFallSpeed", durationSeconds: 8, lastsUntilUsed: false, penalty: 1 },
      { name: "daze", label: "DAZE", char: "\u2300\uFE0E", effect: "reversePlayerMovement", durationSeconds: 8, lastsUntilUsed: false, penalty: 1 },
      { name: "glass", label: "GLASS", char: "\u26A0\uFE0E", effect: "nextHitExtraDamage", durationSeconds: 10, lastsUntilUsed: false, penalty: 1 },
@@ -109,21 +109,6 @@ function getGameParticleSizeMin() {
 
 function getGameParticleSizeMax() {
      return siteTheme?.getSparkleSettings?.().sizeMax ?? 30;
-}
-
-function getRainbowPalette() {
-     return siteTheme?.getRainbowPalette?.() ?? [ //FIXME: calling wrong rainbow
-          "#ea76cb",
-          "#d20f39",
-          "#fe640b",
-          "#df8e1d",
-          "#40a02b",
-          "#179299",
-          "#04a5e5",
-          "#1e66f5",
-          "#7287fd",
-          "#8839ef"
-     ];
 }
 
 // ==================================================

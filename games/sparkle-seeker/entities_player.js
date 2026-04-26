@@ -283,13 +283,13 @@ export function applyTemporaryPlayerFace(face, duration) {
      player.sparkleFaceTimer = duration;
 }
 
-// NOTE: SHARED FACE POP
+// SHARED FACE POP
 // Centralized collision scale effect for sparkles and effect pickups.
 export function triggerPlayerFacePop(scale = 1.1) {
      player.hitScale = Math.max(player.hitScale, scale);
 }
 
-// NOTE: PLAYER LEVEL SCALE
+// PLAYER LEVEL SCALE
 // Level 5 makes the player 10% larger.
 // This affects BOTH the drawn icon size and the collision radius.
 export function getPlayerLevelScale() {
