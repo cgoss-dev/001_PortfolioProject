@@ -82,13 +82,13 @@ import {
      updatePlayer,
      updatePlayerFaceState,
      updatePlayerTrail
-} from "./entities_player.js";
+} from "./player.js";
 
 import {
      updateSparkleSpawns,
      updateSparkles,
      collectSparkles
-} from "./entities_sparkles.js";
+} from "./entities.js";
 
 import {
      updateEffectState,
@@ -102,7 +102,7 @@ import {
      startOverlayDuration,
      overlayFadeFrames,
      getScreenTitleLinesForMode
-} from "./entities_level.js";
+} from "./win_rules_conditions.js";
 
 import {
      drawGame,

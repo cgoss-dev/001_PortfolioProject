@@ -25,7 +25,7 @@ import {
 
 import {
      getCurrentLevelNumber
-} from "./entities_level.js";
+} from "./win_rules_conditions.js";
 
 // ==================================================
 // PLAYER

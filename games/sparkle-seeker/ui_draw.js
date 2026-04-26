@@ -44,11 +44,11 @@ import {
 import {
      drawPlayer,
      drawPlayerTrail
-} from "./entities_player.js";
+} from "./player.js";
 
 import {
      drawSparkles
-} from "./entities_sparkles.js";
+} from "./entities.js";
 
 import {
      drawEffectPickups,
@@ -61,7 +61,7 @@ import {
      getHowToPlayLines,
      getHelpfulEffectLines,
      getHarmfulEffectLines
-} from "./entities_level.js";
+} from "./win_rules_conditions.js";
 
 import {
      isScreenWelcomeActive,
