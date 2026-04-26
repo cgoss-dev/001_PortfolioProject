@@ -1,33 +1,31 @@
-// NOTE: UI MODE
-// Game entry file loaded by page.
+// NOTE: 2-- GAME ENGINE
+// Main runtime orchestration for Sparkle Seeker.
 //
 // Owned here:
-// - canvas size syncing
-// - round/startup flow
-// - mode/state transitions
-// - gameplay update loop
-// - overlay timers
-// - screen action hitbox storage
-// - menu screen layout math
+// - startup / boot flow
+// - main game loop
+// - round reset flow
+// - screen/mode transitions
+// - overlay timers / overlay state helpers
+// - win / lose checks
+// - option step helpers used by input/UI
 //
-// NOT owned here anymore:
-// - screen-specific canvas rendering
-// - low-level shared draw primitives
-// - theme/color/font token creation
-// - progression/help copy
+// NOT owned here:
+// - raw shared data storage
+// - drawing implementation
+// - menu layout / menu click handling
+// - player movement input plumbing
+// - particle internals
 //
 // Newbie note:
-// - This file should answer "what state is the game in?" and
-//   "where should clickable menu things live?"
-// - If code is about actually drawing pixels, it belongs in `ui_draw.js`.
-// - If code is about reusable colors/fonts/shapes, it belongs in `ui_config.js`.
-// - If code is about progression text/goals/titles, it belongs in `entities_level.js`.
+// - This file should answer "what happens next?"
+// - If code draws things, it belongs in `9_UI.js`.
+// - If code stores shared mutable data, it belongs in `3_Vars.js`.
+// - If code updates sparkles/friends/enemies, it belongs in `8_Particles.js`.
 
 import {
      miniGameCanvas,
      miniGameCtx,
-     miniGameWidth,
-     miniGameHeight,
      gameStarted,
      gamePaused,
      gameMenuOpen,
@@ -35,16 +33,14 @@ import {
      gameOver,
      gameWon,
      gameOverlayText,
-     gameOverlaySubtext,
      gameOverlayTimer,
      gameOverlayDuration,
-     gameMenuUi,
-     musicLevel,
-     soundEffectsLevel,
-     harmfulLevel,
      optionLevelLabels,
      optionLevelValues,
      maxOptionLevelIndex,
+     musicLevel,
+     soundEffectsLevel,
+     harmfulLevel,
      effectPickups,
      sparkleScore,
      playerHealth,
@@ -64,127 +60,65 @@ import {
      setHarmfulLevel,
      setMiniGameSize,
 
+     resetUiActionBounds,
      resetGameState
-} from "./state.js";
+} from "./3_Vars.js";
 
 import {
      bindKeyboardInput,
      bindPointerInput,
      bindResizeHandler,
-     updatePauseButtonState,
      updateTouchControlBounds,
      resetTouchControls
-} from "./input.js";
+} from "./6_Input.js";
 
 import {
      resetPlayerPosition,
-     resetEntityColorCycle,
      updatePlayer,
      updatePlayerFaceState,
      updatePlayerTrail
-} from "./player.js";
+} from "./7_Player.js";
 
 import {
+     resetEntityColorCycle,
+     updateEffectState,
      updateSparkleSpawns,
      updateSparkles,
-     collectSparkles
-} from "./entities.js";
-
-import {
-     updateEffectState,
      updateEffectPickups,
      updateCollisionBursts,
+     collectSparkles,
      collectEffectPickups
-} from "./entities_effects.js";
+} from "./8_Particles.js";
 
 import {
      winScore,
      startOverlayDuration,
      overlayFadeFrames,
      getScreenTitleLinesForMode
-} from "./win_rules_conditions.js";
+} from "./5_WinRulesConditions.js";
 
 import {
      drawGame,
+     syncUiBounds,
+     updatePauseButtonState,
      updateScreenTitleColorState
-} from "./ui_draw.js";
+} from "./9_UI.js";
 
 import {
-     getUiTheme,
-     getMenuScreenLayout
-} from "./ui_config.js";
+     loadAndApplySavedOptions,
+     saveCurrentOptions
+} from "./4_Config.js";
 
+// ==================================================
 // SCREEN STATE
+// `screenWelcome` hides the board entirely.
+// `screenTryAgain` and `screenYouWin` are board overlays.
+// ==================================================
+
 let screenLayerActive = true;
 let screenLayerTimer = -1;
 let screenLayerDuration = -1;
-
-// SCREEN MODE
-// `screenWelcome` is the only screen that hides the board.
-// `screenTryAgain` and `screenYouWin` are overlays.
 let gameScreenMode = "screenWelcome";
-
-// ==================================================
-// SCREEN ACTION TARGETS
-// These hitboxes are updated by layout/draw code and read by input code.
-// Keeping them here makes `ui_mode.js` the source-of-truth for UI interaction state.
-// ==================================================
-
-const screenActionUi = {
-     startButton: { x: 0, y: 0, width: 0, height: 0 },
-     tipsButton: { x: 0, y: 0, width: 0, height: 0 },
-     menuButton: { x: 0, y: 0, width: 0, height: 0 }
-};
-
-const pausedActionUi = {
-     resumeButton: { x: 0, y: 0, width: 0, height: 0 },
-     tipsButton: { x: 0, y: 0, width: 0, height: 0 },
-     menuButton: { x: 0, y: 0, width: 0, height: 0 }
-};
-
-export function getScreenActionUi() {
-     return screenActionUi;
-}
-
-export function getPausedActionUi() {
-     return pausedActionUi;
-}
-
-export function resetScreenActionUiBounds() {
-     screenActionUi.startButton.x = 0;
-     screenActionUi.startButton.y = 0;
-     screenActionUi.startButton.width = 0;
-     screenActionUi.startButton.height = 0;
-
-     screenActionUi.tipsButton.x = 0;
-     screenActionUi.tipsButton.y = 0;
-     screenActionUi.tipsButton.width = 0;
-     screenActionUi.tipsButton.height = 0;
-
-     screenActionUi.menuButton.x = 0;
-     screenActionUi.menuButton.y = 0;
-     screenActionUi.menuButton.width = 0;
-     screenActionUi.menuButton.height = 0;
-
-     pausedActionUi.resumeButton.x = 0;
-     pausedActionUi.resumeButton.y = 0;
-     pausedActionUi.resumeButton.width = 0;
-     pausedActionUi.resumeButton.height = 0;
-
-     pausedActionUi.tipsButton.x = 0;
-     pausedActionUi.tipsButton.y = 0;
-     pausedActionUi.tipsButton.width = 0;
-     pausedActionUi.tipsButton.height = 0;
-
-     pausedActionUi.menuButton.x = 0;
-     pausedActionUi.menuButton.y = 0;
-     pausedActionUi.menuButton.width = 0;
-     pausedActionUi.menuButton.height = 0;
-}
-
-export function getCurrentScreenTitleLines() {
-     return getScreenTitleLinesForMode(gameScreenMode);
-}
 
 // ==================================================
 // SCREEN MODE HELPERS
@@ -192,7 +126,7 @@ export function getCurrentScreenTitleLines() {
 
 function setMenuViewAndRefresh(view) {
      setGameMenuView(view);
-     updateMenuUiBounds();
+     syncUiBounds();
 }
 
 export function isScreenWelcomeActive() {
@@ -208,6 +142,10 @@ export function isOverlayScreenActive() {
 
 export function getGameScreenMode() {
      return gameScreenMode;
+}
+
+export function getCurrentScreenTitleLines() {
+     return getScreenTitleLinesForMode(gameScreenMode);
 }
 
 export function dismissScreenWelcomeToStart() {
@@ -295,13 +233,13 @@ export function dismissMenuBackToPreviousScreen() {
           setGameOver(false);
           setGameWon(false);
           clearGameOverlay();
-          updateMenuUiBounds();
+          syncUiBounds();
           updateTouchControlBounds();
           return;
      }
 
      setGamePaused(true);
-     updateMenuUiBounds();
+     syncUiBounds();
      updateTouchControlBounds();
 }
 
@@ -361,145 +299,10 @@ export function syncCanvasResolutionFromCssSize() {
      setMiniGameSize(rect.width, rect.height);
 }
 
-// ==================================================
-// MENU LAYOUT / MENU INPUT BOUNDS
-// This math supports clicking/tapping on menu rows and buttons.
-// It belongs here because it defines interactive UI state, not drawing style.
-// ==================================================
-
-function setOptionRowBounds(row, decreaseButton, increaseButton, x, y, width, height) {
-     const arrowWidth = Math.min(48, Math.max(35, width * 0.18));
-
-     row.x = x;
-     row.y = y;
-     row.width = width;
-     row.height = height;
-
-     decreaseButton.x = x;
-     decreaseButton.y = y;
-     decreaseButton.width = arrowWidth;
-     decreaseButton.height = height;
-
-     increaseButton.x = x + width - arrowWidth;
-     increaseButton.y = y;
-     increaseButton.width = arrowWidth;
-     increaseButton.height = height;
-}
-
-function getMenuLayoutMetrics(panelX, panelWidth) {
-     const theme = getUiTheme();
-     const sharedLayout = getMenuScreenLayout(theme);
-     const buttonHeight = theme.layout.menu.buttonHeight;
-     const buttonX = panelX + sharedLayout.sidePadding;
-     const buttonWidth = panelWidth - (sharedLayout.sidePadding * 2);
-
-     return {
-          buttonHeight,
-          buttonX,
-          buttonWidth,
-          rowGap: sharedLayout.rowGap,
-          backButtonSize: sharedLayout.backButtonSize,
-          backButtonX: sharedLayout.backButtonX,
-          backButtonY: sharedLayout.backButtonY,
-          contentTopY: sharedLayout.contentTopY
-     };
-}
-
-export function updateMenuUiBounds() {
-     const panelX = 0;
-     const panelY = 0;
-     const panelWidth = miniGameWidth;
-     const panelHeight = miniGameHeight;
-
-     gameMenuUi.panel.x = panelX;
-     gameMenuUi.panel.y = panelY;
-     gameMenuUi.panel.width = panelWidth;
-     gameMenuUi.panel.height = panelHeight;
-
-     const layout = getMenuLayoutMetrics(panelX, panelWidth);
-
-     gameMenuUi.backButton.x = layout.backButtonX;
-     gameMenuUi.backButton.y = layout.backButtonY;
-     gameMenuUi.backButton.width = layout.backButtonSize;
-     gameMenuUi.backButton.height = layout.backButtonSize;
-
-     if (gameMenuView === "tips") {
-          const menuButtons = [
-               gameMenuUi.tipsHowToPlayButton,
-               gameMenuUi.tipsHelpEffectsButton,
-               gameMenuUi.tipsHarmEffectsButton
-          ];
-
-          menuButtons.forEach((row, index) => {
-               const y = layout.contentTopY + (index * (layout.buttonHeight + layout.rowGap));
-
-               row.x = layout.buttonX;
-               row.y = y;
-               row.width = layout.buttonWidth;
-               row.height = layout.buttonHeight;
-          });
-
-          return;
-     }
-
-     if (
-          gameMenuView === "tips_how_to_play" ||
-          gameMenuView === "tips_help_effects" ||
-          gameMenuView === "tips_harm_effects"
-     ) {
-          return;
-     }
-
-     if (gameMenuView !== "options") {
-          return;
-     }
-
-     const optionRows = [
-          {
-               row: gameMenuUi.harmfulRow,
-               decreaseButton: gameMenuUi.harmfulDecreaseButton,
-               increaseButton: gameMenuUi.harmfulIncreaseButton
-          },
-          {
-               row: gameMenuUi.musicRow,
-               decreaseButton: gameMenuUi.musicDecreaseButton,
-               increaseButton: gameMenuUi.musicIncreaseButton
-          },
-          {
-               row: gameMenuUi.soundEffectsRow,
-               decreaseButton: gameMenuUi.soundEffectsDecreaseButton,
-               increaseButton: gameMenuUi.soundEffectsIncreaseButton
-          }
-     ];
-
-     optionRows.forEach((item, index) => {
-          const y = layout.contentTopY + (index * (layout.buttonHeight + layout.rowGap));
-
-          setOptionRowBounds(
-               item.row,
-               item.decreaseButton,
-               item.increaseButton,
-               layout.buttonX,
-               y,
-               layout.buttonWidth,
-               layout.buttonHeight
-          );
-     });
-}
-
-export function isPointInsideMenuPanel(x, y) {
-     return (
-          x >= gameMenuUi.panel.x &&
-          x <= gameMenuUi.panel.x + gameMenuUi.panel.width &&
-          y >= gameMenuUi.panel.y &&
-          y <= gameMenuUi.panel.y + gameMenuUi.panel.height
-     );
-}
-
 export function syncCanvasResolutionAndUiBounds() {
      syncCanvasResolutionFromCssSize();
      updateTouchControlBounds();
-     updateMenuUiBounds();
+     syncUiBounds();
 }
 
 // ==================================================
@@ -558,18 +361,22 @@ export function getSoundEffectsToggleLabel() {
 
 export function decreaseMusicLevel() {
      setMusicLevel(getPreviousOptionLevelIndex(musicLevel));
+     saveCurrentOptions();
 }
 
 export function increaseMusicLevel() {
      setMusicLevel(getNextOptionLevelIndex(musicLevel));
+     saveCurrentOptions();
 }
 
 export function decreaseSoundEffectsLevel() {
      setSoundEffectsLevel(getPreviousOptionLevelIndex(soundEffectsLevel));
+     saveCurrentOptions();
 }
 
 export function increaseSoundEffectsLevel() {
      setSoundEffectsLevel(getNextOptionLevelIndex(soundEffectsLevel));
+     saveCurrentOptions();
 }
 
 export function decreaseHarmfulLevel() {
@@ -579,10 +386,13 @@ export function decreaseHarmfulLevel() {
      if (nextLevel === 0) {
           effectPickups.length = 0;
      }
+
+     saveCurrentOptions();
 }
 
 export function increaseHarmfulLevel() {
      setHarmfulLevel(getNextOptionLevelIndex(harmfulLevel));
+     saveCurrentOptions();
 }
 
 // ==================================================
@@ -635,14 +445,6 @@ export function getGameOverlayAlpha() {
      const fadeOut = Math.min(1, gameOverlayTimer / overlayFadeFrames);
 
      return Math.max(0, Math.min(1, Math.min(fadeIn, fadeOut)));
-}
-
-// ==================================================
-// PAUSE SYNC
-// ==================================================
-
-export function syncPauseOverlay() {
-     // Pause uses the dedicated full-screen paused overlay.
 }
 
 // ==================================================
@@ -716,13 +518,15 @@ function gameLoop() {
 // ==================================================
 
 export function startSparkleSeeker() {
+     loadAndApplySavedOptions();
+
      resetGameState();
      resetTouchControls();
      resetEntityColorCycle();
 
      syncCanvasResolutionAndUiBounds();
      resetPlayerPosition();
-     resetScreenActionUiBounds();
+     resetUiActionBounds();
 
      screenLayerActive = true;
      screenLayerTimer = -1;

@@ -1,12 +1,24 @@
-// NOTE: ENTITIES / PLAYER
-// Player-only logic extracted from entities.js.
+// NOTE: 7 - PLAYER
+// Player movement, face state, trail state, health-expression sync, and player drawing.
 //
 // Owned here:
-// - player movement
-// - player face / health sync helpers
-// - player level scale
-// - player trail
-// - player drawing
+// - player reset / position clamping
+// - keyboard and touch movement handling
+// - temporary face-expression changes
+// - low-health visual pulse
+// - player trail updates / drawing
+// - player rendering
+//
+// NOT owned here:
+// - input event binding
+// - shared state storage
+// - sparkle/effect spawning
+// - menus / overlays / HUD
+//
+// Newbie note:
+// - This file should answer "what is the player doing and how do they look?"
+// - If code stores the shared player object, it belongs in `3_Vars.js`.
+// - If code updates falling pickups or score, it belongs in `8_Particles.js`.
 
 import {
      miniGameCtx,
@@ -15,20 +27,27 @@ import {
      player,
      keys,
      touchControls,
-
      gamePaused,
      playerHealth,
      maxPlayerHealth,
 
      isEffectActive
-} from "./state.js";
+} from "./3_Vars.js";
+
+import {
+     touchArriveDistance,
+     playerGlowBlurFallback,
+     rainbowFallbackPalette
+} from "./4_Config.js";
 
 import {
      getCurrentLevelNumber
-} from "./win_rules_conditions.js";
+} from "./5_WinRulesConditions.js";
+
+const siteTheme = window.SiteTheme;
 
 // ==================================================
-// PLAYER
+// NOTE: PLAYER
 // ==================================================
 
 export const playerFaces = {
@@ -38,30 +57,28 @@ export const playerFaces = {
      harmful: "😫",
      maxHealth: "🤩",
      lowHealth: "😰",
-     dead: "☠️"
+     dead: "☠️",
+     frozen: "🥶",
+     dazed: "😵‍💫"
 };
 
 export const playerBaseHealth = 3;
-export const playerBaseSpeed = 2;
-export const playerSpeedPerHeart = 0.5;
+export const playerBaseSpeed = 3;
+export const playerSpeedPerHeart = 1;
 
-// PLAYER BASE SIZE
-// These are the player's normal visual/collision values.
-// We keep them separate so level-based scaling can always return to the original size cleanly.
 export const playerBaseSize = 64;
 export const playerBaseRadius = 30;
 
 // ==================================================
-// NOTE: PLAYER TRAIL
+// NOTE: TRAIL
 // Short rainbow ribbon segments that follow actual movement.
-// This now supports full 2D movement from keyboard or touch.
 // ==================================================
 
 export const playerTrailCountMax = 2;
 export const playerTrailCountMin = 0;
 
 export const playerTrailLifeMax = 64;
-export const playerTrailLifeMin = 16;
+export const playerTrailLifeMin = 12;
 
 export const playerTrailWidthMax = 10;
 export const playerTrailWidthMin = 2;
@@ -70,7 +87,7 @@ export const playerTrailOffsetMax = 25;
 export const playerTrailOffsetMin = -25;
 
 export const playerTrailLengthMax = 32;
-export const playerTrailLengthMin = 8;
+export const playerTrailLengthMin = 2;
 
 // Negative raises the ribbon anchor above the player center; positive lowers it.
 export const playerTrailAnchorYOffset = -4;
@@ -79,66 +96,68 @@ const playerTrail = [];
 
 // ==================================================
 // SHARED VISUAL HELPERS
-// Pull visual values from root helpers when possible.
-// Keep safe fallbacks in case something is missing.
 // ==================================================
 
-const siteTheme = window.SiteTheme;
-
-function getGameGlowBlur() {
-     return siteTheme?.getGlowSettings?.().gameParticleBlur ?? 18;
+function getTrailGlowBlur() {
+     return siteTheme?.getGlowSettings?.().gameParticleBlur ?? playerGlowBlurFallback;
 }
 
 function getRainbowPalette() {
-     return siteTheme?.getRainbowPalette?.() ?? [
-          "#ea76cb",
-          "#d20f39",
-          "#fe640b",
-          "#df8e1d",
-          "#40a02b",
-          "#179299",
-          "#04a5e5",
-          "#1e66f5",
-          "#7287fd",
-          "#8839ef"
-     ];
+     const cssPalette = [
+          siteTheme?.getCssColor?.("--rainbow-red"),
+          siteTheme?.getCssColor?.("--rainbow-orange"),
+          siteTheme?.getCssColor?.("--rainbow-yellow"),
+          siteTheme?.getCssColor?.("--rainbow-lime"),
+          siteTheme?.getCssColor?.("--rainbow-green"),
+          siteTheme?.getCssColor?.("--rainbow-mint"),
+          siteTheme?.getCssColor?.("--rainbow-cyan"),
+          siteTheme?.getCssColor?.("--rainbow-sky"),
+          siteTheme?.getCssColor?.("--rainbow-blue"),
+          siteTheme?.getCssColor?.("--rainbow-violet"),
+          siteTheme?.getCssColor?.("--rainbow-magenta"),
+          siteTheme?.getCssColor?.("--rainbow-rose")
+     ].filter(Boolean);
+
+     return cssPalette.length ? cssPalette : rainbowFallbackPalette;
 }
 
 // ==================================================
 // COLOR ROTATION
-// Uses the shared root color engine instead of a local duplicate.
 // ==================================================
 
-const sparkleColorEngine = {
+const trailColorEngine = {
      engine: null
 };
 
-function ensureSparkleColorEngine() {
-     if (!sparkleColorEngine.engine) {
+function ensureTrailColorEngine() {
+     if (!trailColorEngine.engine) {
           const createEngine = siteTheme?.createColorEngine;
 
-          sparkleColorEngine.engine = createEngine
+          trailColorEngine.engine = createEngine
                ? createEngine(getRainbowPalette)
                : {
+                    paletteIndex: 0,
                     next() {
                          const palette = getRainbowPalette();
-                         return palette[0] || "#ffffff";
+
+                         if (!palette.length) {
+                              return "#ffffff";
+                         }
+
+                         const color = palette[this.paletteIndex % palette.length];
+                         this.paletteIndex += 1;
+                         return color;
+                    },
+                    reset() {
+                         this.paletteIndex = 0;
                     }
                };
      }
 }
 
-function getNextSparkleColor() {
-     ensureSparkleColorEngine();
-     return sparkleColorEngine.engine.next() || "#ffffff";
-}
-
-export function resetEntityColorCycle() {
-     if (sparkleColorEngine.engine?.reset) {
-          sparkleColorEngine.engine.reset();
-     }
-
-     sparkleColorEngine.engine = null;
+function getNextTrailColor() {
+     ensureTrailColorEngine();
+     return trailColorEngine.engine.next() || "#ffffff";
 }
 
 // ==================================================
@@ -170,7 +189,9 @@ function createPlayerTrail(fromX, fromY, toX, toY) {
      const directionY = dy / distance;
      const normalX = -directionY;
      const normalY = directionX;
-     const trailCount = Math.floor(Math.random() * (playerTrailCountMax - playerTrailCountMin + 1)) + playerTrailCountMin;
+     const trailCount =
+          Math.floor(Math.random() * (playerTrailCountMax - playerTrailCountMin + 1)) +
+          playerTrailCountMin;
 
      for (let i = 0; i < trailCount; i += 1) {
           const life = Math.random() * (playerTrailLifeMax - playerTrailLifeMin) + playerTrailLifeMin;
@@ -186,7 +207,7 @@ function createPlayerTrail(fromX, fromY, toX, toY) {
                fromY: trailFromY + (normalY * offset),
                toX: toX + (normalX * offset),
                toY: toY + (normalY * offset),
-               color: getNextSparkleColor(),
+               color: getNextTrailColor(),
                life,
                maxLife: life,
                width
@@ -194,53 +215,21 @@ function createPlayerTrail(fromX, fromY, toX, toY) {
      }
 }
 
-export function updatePlayerTrail() {
-     for (let i = playerTrail.length - 1; i >= 0; i -= 1) {
-          const trail = playerTrail[i];
-
-          trail.life -= 1;
-
-          if (trail.life <= 0) {
-               playerTrail.splice(i, 1);
-          }
-     }
-}
-
-export function drawPlayerTrail() {
-     if (!miniGameCtx) {
-          return;
-     }
-
-     const glowBlur = getGameGlowBlur();
-
-     for (let i = playerTrail.length - 1; i >= 0; i -= 1) {
-          const trail = playerTrail[i];
-          const lifeRatio = trail.life / trail.maxLife;
-
-          miniGameCtx.save();
-          miniGameCtx.globalAlpha = Math.max(0, lifeRatio * 0.75);
-          miniGameCtx.strokeStyle = trail.color;
-          miniGameCtx.shadowColor = trail.color;
-          miniGameCtx.shadowBlur = glowBlur;
-          miniGameCtx.lineWidth = trail.width * lifeRatio;
-          miniGameCtx.lineCap = "round";
-
-          miniGameCtx.beginPath();
-          miniGameCtx.moveTo(trail.fromX, trail.fromY);
-          miniGameCtx.lineTo(trail.toX, trail.toY);
-          miniGameCtx.stroke();
-
-          miniGameCtx.restore();
-     }
-}
-
 // ==================================================
-// NOTE: PLAYER HEALTH / FACE HELPERS
+// PLAYER HEALTH / FACE HELPERS
 // ==================================================
 
 export function getDefaultPlayerFace() {
      if (playerHealth <= 0) {
           return playerFaces.dead;
+     }
+
+     if (isEffectActive("freeze")) {
+          return playerFaces.frozen;
+     }
+
+     if (isEffectActive("daze")) {
+          return playerFaces.dazed;
      }
 
      if (playerHealth === maxPlayerHealth) {
@@ -272,7 +261,9 @@ export function applyTemporaryPlayerFace(face, duration) {
      if (
           playerHealth <= 0 ||
           playerHealth === maxPlayerHealth ||
-          playerHealth <= 2
+          playerHealth <= 2 ||
+          isEffectActive("freeze") ||
+          isEffectActive("daze")
      ) {
           player.sparkleFaceTimer = 0;
           refreshPlayerFaceFromHealth();
@@ -283,42 +274,29 @@ export function applyTemporaryPlayerFace(face, duration) {
      player.sparkleFaceTimer = duration;
 }
 
-// SHARED FACE POP
-// Centralized collision scale effect for sparkles and effect pickups.
 export function triggerPlayerFacePop(scale = 1.1) {
      player.hitScale = Math.max(player.hitScale, scale);
 }
 
+// ==================================================
 // PLAYER LEVEL SCALE
 // Level 5 makes the player 10% larger.
-// This affects BOTH the drawn icon size and the collision radius.
+// ==================================================
+
 export function getPlayerLevelScale() {
-     const level = getCurrentLevelNumber();
-
-     if (level >= 5) {
-          return 1.1;
-     }
-
-     return 1;
+     return getCurrentLevelNumber() >= 5 ? 1.1 : 1;
 }
 
-// APPLY PLAYER LEVEL SCALE
-// This keeps size/radius changes centralized instead of scattering them through draw/collision code.
-// Newbie tip:
-// - player.size controls how big the emoji LOOKS
-// - player.radius controls how big the hitbox/collision area IS
 export function applyPlayerLevelScale() {
      const levelScale = getPlayerLevelScale();
 
      player.size = playerBaseSize * levelScale;
      player.radius = playerBaseRadius * levelScale;
-
-     // If the player grows near a wall, keep them safely inside the canvas.
      clampPlayerToCanvas();
 }
 
 // ==================================================
-// PLAYER MOVEMENT
+// NOTE: MOVEMENT
 // ==================================================
 
 export function resetPlayerPosition() {
@@ -330,6 +308,11 @@ export function resetPlayerPosition() {
      player.hitScale = 1;
      player.lowHealthPulseTime = 0;
      playerTrail.length = 0;
+
+     if (trailColorEngine.engine?.reset) {
+          trailColorEngine.engine.reset();
+     }
+
      syncPlayerHealthState();
 }
 
@@ -347,7 +330,7 @@ export function clampPlayerToCanvas() {
      );
 }
 
-function movePlayerTowardTouchTarget() {
+function movePlayerTowardPointerTarget() {
      const target = touchControls.touchMoveTarget;
 
      if (!target?.isActive) {
@@ -358,7 +341,7 @@ function movePlayerTowardTouchTarget() {
      const dy = target.y - player.y;
      const distance = Math.hypot(dx, dy);
 
-     if (distance < 0.5) {
+     if (distance <= touchArriveDistance) {
           return true;
      }
 
@@ -375,19 +358,19 @@ function movePlayerFromKeyboard() {
      let dx = 0;
      let dy = 0;
 
-     if (keys["a"] || keys["arrowleft"]) {
+     if (keys.a || keys.A || keys.ArrowLeft || keys.arrowleft) {
           dx -= 1;
      }
 
-     if (keys["d"] || keys["arrowright"]) {
+     if (keys.d || keys.D || keys.ArrowRight || keys.arrowright) {
           dx += 1;
      }
 
-     if (keys["w"] || keys["arrowup"]) {
+     if (keys.w || keys.W || keys.ArrowUp || keys.arrowup) {
           dy -= 1;
      }
 
-     if (keys["s"] || keys["arrowdown"]) {
+     if (keys.s || keys.S || keys.ArrowDown || keys.arrowdown) {
           dy += 1;
      }
 
@@ -407,7 +390,7 @@ export function updatePlayer() {
      const previousX = player.x;
      const previousY = player.y;
 
-     if (!movePlayerTowardTouchTarget()) {
+     if (!movePlayerTowardPointerTarget()) {
           movePlayerFromKeyboard();
      }
 
@@ -447,6 +430,56 @@ export function updatePlayerFaceState() {
                player.hitScale = 1;
           }
      }
+
+     if (playerHealth <= 2) {
+          player.lowHealthPulseTime += 0.14;
+     } else {
+          player.lowHealthPulseTime = 0;
+     }
+}
+
+export function updatePlayerTrail() {
+     for (let i = playerTrail.length - 1; i >= 0; i -= 1) {
+          const trail = playerTrail[i];
+
+          trail.life -= 1;
+
+          if (trail.life <= 0) {
+               playerTrail.splice(i, 1);
+          }
+     }
+}
+
+// ==================================================
+// DRAW
+// ==================================================
+
+export function drawPlayerTrail() {
+     if (!miniGameCtx) {
+          return;
+     }
+
+     const glowBlur = getTrailGlowBlur();
+
+     for (let i = playerTrail.length - 1; i >= 0; i -= 1) {
+          const trail = playerTrail[i];
+          const lifeRatio = trail.life / trail.maxLife;
+
+          miniGameCtx.save();
+          miniGameCtx.globalAlpha = Math.max(0, lifeRatio * 0.75);
+          miniGameCtx.strokeStyle = trail.color;
+          miniGameCtx.shadowColor = trail.color;
+          miniGameCtx.shadowBlur = glowBlur;
+          miniGameCtx.lineWidth = Math.max(1, trail.width * lifeRatio);
+          miniGameCtx.lineCap = "round";
+
+          miniGameCtx.beginPath();
+          miniGameCtx.moveTo(trail.fromX, trail.fromY);
+          miniGameCtx.lineTo(trail.toX, trail.toY);
+          miniGameCtx.stroke();
+
+          miniGameCtx.restore();
+     }
 }
 
 export function drawPlayer() {
@@ -456,12 +489,15 @@ export function drawPlayer() {
 
      miniGameCtx.save();
 
-     const drawSize = player.size * player.hitScale;
+     const drawSize = player.size * (player.hitScale || 1);
 
+     miniGameCtx.globalAlpha = 1;
      miniGameCtx.font = `${drawSize}px Arial, Helvetica, sans-serif`;
      miniGameCtx.textAlign = "center";
      miniGameCtx.textBaseline = "middle";
      miniGameCtx.fillStyle = "#ffffff";
+     miniGameCtx.shadowColor = "transparent";
+     miniGameCtx.shadowBlur = 0;
 
      let playerYOffset = 0;
 

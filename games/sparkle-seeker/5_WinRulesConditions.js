@@ -1,5 +1,5 @@
-// NOTE: LEVELS / PROGRESSION
-// This file owns score thresholds, level progress, win-goal helpers,
+// NOTE: 5 - WIN RULES CONDITIONS
+// Score thresholds, progression rules, win-goal helpers,
 // and shared progression/help copy used by the UI.
 //
 // Owned here:
@@ -19,25 +19,20 @@
 // Newbie note:
 // - If code answers "how far through the run is the player?",
 //   "what is the goal?", or "what text explains that goal?",
-//   it can live here.
+//   it belongs here.
 
 import {
      sparkleScore
-} from "./state.js";
+} from "./3_Vars.js";
 
 // ==================================================
-// PROGRESSION CONSTANTS
+// NOTE: LEVEL PARAMETERS
+// `scoreMin` is inclusive. Stars show progress inside the current level.
 // ==================================================
 
 export const winScore = 999;
 export const startOverlayDuration = 120;
 export const overlayFadeFrames = 30;
-
-// ==================================================
-// LEVEL RULES
-// `scoreMin` is inclusive.
-// Stars show progress inside the current level.
-// ==================================================
 
 const levelRules = [
      { levelNumber: 1, scoreMin: 0, starsFilled: 0 },
@@ -67,8 +62,7 @@ const levelRules = [
 ];
 
 // ==================================================
-// SCREEN COPY
-// Shared text moved here to trim UI files.
+// NOTE: WELCOME / BUTTON TEXT
 // ==================================================
 
 const welcomeTitleLines = ["SPARKLE", "SEEKER"];
@@ -110,6 +104,10 @@ export function getCurrentScreenActionTexts() {
 export function getCurrentPausedActionTexts() {
      return pausedActionTexts;
 }
+
+// ==================================================
+// NOTE: TIPS TEXT
+// ==================================================
 
 export function getHowToPlayLines() {
      return [

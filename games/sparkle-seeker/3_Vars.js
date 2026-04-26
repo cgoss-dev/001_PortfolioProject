@@ -1,6 +1,8 @@
-// NOTE: GAME STATE
-// This file stores shared runtime data for Sparkle Seeker.
-// Other JS files can import from here to READ state, and use the setter functions below to UPDATE state.
+// NOTE: VARS
+// Shared runtime data for Sparkle Seeker.
+//
+// Other files import from here to READ shared state, and use the setter
+// functions below to UPDATE shared state.
 //
 // Keep this file focused on shared data only.
 // Do not place game loop, rendering, or gameplay system logic in here.
@@ -50,19 +52,21 @@ export const effectPickups = [];
 export const collisionBursts = [];
 
 // ==================================================
-// NOTE: SCORE + HEALTH
+// SCORE + HEALTH
 // ==================================================
+
+export const startingPlayerHealth = 3;
 
 export let sparkleScore = 0;
 export let sparkleHealProgress = 0;
 export let scoreMultiplier = 1;
 
-export let playerHealth = 3;
+export let playerHealth = startingPlayerHealth;
 export const maxPlayerHealth = 5;
 
 // ==================================================
 // NOTE: OPTIONS LEVELS
-// Shared scale for Options submenu items.
+// Shared scale for player-facing option items.
 // ==================================================
 
 export const optionLevelLabels = ["Off", "Min", "Low", "Med", "Max"];
@@ -71,8 +75,8 @@ export const maxOptionLevelIndex = optionLevelLabels.length - 1;
 export const defaultOptionLevelIndex = 2;
 
 // ==================================================
-// NOTE: EFFECT STATE
-// Runtime storage only. Effect rules live in gameplay systems.
+// EFFECT STATE
+// Runtime storage only. Effect rules live elsewhere.
 // Timers are frame counts, so 60 frames is roughly 1 second.
 // ==================================================
 
@@ -127,7 +131,7 @@ export let gameWon = false;
 
 // ==================================================
 // OVERLAY STATE
-// Used by UI code for short messages like win / lose / start text.
+// Used for short messages like win / lose / start text.
 // ==================================================
 
 export let gameOverlayText = "";
@@ -136,9 +140,8 @@ export let gameOverlayTimer = 0;
 export let gameOverlayDuration = 0;
 
 // ==================================================
-// NOTE: MENU UI HIT BOXES
-// These are layout bounds for menu screens that pointer/touch input can read.
-// Welcome / paused action hitboxes now live in `ui_mode.js`.
+// UI HIT BOXES
+// Layout bounds that UI code and pointer/touch handling can share.
 // ==================================================
 
 export const gameMenuUi = {
@@ -163,10 +166,34 @@ export const gameMenuUi = {
      backButton: { x: 0, y: 0, width: 0, height: 0 }
 };
 
+export const screenActionUi = {
+     startButton: { x: 0, y: 0, width: 0, height: 0 },
+     tipsButton: { x: 0, y: 0, width: 0, height: 0 },
+     menuButton: { x: 0, y: 0, width: 0, height: 0 }
+};
+
+export const pausedActionUi = {
+     resumeButton: { x: 0, y: 0, width: 0, height: 0 },
+     tipsButton: { x: 0, y: 0, width: 0, height: 0 },
+     menuButton: { x: 0, y: 0, width: 0, height: 0 }
+};
+
 // ==================================================
-// NOTE: TOUCH CONTROLS
+// MENU KEYBOARD FOCUS STATE
+// Shared so input can write it and UI can read it without a circular import.
+// ==================================================
+
+export let welcomeSelectionIndex = 0;
+export let pausedSelectionIndex = 0;
+export let tipsSelectionIndex = 0;
+export let optionsSelection = {
+     row: 0,
+     col: 0
+};
+
+// ==================================================
+// TOUCH CONTROLS
 // Sizes here are gameplay/UI data, not CSS styling.
-// So it is fine to keep them in JS.
 // ==================================================
 
 export const touchControls = {
@@ -421,6 +448,31 @@ export function setGameMenuView(value) {
      gameMenuView = value;
 }
 
+export function setWelcomeSelectionIndex(value) {
+     welcomeSelectionIndex = value;
+}
+
+export function setPausedSelectionIndex(value) {
+     pausedSelectionIndex = value;
+}
+
+export function setTipsSelectionIndex(value) {
+     tipsSelectionIndex = value;
+}
+
+export function setOptionsSelection(row, col = optionsSelection.col) {
+     optionsSelection.row = row;
+     optionsSelection.col = col;
+}
+
+export function setOptionsSelectionRow(value) {
+     optionsSelection.row = value;
+}
+
+export function setOptionsSelectionCol(value) {
+     optionsSelection.col = value;
+}
+
 // Boolean setters. Keep legacy simple on/off controls in sync with option levels.
 export function setMusicEnabled(value) {
      musicEnabled = value;
@@ -494,9 +546,44 @@ export function setPauseButtonPointerId(value) {
 }
 
 // ==================================================
-// NOTE: FULL GAME RESET
+// UI ACTION BOUNDS HELPERS
+// ==================================================
+
+export function resetUiActionBounds() {
+     screenActionUi.startButton.x = 0;
+     screenActionUi.startButton.y = 0;
+     screenActionUi.startButton.width = 0;
+     screenActionUi.startButton.height = 0;
+
+     screenActionUi.tipsButton.x = 0;
+     screenActionUi.tipsButton.y = 0;
+     screenActionUi.tipsButton.width = 0;
+     screenActionUi.tipsButton.height = 0;
+
+     screenActionUi.menuButton.x = 0;
+     screenActionUi.menuButton.y = 0;
+     screenActionUi.menuButton.width = 0;
+     screenActionUi.menuButton.height = 0;
+
+     pausedActionUi.resumeButton.x = 0;
+     pausedActionUi.resumeButton.y = 0;
+     pausedActionUi.resumeButton.width = 0;
+     pausedActionUi.resumeButton.height = 0;
+
+     pausedActionUi.tipsButton.x = 0;
+     pausedActionUi.tipsButton.y = 0;
+     pausedActionUi.tipsButton.width = 0;
+     pausedActionUi.tipsButton.height = 0;
+
+     pausedActionUi.menuButton.x = 0;
+     pausedActionUi.menuButton.y = 0;
+     pausedActionUi.menuButton.width = 0;
+     pausedActionUi.menuButton.height = 0;
+}
+
+// ==================================================
+// FULL GAME RESET
 // Central reset used when starting a new round.
-// This keeps reset logic from being scattered across files.
 // ==================================================
 
 export function resetGameState() {
@@ -504,7 +591,7 @@ export function resetGameState() {
      sparkleHealProgress = 0;
      scoreMultiplier = 1;
 
-     playerHealth = 3;
+     playerHealth = startingPlayerHealth;
 
      gameStarted = false;
      gamePaused = true;
@@ -512,8 +599,6 @@ export function resetGameState() {
      gameMenuOpen = false;
      gameMenuView = "";
 
-     // Options are intentionally NOT reset here.
-     // They persist across rounds until the player changes them.
      syncOptionFlagsFromLevels();
 
      gameOver = false;
@@ -531,7 +616,14 @@ export function resetGameState() {
      effectPickups.length = 0;
      collisionBursts.length = 0;
 
+     welcomeSelectionIndex = 0;
+     pausedSelectionIndex = 0;
+     tipsSelectionIndex = 0;
+     optionsSelection.row = 0;
+     optionsSelection.col = 0;
+
      resetEffectState();
+     resetUiActionBounds();
 
      touchControls.touchMoveTarget.x = 0;
      touchControls.touchMoveTarget.y = 0;
@@ -543,7 +635,7 @@ export function resetGameState() {
 }
 
 // ==================================================
-// NOTE: SMALL SHARED HELPERS
+// SMALL SHARED HELPERS
 // ==================================================
 
 export function randomItem(array) {

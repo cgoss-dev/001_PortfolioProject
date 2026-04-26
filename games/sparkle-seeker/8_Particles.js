@@ -1,12 +1,23 @@
-// NOTE: ENTITIES / SPARKLES
-// Sparkle-only logic extracted from entities.js.
+// NOTE: PARTICLES
+// Sparkles, effect pickups, collision bursts, and effect state for Sparkle Seeker.
 //
 // Owned here:
-// - sparkle spawning
-// - sparkle updates
-// - sparkle collection
-// - sparkle drawing
-// - shared sparkle color cycle
+// - sparkle spawning / updates / collection / drawing
+// - helpful and harmful pickup definitions
+// - active effect timers and status sync
+// - collision burst creation / updates / drawing
+// - shared falling-object color cycle
+//
+// NOT owned here:
+// - main game loop / win checks
+// - player movement logic
+// - raw shared state storage
+// - menu / overlay rendering
+//
+// Newbie note:
+// - This file should answer "what are the falling things doing?"
+// - If code stores the arrays or timers themselves, it belongs in `3_Vars.js`.
+// - If code decides whether the game is paused or won, it belongs in `2_GameEngine.js`.
 
 import {
      miniGameCtx,
@@ -17,282 +28,26 @@ import {
      playerHealth,
      maxPlayerHealth,
      sparkleHealProgress,
+     sparkleScore,
+     scoreMultiplier,
+
      sparkles,
+     effectPickups,
+     collisionBursts,
+
      sparkleSpawnTimer,
+     harmfulLevel,
+     effectTimers,
 
      setSparkleSpawnTimer,
      setSparkleHealProgress,
      addSparkleHealProgress,
      addSparkleScore,
-     addPlayerHealth,
-
-     isEffectActive,
-     isCollidingWithSparkle
-} from "./state.js";
-
-import {
-     playerFaces,
-     syncPlayerHealthState,
-     applyTemporaryPlayerFace,
-     triggerPlayerFacePop
-} from "./player.js";
-
-import {
-     maybeCreateEffectPickupsFromSparkleSpawn,
-     createCollisionBurst
-} from "./entities_effects.js";
-
-const siteTheme = window.SiteTheme;
-
-// ==================================================
-// NOTE: GAMEPLAY BALANCE
-// These are game rules, so they belong in JS.
-// ==================================================
-
-export const sparkleSpawnDelay = 20;
-export const sparkleSpawnCap = 75;
-
-// ==================================================
-// SHARED VISUAL HELPERS
-// ==================================================
-
-function getGameGlowBlur() {
-     return siteTheme?.getGlowSettings?.().gameParticleBlur ?? 18; // FIXME gameParticleBlur?
-}
-
-function getGameParticleSizeMin() {
-     return siteTheme?.getSparkleSettings?.().sizeMin ?? 25;
-}
-
-function getGameParticleSizeMax() {
-     return siteTheme?.getSparkleSettings?.().sizeMax ?? 30;
-}
-
-// ==================================================
-// COLOR ROTATION
-// Uses the shared root color engine instead of a local duplicate.
-// ==================================================
-
-const sparkleColorEngine = {
-     engine: null
-};
-
-function ensureSparkleColorEngine() {
-     if (!sparkleColorEngine.engine) {
-          const createEngine = siteTheme?.createColorEngine;
-
-          sparkleColorEngine.engine = createEngine
-               ? createEngine(getRainbowPalette)
-               : {
-                    next() {
-                         const palette = getRainbowPalette();
-                         return palette[0] || "#ffffff";
-                    }
-               };
-     }
-}
-
-function getNextSparkleColor() {
-     ensureSparkleColorEngine();
-     return sparkleColorEngine.engine.next() || "#ffffff";
-}
-
-export function resetEntityColorCycle() {
-     if (sparkleColorEngine.engine?.reset) {
-          sparkleColorEngine.engine.reset();
-     }
-
-     sparkleColorEngine.engine = null;
-}
-
-// ==================================================
-// NOTE: SPARKLES
-// ==================================================
-
-export const sparkleChars = ["✦", "✧"];
-
-function applyMagnetEffectToSparkle(sparkle) {
-     if (!isEffectActive("magnet")) {
-          return;
-     }
-
-     const dx = player.x - sparkle.x;
-     const dy = player.y - sparkle.y;
-     const distance = Math.hypot(dx, dy);
-     const magnetRadius = Math.max(120, Math.min(220, miniGameWidth * 0.75));
-
-     if (distance <= 0 || distance > magnetRadius) {
-          return;
-     }
-
-     // Stronger when closer to the player.
-     const strength = 1 - (distance / magnetRadius);
-
-     // Make sideways pull feel more obvious than vertical pull.
-     const pullX = (dx / distance) * (2 + (strength * 3.5));
-     const pullY = (dy / distance) * (0.75 + (strength * 2));
-
-     sparkle.x += pullX;
-     sparkle.y += pullY;
-
-     // Optional: slow the normal falling motion a bit while magnetized.
-     if (typeof sparkle.speed === "number") {
-          sparkle.speed *= 0.9;
-     }
-}
-
-
-function getObjectFallSpeedMultiplier() {
-     if (isEffectActive("surge")) {
-          return 3;
-     }
-
-     if (isEffectActive("slowmo")) {
-          return 0.25;
-     }
-
-     return 1;
-}
-
-export function createSparkle() {
-     const x = Math.random() * (miniGameWidth - 20) + 10;
-
-     sparkles.push({
-          x,
-          baseX: x,
-          y: -20,
-          speed: 0.25 + Math.random() * 0.5,
-          size: Math.random() * (getGameParticleSizeMax() - getGameParticleSizeMin()) + getGameParticleSizeMin(),
-          char: sparkleChars[Math.floor(Math.random() * sparkleChars.length)],
-          color: getNextSparkleColor(),
-          wobbleOffset: Math.random() * Math.PI * 2,
-          wobbleSpeed: 0.02 + Math.random() * 0.03,
-          wobbleAmount: 5 + Math.random() * 10
-     });
-}
-
-export function updateSparkleSpawns() {
-     const nextSparkleSpawnTimer = sparkleSpawnTimer + 1;
-     setSparkleSpawnTimer(nextSparkleSpawnTimer);
-
-     // This keeps sparkles from spawning on a perfectly robotic rhythm.
-     const sparkleSpawnJitter = Math.random() * 8;
-
-     if (nextSparkleSpawnTimer >= sparkleSpawnDelay + sparkleSpawnJitter) {
-          if (sparkles.length < sparkleSpawnCap) {
-               createSparkle();
-               maybeCreateEffectPickupsFromSparkleSpawn();
-          }
-
-          setSparkleSpawnTimer(0);
-     }
-}
-
-export function updateSparkles() {
-     const fallSpeedMultiplier = getObjectFallSpeedMultiplier();
-
-     for (let i = sparkles.length - 1; i >= 0; i -= 1) {
-          const sparkle = sparkles[i];
-
-          sparkle.y += sparkle.speed * fallSpeedMultiplier;
-          sparkle.wobbleOffset += sparkle.wobbleSpeed;
-          sparkle.x = sparkle.baseX + Math.sin(sparkle.wobbleOffset) * sparkle.wobbleAmount;
-
-          applyMagnetEffectToSparkle(sparkle);
-
-          if (sparkle.y > miniGameHeight + 30) {
-               sparkles.splice(i, 1);
-          }
-     }
-}
-
-export function collectSparkles() {
-     for (let i = sparkles.length - 1; i >= 0; i -= 1) {
-          const sparkle = sparkles[i];
-
-          if (isCollidingWithSparkle(player, sparkle)) {
-               createCollisionBurst(sparkle.x, sparkle.y, sparkle.color, "sparkle");
-               sparkles.splice(i, 1);
-
-               addSparkleScore(1);
-               addSparkleHealProgress(1);
-
-               let progress = sparkleHealProgress;
-
-               while (progress >= 10 && playerHealth < maxPlayerHealth) {
-                    progress -= 10;
-                    addPlayerHealth(1);
-               }
-
-               setSparkleHealProgress(progress);
-               syncPlayerHealthState();
-               applyTemporaryPlayerFace(playerFaces.sparkle, 60);
-               triggerPlayerFacePop(1.25);
-          }
-     }
-}
-
-export function drawSparkles() {
-     if (!miniGameCtx) {
-          return;
-     }
-
-     const glowBlur = getGameGlowBlur();
-
-     miniGameCtx.textAlign = "center";
-     miniGameCtx.textBaseline = "middle";
-
-     for (let i = sparkles.length - 1; i >= 0; i -= 1) {
-          const sparkle = sparkles[i];
-
-          miniGameCtx.save();
-          miniGameCtx.font = `${Math.max(16, sparkle.size)}px Arial, Helvetica, sans-serif`;
-          miniGameCtx.fillStyle = sparkle.color;
-          miniGameCtx.shadowColor = sparkle.color;
-          miniGameCtx.shadowBlur = glowBlur;
-
-          miniGameCtx.globalAlpha = 0.95;
-          miniGameCtx.fillText(sparkle.char, sparkle.x, sparkle.y);
-
-          miniGameCtx.shadowBlur = 0;
-          miniGameCtx.globalAlpha = 1;
-          miniGameCtx.fillText(sparkle.char, sparkle.x, sparkle.y);
-
-          miniGameCtx.restore();
-     }
-}
-
-
-
-
-
-// NOTE: ENTITIES / EFFECTS
-// Effect pickup and collision burst logic extracted from entities.js.
-//
-// Owned here:
-// - helpful / harmful effect definitions
-// - effect timer/state sync
-// - falling effect pickups
-// - effect collection / application
-// - collision bursts
-
-import {
-     miniGameCtx,
-     miniGameWidth,
-     miniGameHeight,
-     player,
-
-     playerHealth,
-     sparkleScore,
-     scoreMultiplier,
-     effectPickups,
-     collisionBursts,
-     harmfulLevel,
-     effectTimers,
-
      setSparkleScore,
      setScoreMultiplier,
+     addPlayerHealth,
      setPlayerHealth,
+
      setStoredEffect,
      clearStoredEffect,
      isStoredEffectReady,
@@ -305,36 +60,49 @@ import {
      randomItem,
      randomNumber,
      isCollidingWithSparkle
-} from "./state.js";
+} from "./3_Vars.js";
+
+import {
+     rainbowFallbackPalette,
+     particleGlowBlurFallback,
+     sparkleSizeMinFallback,
+     sparkleSizeMaxFallback,
+     healProgressPerHeart,
+     statusFlashSeconds
+} from "./4_Config.js";
 
 import {
      playerFaces,
      syncPlayerHealthState,
      applyTemporaryPlayerFace,
      triggerPlayerFacePop
-} from "./player.js";
+} from "./7_Player.js";
 
 const siteTheme = window.SiteTheme;
 
 // ==================================================
-// NOTE: GAMEPLAY BALANCE
+// NOTE: BALANCE
 // ==================================================
 
 export const framesPerSecond = 60;
-
-// Global safety cap only.
-// Harmful effect density is controlled by Options, not by level.
+export const sparkleSpawnDelay = 20;
+export const sparkleSpawnCap = 75;
 export const effectPickupCap = 60;
-
-// Helpful effects are intentionally rarer than sparkles.
 export const helpfulEffectSpawnChance = 1 / 14;
-
 export const collisionBurstParticleCount = 15;
 
+// Harmful effects are spawned as a ratio of successful sparkle spawns:
+// Off 1:0, Min 1:8, Low 1:6, Med 1:4, Max 1:2.
+export const harmfulEffectSpawnRatios = [
+     0,
+     1 / 8,
+     1 / 6,
+     1 / 4,
+     1 / 2
+];
+
 // ==================================================
-// NOTE: EFFECT TYPES
-// Helpful and harmful falling pickups share the effectPickups array.
-// category tells collision logic whether the pickup helps or hurts.
+// NOTE: EFFECTS
 // ==================================================
 
 export const helpfulEffectTypes = [
@@ -353,58 +121,86 @@ export const harmfulEffectTypes = [
      { name: "fog", label: "FOG", char: "\u224B\uFE0E", effect: "limitVisionAroundPlayer", durationSeconds: 8, lastsUntilUsed: false, penalty: 1 }
 ];
 
-// Harmful effects are spawned as a ratio of successful sparkle spawns:
-// Off 1:0, Min 1:8, Low 1:6, Med 1:4, Max 1:2.
-export const harmfulEffectSpawnRatios = [
-     0,
-     1 / 8,
-     1 / 6,
-     1 / 4,
-     1 / 2
-];
+// ==================================================
+// VISUAL HELPERS
+// ==================================================
 
-// ==================================================
-// SHARED VISUAL HELPERS
-// ==================================================
+function getRainbowPalette() {
+     const cssPalette = [
+          siteTheme?.getCssColor?.("--rainbow-red"),
+          siteTheme?.getCssColor?.("--rainbow-orange"),
+          siteTheme?.getCssColor?.("--rainbow-yellow"),
+          siteTheme?.getCssColor?.("--rainbow-lime"),
+          siteTheme?.getCssColor?.("--rainbow-green"),
+          siteTheme?.getCssColor?.("--rainbow-mint"),
+          siteTheme?.getCssColor?.("--rainbow-cyan"),
+          siteTheme?.getCssColor?.("--rainbow-sky"),
+          siteTheme?.getCssColor?.("--rainbow-blue"),
+          siteTheme?.getCssColor?.("--rainbow-violet"),
+          siteTheme?.getCssColor?.("--rainbow-magenta"),
+          siteTheme?.getCssColor?.("--rainbow-rose")
+     ].filter(Boolean);
+
+     return cssPalette.length ? cssPalette : rainbowFallbackPalette;
+}
 
 function getGameGlowBlur() {
-     return siteTheme?.getGlowSettings?.().gameParticleBlur ?? 18;
+     return siteTheme?.getGlowSettings?.().gameParticleBlur ?? particleGlowBlurFallback;
 }
 
 function getGameParticleSizeMin() {
-     return siteTheme?.getSparkleSettings?.().sizeMin ?? 25;
+     return siteTheme?.getSparkleSettings?.().sizeMin ?? sparkleSizeMinFallback;
 }
 
 function getGameParticleSizeMax() {
-     return siteTheme?.getSparkleSettings?.().sizeMax ?? 30;
+     return siteTheme?.getSparkleSettings?.().sizeMax ?? sparkleSizeMaxFallback;
 }
 
 // ==================================================
 // COLOR ROTATION
 // ==================================================
 
-const sparkleColorEngine = {
+const particleColorEngine = {
      engine: null
 };
 
-function ensureSparkleColorEngine() {
-     if (!sparkleColorEngine.engine) {
+function ensureParticleColorEngine() {
+     if (!particleColorEngine.engine) {
           const createEngine = siteTheme?.createColorEngine;
 
-          sparkleColorEngine.engine = createEngine
+          particleColorEngine.engine = createEngine
                ? createEngine(getRainbowPalette)
                : {
+                    paletteIndex: 0,
                     next() {
                          const palette = getRainbowPalette();
-                         return palette[0] || "#ffffff";
+
+                         if (!palette.length) {
+                              return "#ffffff";
+                         }
+
+                         const color = palette[this.paletteIndex % palette.length];
+                         this.paletteIndex += 1;
+                         return color;
+                    },
+                    reset() {
+                         this.paletteIndex = 0;
                     }
                };
      }
 }
 
-function getNextSparkleColor() {
-     ensureSparkleColorEngine();
-     return sparkleColorEngine.engine.next() || "#ffffff";
+function getNextParticleColor() {
+     ensureParticleColorEngine();
+     return particleColorEngine.engine.next() || "#ffffff";
+}
+
+export function resetEntityColorCycle() {
+     if (particleColorEngine.engine?.reset) {
+          particleColorEngine.engine.reset();
+     }
+
+     particleColorEngine.engine = null;
 }
 
 // ==================================================
@@ -430,24 +226,28 @@ function getEffectDurationFrames(effectType) {
      return secondsToFrames(effectType.durationSeconds || 0);
 }
 
+function getStatusFlashFrames() {
+     return secondsToFrames(statusFlashSeconds);
+}
+
 function clearTimedEffects() {
      timedEffectNames.forEach((effectName) => {
           setEffectTimer(effectName, 0);
      });
 }
 
-function setSingleTimedEffect(effectName, durationFrames) {
-     clearTimedEffects();
-     setEffectTimer(effectName, durationFrames);
-     syncScoreMultiplierFromEffects();
-}
-
 function syncScoreMultiplierFromEffects() {
-     const nextMultiplier = isEffectActive("luck") ? 3 : 1;
+     const nextMultiplier = isEffectActive("luck") ? 2 : 1;
 
      if (scoreMultiplier !== nextMultiplier) {
           setScoreMultiplier(nextMultiplier);
      }
+}
+
+function setSingleTimedEffect(effectName, durationFrames) {
+     clearTimedEffects();
+     setEffectTimer(effectName, durationFrames);
+     syncScoreMultiplierFromEffects();
 }
 
 function getHighestPriorityActiveEffect() {
@@ -539,28 +339,20 @@ function applyHelpfulEffect(type) {
      }
 
      setSingleTimedEffect(type.name, getEffectDurationFrames(type));
-
-     if (type.name === "luck") {
-          setScoreMultiplier(2);
-     }
-
      syncActiveStatusUiFromEffects();
 }
 
 function applyHarmfulEffect(type) {
      if (isStoredEffectReady("cure")) {
           clearStoredEffect("cure");
-          setActiveStatusUi("CURED", "\u271A\uFE0E", secondsToFrames(1.25), secondsToFrames(1.25));
+          const curedFrames = getStatusFlashFrames();
+          setActiveStatusUi("CURED", "\u271A\uFE0E", curedFrames, curedFrames);
           return;
      }
 
      setSingleTimedEffect(type.name, getEffectDurationFrames(type));
      syncActiveStatusUiFromEffects();
 }
-
-// ==================================================
-// NOTE: EFFECT PICKUPS
-// ==================================================
 
 function getObjectFallSpeedMultiplier() {
      if (isEffectActive("surge")) {
@@ -573,6 +365,151 @@ function getObjectFallSpeedMultiplier() {
 
      return 1;
 }
+
+// ==================================================
+// SPARKLES
+// ==================================================
+
+export const sparkleChars = ["✦", "✧"];
+
+function applyMagnetEffectToSparkle(sparkle) {
+     if (!isEffectActive("magnet")) {
+          return;
+     }
+
+     const dx = player.x - sparkle.x;
+     const dy = player.y - sparkle.y;
+     const distance = Math.hypot(dx, dy);
+     const magnetRadius = Math.max(120, Math.min(220, miniGameWidth * 0.75));
+
+     if (distance <= 0 || distance > magnetRadius) {
+          return;
+     }
+
+     const strength = 1 - (distance / magnetRadius);
+     const pullX = (dx / distance) * (2 + (strength * 3.5));
+     const pullY = (dy / distance) * (0.75 + (strength * 2));
+
+     sparkle.x += pullX;
+     sparkle.y += pullY;
+
+     if (typeof sparkle.speed === "number") {
+          sparkle.speed *= 0.9;
+     }
+}
+
+export function createSparkle() {
+     const x = Math.random() * (miniGameWidth - 20) + 10;
+
+     sparkles.push({
+          x,
+          baseX: x,
+          y: -20,
+          speed: 0.25 + Math.random() * 0.5,
+          size: Math.random() * (getGameParticleSizeMax() - getGameParticleSizeMin()) + getGameParticleSizeMin(),
+          char: sparkleChars[Math.floor(Math.random() * sparkleChars.length)],
+          color: getNextParticleColor(),
+          wobbleOffset: Math.random() * Math.PI * 2,
+          wobbleSpeed: 0.02 + Math.random() * 0.03,
+          wobbleAmount: 5 + Math.random() * 10
+     });
+}
+
+export function updateSparkleSpawns() {
+     const nextSparkleSpawnTimer = sparkleSpawnTimer + 1;
+     setSparkleSpawnTimer(nextSparkleSpawnTimer);
+
+     const sparkleSpawnJitter = Math.random() * 8;
+
+     if (nextSparkleSpawnTimer >= sparkleSpawnDelay + sparkleSpawnJitter) {
+          if (sparkles.length < sparkleSpawnCap) {
+               createSparkle();
+               maybeCreateEffectPickupsFromSparkleSpawn();
+          }
+
+          setSparkleSpawnTimer(0);
+     }
+}
+
+export function updateSparkles() {
+     const fallSpeedMultiplier = getObjectFallSpeedMultiplier();
+
+     for (let i = sparkles.length - 1; i >= 0; i -= 1) {
+          const sparkle = sparkles[i];
+
+          sparkle.y += sparkle.speed * fallSpeedMultiplier;
+          sparkle.wobbleOffset += sparkle.wobbleSpeed;
+          sparkle.x = sparkle.baseX + Math.sin(sparkle.wobbleOffset) * sparkle.wobbleAmount;
+
+          applyMagnetEffectToSparkle(sparkle);
+
+          if (sparkle.y > miniGameHeight + 30) {
+               sparkles.splice(i, 1);
+          }
+     }
+}
+
+export function collectSparkles() {
+     for (let i = sparkles.length - 1; i >= 0; i -= 1) {
+          const sparkle = sparkles[i];
+
+          if (!isCollidingWithSparkle(player, sparkle)) {
+               continue;
+          }
+
+          createCollisionBurst(sparkle.x, sparkle.y, sparkle.color, "sparkle");
+          sparkles.splice(i, 1);
+
+          addSparkleScore(1);
+          addSparkleHealProgress(1);
+
+          let progress = sparkleHealProgress;
+
+          while (progress >= healProgressPerHeart && playerHealth < maxPlayerHealth) {
+               progress -= healProgressPerHeart;
+               addPlayerHealth(1);
+          }
+
+          setSparkleHealProgress(progress);
+          syncPlayerHealthState();
+          applyTemporaryPlayerFace(playerFaces.sparkle, 60);
+          triggerPlayerFacePop(1.25);
+     }
+}
+
+export function drawSparkles() {
+     if (!miniGameCtx) {
+          return;
+     }
+
+     const glowBlur = getGameGlowBlur();
+
+     miniGameCtx.textAlign = "center";
+     miniGameCtx.textBaseline = "middle";
+
+     for (let i = sparkles.length - 1; i >= 0; i -= 1) {
+          const sparkle = sparkles[i];
+
+          miniGameCtx.save();
+          miniGameCtx.font = `${Math.max(16, sparkle.size)}px Arial, Helvetica, sans-serif`;
+          miniGameCtx.fillStyle = sparkle.color;
+          miniGameCtx.shadowColor = sparkle.color;
+          miniGameCtx.shadowBlur = glowBlur;
+
+          miniGameCtx.globalAlpha = 0.95;
+          miniGameCtx.fillText(sparkle.char, sparkle.x, sparkle.y);
+
+          miniGameCtx.shadowBlur = 0;
+          miniGameCtx.globalAlpha = 1;
+          miniGameCtx.fillText(sparkle.char, sparkle.x, sparkle.y);
+
+          miniGameCtx.restore();
+     }
+}
+
+// ==================================================
+// EFFECT PICKUPS
+// ==================================================
 
 function createEffectPickup(type, category) {
      const x = Math.random() * (miniGameWidth - 20) + 10;
@@ -590,7 +527,7 @@ function createEffectPickup(type, category) {
           char: type.char,
           type,
           category,
-          color: getNextSparkleColor(),
+          color: getNextParticleColor(),
           wobbleOffset: Math.random() * Math.PI * 2,
           wobbleSpeed: 0.02 + Math.random() * 0.03,
           wobbleAmount: 5 + Math.random() * 10
@@ -667,7 +604,8 @@ function collectHarmfulEffect(pickup, index) {
 
      if (isStoredEffectReady("shield")) {
           clearStoredEffect("shield");
-          setActiveStatusUi("BLOCKED", "\u2B21\uFE0E", secondsToFrames(1.25), secondsToFrames(1.25));
+          const blockedFrames = getStatusFlashFrames();
+          setActiveStatusUi("BLOCKED", "\u2B21\uFE0E", blockedFrames, blockedFrames);
           triggerPlayerFacePop(1.18);
           return;
      }
@@ -740,7 +678,7 @@ export function drawEffectPickups() {
 }
 
 // ==================================================
-// NOTE: COLLISION BURSTS
+// COLLISION BURSTS
 // ==================================================
 
 export const burstChars = ["✦", "✧", "·", "•"];

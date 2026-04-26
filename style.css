@@ -43,9 +43,9 @@
           --font-body: "Noto Sans Mono", monospace;
           --font-display: "Bungee Shade", monospace;
           --font-size-marquee: clamp(6.00rem, 15.00vw, 25.00rem);
-          --font-size-lg: clamp(1.25rem, 4vw, 2rem);
-          --font-size-md: clamp(0.75rem, 3vw, 1.25rem);
-          --font-size-sm: clamp(0.75rem, 2vw, 1.25rem);
+          --font-size-lg: clamp(1.5rem, 4vw, 2.5rem);     /* 15px to 25px */
+          --font-size-md: clamp(1.125rem, 3vw, 1.875rem); /* 11.25px to 18.75px */
+          --font-size-sm: clamp(0.75rem, 2vw, 1.25rem);   /* 7.5px to 12.5px */
 
      /* COMPONENTS */
           /* MENU */
@@ -58,7 +58,12 @@
                --nav-pill-gap: 1rem;
                --nav-pill-padding-y: 0.5rem;
                --nav-pill-padding-x: 0.5rem;
-               --nav-icon-size: clamp(2rem, 5vw, 3rem);
+               --nav-icon-size: calc(var(--font-size-lg) * 1.5);
+               --nav-label-size: var(--font-size-md);
+               --nav-desc-size: var(--font-size-sm);
+
+          /* HERO */
+               --tagline-size: var(--font-size-md);
 
           /* PANEL */
                --panel-radius: 1em;
@@ -410,7 +415,7 @@ h1 {
 }
 
 .nav-label {
-     font-size: var(--font-size-lg);
+     font-size: var(--nav-label-size);
      line-height: 1;
      white-space: normal;
      overflow-wrap: normal;
@@ -420,7 +425,7 @@ h1 {
 
 .nav-desc {
      display: none;
-     font-size: var(--font-size-sm);
+     font-size: var(--nav-desc-size);
      opacity: 0.75;
      white-space: normal;
      overflow-wrap: normal;
@@ -529,7 +534,7 @@ h1 {
      margin: 0 auto;
      padding: 0;
      color: var(--color-text);
-     font-size: var(--font-size-sm);
+     font-size: var(--tagline-size);
      line-height: 1;
      text-align: center;
      white-space: normal;
@@ -573,7 +578,7 @@ h1 {
      .tagline {
           white-space: nowrap;
           overflow-wrap: normal;
-          font-size: var(--font-size-sm);
+          font-size: var(--tagline-size);
      }
 
      .tagline-break {
@@ -607,7 +612,7 @@ h1 {
      .tagline {
           white-space: nowrap;
           overflow-wrap: normal;
-          font-size: var(--font-size-sm);
+          font-size: var(--tagline-size);
      }
 
      .tagline-break {
@@ -647,12 +652,12 @@ h1 {
           word-break: keep-all;
           text-wrap: balance;
           line-height: 1;
-          font-size: var(--font-size-sm);
+          font-size: var(--nav-label-size);
      }
 
      .tagline {
           white-space: normal;
-          font-size: var(--font-size-sm);
+          font-size: var(--tagline-size);
           line-height: 1;
      }
 
@@ -692,6 +697,7 @@ h1 {
           word-break: keep-all;
           text-wrap: balance;
           line-height: 1.1;
+          font-size: var(--nav-label-size);
      }
 
      .nav-icon {
@@ -701,7 +707,7 @@ h1 {
 
      .tagline {
           white-space: normal;
-          font-size: var(--font-size-sm);
+          font-size: var(--tagline-size);
           line-height: 1;
      }
 
