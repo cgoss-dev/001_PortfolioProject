@@ -605,21 +605,21 @@ export function getHowToPlayLines() {
 
 export function getHelpfulEffectLines() {
      return [
-          "{iconShield} Shield: blocks the next harmful pickup.",
-          "{iconCure} Cure: blocks the next harmful status effect.",
-          "{iconLuck} Luck: doubles sparkle points for a short time.",
-          "{iconMagnet} Magnet: pulls nearby sparkles toward you.",
+          "{iconShield} Shield: blocks next hit.",
+          "{iconCure} Cure: blocks next status effect.",
+          "{iconLuck} Luck: doubles points for a short time.",
+          "{iconMagnet} Magnet: pulls sparkles toward you.",
           "{iconSlowmo} Slowmo: slows falling objects."
      ];
 }
 
 export function getHarmfulEffectLines() {
      return [
-          "{iconFreeze} Freeze: stops movement briefly.",
-          "{iconSurge} Surge: speeds falling objects up.",
-          "{iconDaze} Daze: reverses movement.",
-          "{iconGlass} Glass: makes the next hit hurt more.",
-          "{iconFog} Fog: limits your visible area."
+          "{iconFreeze} Freeze: stops player briefly.",
+          "{iconSurge} Surge: speeds falling objects.",
+          "{iconDaze} Daze: reverses player movement.",
+          "{iconGlass} Glass: doubles hit cost.",
+          "{iconFog} Fog: limits visible area."
      ];
 }
 

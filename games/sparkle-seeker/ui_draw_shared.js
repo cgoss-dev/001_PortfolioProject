@@ -1,6 +1,5 @@
 // NOTE: UI DRAW / SHARED
-// Shared canvas drawing helpers, theme helpers, HUD drawing,
-// menu layout helpers, and rich text / title color helpers.
+// Shared canvas drawing helpers, theme helpers, HUD drawing, menu layout helpers, and rich text / title color helpers.
 //
 // Owned here:
 // - theme/color/font helpers
@@ -12,13 +11,11 @@
 // - title color engines
 //
 // Newbie note:
-// - If a visual size/spacing change "does nothing", the value may be controlled in
-//   `ui_draw.js` instead of here.
+// - If a visual size/spacing change "does nothing", the value may be controlled in `ui_draw.js` instead of here.
 // - This file is the main source-of-truth for shared UI knobs.
 // - Try changing values in the JS Root first before hunting through draw functions.
 // - Most "what size is this text/button/gap?" questions are answered in `getUiTheme()`.
-// - `theme` is just a plain object full of numbers/colors/fonts that other draw
-//   functions read from.
+// - `theme` is just a plain object full of numbers/colors/fonts that other draw functions read from.
 
 import {
      miniGameCtx,
@@ -94,6 +91,7 @@ export function getCssPixelSize(variableName, fallback = 16) {
 
 export function getUiTheme() {
      const fontColor = getCssColor("--color-text", getCssColor("--color-text", "#ffffff"));
+     const uiFontMarquee = getCssPixelSize("--font-size-marquee", 80);
      const uiFontLg = getCssPixelSize("--font-size-lg");
      const uiFontMd = getCssPixelSize("--font-size-md");
      const uiFontSm = getCssPixelSize("--font-size-sm");
@@ -104,6 +102,7 @@ export function getUiTheme() {
 
      // "base" holds generic shared sizes used in many places.
      const base = {
+          uiFontMarquee,
           uiFontLg,
           uiFontMd,
           uiFontSm,
@@ -119,7 +118,7 @@ export function getUiTheme() {
           statusDetailFontSize: uiFontLg,
 
           starSize: uiFontLg * 1.5,
-          heartSize: uiFontLg * 2,
+          heartSize: uiFontLg * 1.5,
           starIconY: 3,
           heartIconY: 2,
 
@@ -151,7 +150,7 @@ export function getUiTheme() {
           sidePadding: uiFontLg,
           topPadding: uiFontLg * 2,
 
-          titleFontSize: uiFontLg * 3, //TODO eval ttl font size
+          titleFontSize: uiFontLg * 2,
           titleLetterSpacing: uiFontSm / 2,
           titleGapBelow: uiFontLg * 2,
 
@@ -163,47 +162,43 @@ export function getUiTheme() {
           arrowFontSize: uiFontLg * 2,
 
           buttonHeight: uiFontLg,
-          buttonFontSize: uiFontLg, // TODO menu btn font size
+          buttonFontSize: uiFontLg,
           optionLabelFontSize: uiFontLg,
 
-          detailFontSize: uiFontMd, // TODO dtl font size
-          detailLineHeight: uiFontLg, // space betweens lines within the same paragraph
-          detailSectionGap: uiFontLg, // space between paragraphs
+          detailFontSize: uiFontMd,
+          detailLineHeight: uiFontLg,
+          detailSectionGap: uiFontLg,
           detailIconGutterWidth: uiFontLg * 2
      };
 
-     // NOTE: Shared button format for welcome / paused / result overlays.
+     // Shared button format for welcome / paused / result overlays.
      // This is where NEW GAME / TIPS / OPTIONS / RESUME / TRY AGAIN / etc. stay in sync.
-     //
-     // Newbie note:
-     // We use the *same property names* that the screens expect.
-     // That lets us "spread" this object directly into each screen with `...sharedScreenButtons`
-     // instead of rewriting the same lines over and over.
+
+     // We use the same property names that `ui_draw.js` expects.
+     // That lets us spread this object into each screen without repeating lines.
      const sharedScreenButtons = {
           buttonPaddingX: 10,
           buttonPaddingY: 10,
-          buttonFontSize: uiFontLg, // TODO: w btn font size
+          buttonTextSize: uiFontLg,
           buttonGapMin: uiFontMd,
           buttonGapTitleScale: 0.25
      };
 
-     // NOTE: Shared title sizing for SPARKLE SEEKER / YOU WIN / TRY AGAIN.
-     // `getWelcomeTitleFontSize()` reads these values.
-     //
-     // Newbie note:
-     // `titleWidthScale` and `titleHeightScale` make the title responsive.
-     // `titleMinSize` stops it from getting too small.
-     // `titleMaxSizeFloor` means "never let the max calculation start below this."
+     // NOTE: Shared marquee title sizing for SPARKLE SEEKER / YOU WIN / TRY AGAIN.
+     // This intentionally follows the marquee font size token instead of the old
+     // display font sizing. `getWelcomeMarqueeFontSize()` reads these values.
+
+     // `titleBaseSize` is the preferred size from CSS.
+     // `titleMinSize` stops the title from shrinking too far on small screens.
+     // `titleSidePadding` keeps the text away from the edges of the canvas.
      const sharedScreenTitle = {
-          titleMinSize: 20,
-          titleMaxSizeFloor: 50,
-          titleWidthScale: 0.2,
-          titleHeightScale: 0.2,
-          titleSidePadding: 50
+          titleBaseSize: uiFontMarquee,
+          titleMinSize: Math.max(25, uiFontMarquee * 0.35),
+          titleShrinkStep: 2,
+          titleSidePadding: 25
      };
 
-     // Screen-specific config.
-     // Each screen can inherit shared settings and still override a few values if needed.
+     // Screen-specific config. Each screen can inherit shared settings and still override a few values if needed.
      const screens = {
           welcome: {
                ...sharedScreenTitle,
@@ -255,10 +250,14 @@ export function getUiTheme() {
 
      return {
           fonts: {
-               // `display` = decorative title font
+               // `display` now intentionally points at the marquee font so canvas titles
+               // match the CHRIS GOSS marquee family.
+               // `marquee` is kept as an explicit alias so title code can reference it
+               // without guessing what "display" means.
                // `body` = readable UI font
                // `symbol` = safe fallback stack for stars/hearts/special glyphs
-               display: getCssString("--font-display", '"Bungee Shade", cursive'),
+               display: getCssString("--font-marquee", getCssString("--font-display", '"Bungee Shade", cursive')),
+               marquee: getCssString("--font-marquee", getCssString("--font-display", '"Bungee Shade", cursive')),
                body: getCssString("--font-body", '"Noto Sans Mono", monospace'),
                symbol: '"Segoe UI Symbol", "Apple Color Emoji", "Noto Color Emoji", sans-serif'
           },
@@ -356,17 +355,17 @@ function getUiArrowFont(theme) {
 // Offsets are hand-tuned because symbol fonts rarely align perfectly by default.
 
 const richTextIcons = {
-     iconShield: { char: "\u2B21\uFE0E", scale: 1.5, xOffset: 0, yOffset: -6 },
-     iconCure: { char: "\u271A\uFE0E", scale: 1.5, xOffset: 0, yOffset: -7 },
-     iconLuck: { char: "\u2618\uFE0E", scale: 1.5, xOffset: 0, yOffset: -6 },
-     iconMagnet: { char: "\u2316\uFE0E", scale: 1.5, xOffset: -3, yOffset: -7 },
-     iconSlowmo: { char: "\u29D6\uFE0E", scale: 1.5, xOffset: -1, yOffset: -5 },
+     iconShield:    { char: "\u2B21\uFE0E", scale: 1.5, xOffset: 0,   yOffset: -6 },
+     iconCure:      { char: "\u271A\uFE0E", scale: 1.5, xOffset: 0,   yOffset: -7 },
+     iconLuck:      { char: "\u2618\uFE0E", scale: 1.5, xOffset: 0,   yOffset: -6 },
+     iconMagnet:    { char: "\u2316\uFE0E", scale: 1.5, xOffset: -3,  yOffset: -7 },
+     iconSlowmo:    { char: "\u29D6\uFE0E", scale: 1.5, xOffset: -1,  yOffset: -5 },
 
-     iconFreeze: { char: "\u2744\uFE0E", scale: 1.5, xOffset: 1, yOffset: -4 },
-     iconSurge: { char: "\u26A1\uFE0E", scale: 1.5, xOffset: 0, yOffset: -6 },
-     iconDaze: { char: "\u2300\uFE0E", scale: 1.5, xOffset: 0, yOffset: -6 },
-     iconGlass: { char: "\u26A0\uFE0E", scale: 1.5, xOffset: 0, yOffset: -6 },
-     iconFog: { char: "\u224B\uFE0E", scale: 1.5, xOffset: 0, yOffset: -4 }
+     iconFreeze:    { char: "\u2744\uFE0E", scale: 1.5, xOffset: 1,   yOffset: -4 },
+     iconSurge:     { char: "\u26A1\uFE0E", scale: 1.5, xOffset: 0,   yOffset: -6 },
+     iconDaze:      { char: "\u2300\uFE0E", scale: 1.5, xOffset: 0,   yOffset: -6 },
+     iconGlass:     { char: "\u26A0\uFE0E", scale: 1.5, xOffset: 0,   yOffset: -6 },
+     iconFog:       { char: "\u224B\uFE0E", scale: 1.5, xOffset: 0,   yOffset: -4 }
 };
 
 export function parseRichTextSegments(text) {
@@ -414,7 +413,7 @@ export function drawWrappedRichText(ctx, text, x, y, maxWidth, lineHeight, optio
      const segments = parseRichTextSegments(text);
      const tokens = [];
 
-     // NOTE: We split text into a flat stream of text/icon tokens so they can wrap together.
+     // We split text into a flat stream of text/icon tokens so they can wrap together.
      segments.forEach((segment) => {
           if (segment.type === "icon") {
                tokens.push(segment);
@@ -588,23 +587,21 @@ export function getWelcomeCurrentColors() {
      return welcomeCurrentColors;
 }
 
-export function getWelcomeTitleFontSize(theme, titleLines = getCurrentScreenTitleLines()) {
+export function getWelcomeMarqueeFontSize(theme, titleLines = getCurrentScreenTitleLines()) {
      const { fonts, screens } = theme;
      const config = screens.welcome;
-     const baseSize = Math.min(
-          miniGameWidth * config.titleWidthScale,
-          miniGameHeight * config.titleHeightScale
-     );
-     const maxSize = Math.max(config.titleMaxSizeFloor, baseSize);
-     const minSize = config.titleMinSize;
      const sidePadding = config.titleSidePadding;
-     let fontSize = maxSize;
+     const minSize = config.titleMinSize;
+     const shrinkStep = config.titleShrinkStep;
+     let fontSize = config.titleBaseSize;
 
      miniGameCtx.save();
 
-     // NOTE: We shrink the title until the widest line fits the canvas with side padding.
+     // Start with the marquee CSS size, then shrink only if the text is too wide
+     // for the canvas. This makes SPARKLE SEEKER behave like the site marquee first,
+     // and only become smaller when the canvas forces it to.
      while (fontSize > minSize) {
-          miniGameCtx.font = `${fontSize}px ${fonts.display}`;
+          miniGameCtx.font = `${fontSize}px ${fonts.marquee}`;
 
           const lineWidths = titleLines.map((line) => {
                let width = 0;
@@ -622,7 +619,7 @@ export function getWelcomeTitleFontSize(theme, titleLines = getCurrentScreenTitl
                break;
           }
 
-          fontSize -= 2;
+          fontSize -= shrinkStep;
      }
 
      miniGameCtx.restore();
@@ -686,7 +683,7 @@ export function getMenuScreenLayout(theme) {
      const titleCenterX = miniGameWidth / 2;
      const titleY = topPadding;
 
-     // NOTE: Returning a layout object avoids recalculating these same positions in multiple files.
+     // Returning a layout object avoids recalculating these same positions in multiple files.
      return {
           sidePadding,
           topPadding,
@@ -712,7 +709,7 @@ export function drawMenuScreenTitle(title, theme, centerX, y) {
      miniGameCtx.save();
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "top";
-     miniGameCtx.font = `${titleFontSize}px ${fonts.display}`;
+     miniGameCtx.font = `${titleFontSize}px ${fonts.marquee}`;
 
      updateTipsTitleColors(title);
 
@@ -877,7 +874,7 @@ export function drawControlButton(button, isPressed, theme) {
      miniGameCtx.beginPath();
      miniGameCtx.arc(centerX, centerY, radius * 1.5, 0, Math.PI * 2);
 
-     miniGameCtx.fillStyle = isPressed ? colors.controlFill : colors.controlFill;
+     miniGameCtx.fillStyle = colors.controlFill;
      miniGameCtx.fill();
 
      miniGameCtx.lineWidth = 2;
@@ -941,7 +938,7 @@ export function drawScore(theme) {
      }
 
      const levelY = sizes.starIconY + sizes.starSize + levelGapAbove;
-     miniGameCtx.font = `${statusLabelFontSize}px ${fonts.display}`;
+     miniGameCtx.font = `${statusLabelFontSize}px ${fonts.marquee}`;
      miniGameCtx.fillText(levelText, sizes.scoreX, levelY);
 
      const sparkleY = levelY + statusLabelFontSize + levelGapBelow;
@@ -1013,7 +1010,7 @@ export function drawHealth(theme) {
 
      const statusLabelY = sizes.heartIconY + sizes.heartSize + statusGapAbove;
 
-     miniGameCtx.font = `${statusLabelFontSize}px ${fonts.display}`;
+     miniGameCtx.font = `${statusLabelFontSize}px ${fonts.marquee}`;
      miniGameCtx.fillText(
           statusLabel,
           miniGameWidth - sizes.healthX,
@@ -1053,8 +1050,7 @@ export function drawFogOverlay() {
 
      miniGameCtx.save();
 
-     // NOTE:
-     // Radial gradient gives a "visible around player, hidden elsewhere" fog effect.
+     // NOTE: Radial gradient gives a "visible around player, hidden elsewhere" fog effect.
      const gradient = miniGameCtx.createRadialGradient(
           player.x,
           player.y,

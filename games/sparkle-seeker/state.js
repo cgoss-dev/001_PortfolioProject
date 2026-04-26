@@ -1,7 +1,6 @@
 // NOTE: GAME STATE
 // This file stores shared runtime data for Sparkle Seeker.
-// Other JS files can import from here to READ state,
-// and use the setter functions below to UPDATE state.
+// Other JS files can import from here to READ state, and use the setter functions below to UPDATE state.
 //
 // Keep this file focused on shared data only.
 // Do not place game loop, rendering, or gameplay system logic in here.
