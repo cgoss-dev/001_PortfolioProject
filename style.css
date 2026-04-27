@@ -72,6 +72,18 @@
                --panel-glow-color: var(--color-text);
                --panel-border: var(--panel-border-width) solid var(--panel-border-color);
 
+          /* GAME UI */
+               --ui-border-width: 1.5;
+               --ui-border-width-focus: 3;
+               --ui-panel-border-width: 2;
+
+               /* Pause button */
+               --ui-touch-border-width: 4;
+               --ui-touch-border-color: var(--opaque-strong);
+               --ui-touch-fill: var(--opaque-soft);
+               --ui-touch-glow: var(--color-text);
+               --ui-touch-text-color: var(--color-text);
+
      /* EFFECTS */
           /* GLOW */
                --glow-core: 0 0 clamp(0.01rem, 0.04vw, 0.03rem);

@@ -139,18 +139,26 @@ export function getCssPixelSize(variableName, fallback = 16) {
 export function getUiTheme() {
      const fontColor = getCssColor("--color-text", "#ffffff");
      const uiFontMarquee = getCssPixelSize("--font-size-marquee", 80);
-     const uiFontLg = getCssPixelSize("--font-size-lg", 20);
-     const uiFontMd = getCssPixelSize("--font-size-md", 15);
-     const uiFontSm = getCssPixelSize("--font-size-sm", 10);
+     const uiFontLg = getCssPixelSize("--font-size-lg", 28);
+     const uiFontMd = getCssPixelSize("--font-size-md", 20);
+     const uiFontSm = getCssPixelSize("--font-size-sm", 14);
 
      const menuOverlayFill = "rgba(0, 0, 0, 0.9)";
+     const controlFillFallback = getCssColor("--opaque-soft", "rgba(0, 0, 0, 0.25)");
+     const outlineFallback = getCssColor("--opaque-strong", "rgba(0, 0, 0, 0.75)");
 
      const base = {
           uiFontMarquee,
           uiFontLg,
           uiFontMd,
           uiFontSm,
-          controlRadius: getCssNumber("--panel-radius", 15)
+          controlRadius: getCssNumber("--panel-radius", 15),
+          borderWidth: getCssNumber("--ui-border-width", 1.5),
+          borderWidthFocus: getCssNumber("--ui-border-width-focus", 3),
+          panelBorderWidth: getCssNumber("--ui-panel-border-width", 2),
+
+          // Pause button border defaults to twice the previous 2px weight.
+          touchBorderWidth: getCssNumber("--ui-touch-border-width", 4)
      };
 
      const hud = {
@@ -158,8 +166,8 @@ export function getUiTheme() {
           scoreDetailFontSize: uiFontLg,
           statusDetailFontSize: uiFontLg,
 
-          starSize: uiFontLg,
-          heartSize: uiFontLg,
+          starSize: uiFontLg * 1.5,
+          heartSize: uiFontLg * 1.5,
           starIconY: 3,
           heartIconY: 2,
 
@@ -192,11 +200,11 @@ export function getUiTheme() {
           arrowFontSize: uiFontLg * 2,
 
           buttonHeight: uiFontLg * 2,
-          buttonFontSize: uiFontMd,
-          optionLabelFontSize: uiFontMd,
+          buttonFontSize: uiFontLg,
+          optionLabelFontSize: uiFontLg,
 
           detailFontSize: uiFontMd,
-          detailLineHeight: uiFontMd,
+          detailLineHeight: uiFontLg,
           detailSectionGap: uiFontLg,
           detailIconGutterWidth: uiFontLg * 2
      };
@@ -204,7 +212,7 @@ export function getUiTheme() {
      const sharedScreenButtons = {
           buttonPaddingX: 10,
           buttonPaddingY: 10,
-          buttonTextSize: uiFontMd,
+          buttonTextSize: uiFontLg,
           buttonGapMin: uiFontMd,
           buttonGapTitleScale: 0.25
      };
@@ -233,8 +241,13 @@ export function getUiTheme() {
                starFull: fontColor,
                starGlow: fontColor,
 
-               controlFill: getCssColor("--opaque-soft", "rgba(0, 0, 0, 0.25)"),
-               outlineStrong: getCssColor("--opaque-strong", "rgba(0, 0, 0, 0.75)"),
+               controlFill: controlFillFallback,
+               outlineStrong: outlineFallback,
+
+               touchFill: getCssColor("--ui-touch-fill", controlFillFallback),
+               touchStroke: getCssColor("--ui-touch-border-color", outlineFallback),
+               touchGlow: getCssColor("--ui-touch-glow", fontColor),
+               touchText: getCssColor("--ui-touch-text-color", fontColor),
 
                menuScreenFill: menuOverlayFill,
                menuPanelFill: menuOverlayFill
@@ -291,7 +304,10 @@ export function getUiTheme() {
           glow: {
                uiSoftGlow: getCssNumber("--glow-particle-bg-blur", 10),
                uiMediumGlow: getCssNumber("--glow-particle-game-blur", 16),
-               uiStrongGlow: getCssNumber("--glow-particle-game-blur", 16) * 1.35
+               uiStrongGlow: getCssNumber("--glow-particle-game-blur", 16) * 1.35,
+               uiTitleGlow1: getCssNumber("--glow-particle-bg-blur", 10) * 0.75,
+               uiTitleGlow2: getCssNumber("--glow-particle-game-blur", 16),
+               uiTitleGlow3: getCssNumber("--glow-particle-game-blur", 16) * 1.6
           }
      };
 }
@@ -478,12 +494,41 @@ export function getMenuScreenLayout(theme) {
      };
 }
 
+function drawGlowingCanvasText(ctx, text, x, y, color, font, align = "left", baseline = "middle", theme = null) {
+     if (!ctx) {
+          return;
+     }
+
+     const glow = theme?.glow || {};
+     const blur1 = glow.uiTitleGlow1 ?? 8;
+     const blur2 = glow.uiTitleGlow2 ?? 16;
+     const blur3 = glow.uiTitleGlow3 ?? 26;
+
+     ctx.save();
+     ctx.font = font;
+     ctx.textAlign = align;
+     ctx.textBaseline = baseline;
+     ctx.fillStyle = color;
+     ctx.shadowColor = color;
+
+     ctx.shadowBlur = blur1;
+     ctx.fillText(text, x, y);
+
+     ctx.shadowBlur = blur2;
+     ctx.fillText(text, x, y);
+
+     ctx.shadowBlur = blur3;
+     ctx.fillText(text, x, y);
+
+     ctx.restore();
+}
+
 export function drawMenuScreenTitle(title, theme, centerX, y) {
      if (!miniGameCtx) {
           return;
      }
 
-     const { colors, fonts, glow, layout } = theme;
+     const { colors, fonts, layout } = theme;
      const titleFontSize = layout.menu.titleFontSize;
      const letterSpacing = layout.menu.titleLetterSpacing;
 
@@ -510,10 +555,17 @@ export function drawMenuScreenTitle(title, theme, centerX, y) {
           const letter = title[i];
           const letterColor = tipsTitleCurrentColors[i] || colors.fontColor;
 
-          miniGameCtx.fillStyle = letterColor;
-          miniGameCtx.shadowColor = letterColor;
-          miniGameCtx.shadowBlur = glow.uiSoftGlow;
-          miniGameCtx.fillText(letter, titleX, y);
+          drawGlowingCanvasText(
+               miniGameCtx,
+               letter,
+               titleX,
+               y,
+               letterColor,
+               `${titleFontSize}px ${fonts.marquee}`,
+               "left",
+               "top",
+               theme
+          );
 
           titleX += letterWidths[i] + letterSpacing;
      }
@@ -696,12 +748,13 @@ export function drawRoundedRect(x, y, width, height, radius) {
      miniGameCtx.closePath();
 }
 
-export function drawPanelBox(x, y, width, height, theme, lineWidth = 3) {
+export function drawPanelBox(x, y, width, height, theme, lineWidth = null) {
      if (!miniGameCtx) {
           return;
      }
 
      const { colors, glow, sizes } = theme;
+     const resolvedLineWidth = lineWidth ?? sizes.panelBorderWidth;
 
      miniGameCtx.shadowColor = colors.controlGlow;
      miniGameCtx.shadowBlur = glow.uiStrongGlow;
@@ -712,7 +765,7 @@ export function drawPanelBox(x, y, width, height, theme, lineWidth = 3) {
 
      miniGameCtx.shadowBlur = 0;
      miniGameCtx.strokeStyle = colors.outlineStrong;
-     miniGameCtx.lineWidth = lineWidth;
+     miniGameCtx.lineWidth = resolvedLineWidth;
 
      drawRoundedRect(x, y, width, height, sizes.controlRadius);
      miniGameCtx.stroke();
@@ -733,25 +786,32 @@ export function drawMenuButton(button, label, theme, isFocused = false) {
      const centerY = button.y + (button.height / 2);
 
      miniGameCtx.save();
-     miniGameCtx.fillStyle = colors.controlFill;
      miniGameCtx.strokeStyle = isFocused ? colors.fontColor : colors.outlineStrong;
-     miniGameCtx.lineWidth = isFocused ? 5 : 3;
+     miniGameCtx.lineWidth = isFocused ? sizes.borderWidthFocus : sizes.borderWidth;
      miniGameCtx.shadowColor = isFocused ? colors.fontColor : colors.controlGlow;
      miniGameCtx.shadowBlur = isFocused ? glow.uiStrongGlow : glow.uiSoftGlow;
 
      drawRoundedRect(button.x, button.y, button.width, button.height, sizes.controlRadius);
-     miniGameCtx.fill();
+
+     if (isFocused) {
+          miniGameCtx.fillStyle = colors.controlFill;
+          miniGameCtx.fill();
+     }
+
      miniGameCtx.stroke();
-
-     miniGameCtx.fillStyle = colors.controlText;
-     miniGameCtx.textAlign = "center";
-     miniGameCtx.textBaseline = "middle";
-     miniGameCtx.shadowColor = isFocused ? colors.fontColor : colors.controlGlow;
-     miniGameCtx.shadowBlur = isFocused ? glow.uiStrongGlow : glow.uiSoftGlow;
-     miniGameCtx.font = `400 ${layout.menu.buttonFontSize}px ${fonts.body}`;
-     miniGameCtx.fillText(label, centerX, centerY + 1);
-
      miniGameCtx.restore();
+
+     drawGlowingCanvasText(
+          miniGameCtx,
+          label,
+          centerX,
+          centerY + 1,
+          colors.controlText,
+          `400 ${layout.menu.buttonFontSize}px ${fonts.body}`,
+          "center",
+          "middle",
+          theme
+     );
 }
 
 export function drawMenuBackButton(button, theme, isFocused = false) {
@@ -759,30 +819,39 @@ export function drawMenuBackButton(button, theme, isFocused = false) {
           return;
      }
 
-     const { colors, glow, fonts, layout } = theme;
+     const { colors, glow, fonts, layout, sizes } = theme;
      const centerX = button.x + (button.width / 2);
      const centerY = button.y + (button.height / 2);
      const radius = Math.min(button.width, button.height) * 0.5;
 
      miniGameCtx.save();
-     miniGameCtx.fillStyle = colors.controlFill;
      miniGameCtx.strokeStyle = isFocused ? colors.fontColor : colors.outlineStrong;
-     miniGameCtx.lineWidth = isFocused ? 5 : 3;
+     miniGameCtx.lineWidth = isFocused ? sizes.borderWidthFocus : sizes.borderWidth;
      miniGameCtx.shadowColor = isFocused ? colors.fontColor : colors.controlGlow;
      miniGameCtx.shadowBlur = isFocused ? glow.uiStrongGlow : glow.uiSoftGlow;
 
      miniGameCtx.beginPath();
      miniGameCtx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-     miniGameCtx.fill();
+
+     if (isFocused) {
+          miniGameCtx.fillStyle = colors.controlFill;
+          miniGameCtx.fill();
+     }
+
      miniGameCtx.stroke();
-
-     miniGameCtx.fillStyle = colors.controlText;
-     miniGameCtx.textAlign = "center";
-     miniGameCtx.textBaseline = "middle";
-     miniGameCtx.font = `700 ${layout.menu.arrowFontSize}px ${fonts.body}`;
-     miniGameCtx.fillText("<", centerX, centerY + 1);
-
      miniGameCtx.restore();
+
+     drawGlowingCanvasText(
+          miniGameCtx,
+          "<",
+          centerX,
+          centerY + 1,
+          colors.controlText,
+          `700 ${layout.menu.arrowFontSize}px ${fonts.body}`,
+          "center",
+          "middle",
+          theme
+     );
 }
 
 export function drawOptionStepper(
@@ -807,40 +876,61 @@ export function drawOptionStepper(
      const arrowFont = getUiArrowFont(theme);
 
      miniGameCtx.save();
-     miniGameCtx.fillStyle = colors.controlFill;
      miniGameCtx.strokeStyle = isRowFocused ? colors.fontColor : colors.outlineStrong;
-     miniGameCtx.lineWidth = isRowFocused ? 5 : 3;
+     miniGameCtx.lineWidth = isRowFocused ? sizes.borderWidthFocus : sizes.borderWidth;
      miniGameCtx.shadowColor = isRowFocused ? colors.fontColor : colors.controlGlow;
      miniGameCtx.shadowBlur = isRowFocused ? glow.uiStrongGlow : glow.uiSoftGlow;
 
      drawRoundedRect(row.x, row.y, row.width, row.height, sizes.controlRadius);
-     miniGameCtx.fill();
+
+     if (isRowFocused) {
+          miniGameCtx.fillStyle = colors.controlFill;
+          miniGameCtx.fill();
+     }
+
      miniGameCtx.stroke();
+     miniGameCtx.restore();
 
-     miniGameCtx.textAlign = "center";
-     miniGameCtx.textBaseline = "middle";
-
-     miniGameCtx.fillStyle = focusedSide === 0 ? colors.fontColor : colors.controlText;
+     miniGameCtx.save();
      miniGameCtx.globalAlpha = decreaseAlpha;
-     miniGameCtx.shadowColor = focusedSide === 0 ? colors.fontColor : colors.controlGlow;
-     miniGameCtx.shadowBlur = focusedSide === 0 ? glow.uiStrongGlow : glow.uiSoftGlow;
-     miniGameCtx.font = arrowFont;
-     miniGameCtx.fillText("<", decreaseButton.x + (decreaseButton.width / 2), centerY + 1);
+     drawGlowingCanvasText(
+          miniGameCtx,
+          "<",
+          decreaseButton.x + (decreaseButton.width / 2),
+          centerY + 1,
+          focusedSide === 0 ? colors.fontColor : colors.controlText,
+          arrowFont,
+          "center",
+          "middle",
+          theme
+     );
+     miniGameCtx.restore();
 
-     miniGameCtx.globalAlpha = 1;
-     miniGameCtx.fillStyle = isRowFocused ? colors.fontColor : colors.controlText;
-     miniGameCtx.shadowColor = isRowFocused ? colors.fontColor : colors.controlGlow;
-     miniGameCtx.shadowBlur = isRowFocused ? glow.uiStrongGlow : glow.uiSoftGlow;
-     miniGameCtx.font = `400 ${layout.menu.optionLabelFontSize}px ${fonts.body}`;
-     miniGameCtx.fillText(`${label}: ${value}`, row.x + (row.width / 2), centerY + 1);
+     drawGlowingCanvasText(
+          miniGameCtx,
+          `${label}: ${value}`,
+          row.x + (row.width / 2),
+          centerY + 1,
+          isRowFocused ? colors.fontColor : colors.controlText,
+          `400 ${layout.menu.optionLabelFontSize}px ${fonts.body}`,
+          "center",
+          "middle",
+          theme
+     );
 
-     miniGameCtx.fillStyle = focusedSide === 1 ? colors.fontColor : colors.controlText;
+     miniGameCtx.save();
      miniGameCtx.globalAlpha = increaseAlpha;
-     miniGameCtx.shadowColor = focusedSide === 1 ? colors.fontColor : colors.controlGlow;
-     miniGameCtx.shadowBlur = focusedSide === 1 ? glow.uiStrongGlow : glow.uiSoftGlow;
-     miniGameCtx.font = arrowFont;
-     miniGameCtx.fillText(">", increaseButton.x + (increaseButton.width / 2), centerY + 1);
-
+     drawGlowingCanvasText(
+          miniGameCtx,
+          ">",
+          increaseButton.x + (increaseButton.width / 2),
+          centerY + 1,
+          focusedSide === 1 ? colors.fontColor : colors.controlText,
+          arrowFont,
+          "center",
+          "middle",
+          theme
+     );
      miniGameCtx.restore();
 }
 
@@ -849,23 +939,23 @@ export function drawControlButton(button, isPressed, theme) {
           return;
      }
 
-     const { colors, glow } = theme;
+     const { colors, glow, sizes } = theme;
      const centerX = button.x + (button.width / 2);
      const centerY = button.y + (button.height / 2);
      const radius = button.width / 3;
 
      miniGameCtx.save();
-     miniGameCtx.shadowColor = colors.controlGlow;
+     miniGameCtx.shadowColor = colors.touchGlow;
      miniGameCtx.shadowBlur = isPressed ? glow.uiStrongGlow : glow.uiMediumGlow;
 
      miniGameCtx.beginPath();
      miniGameCtx.arc(centerX, centerY, radius * 1.5, 0, Math.PI * 2);
 
-     miniGameCtx.fillStyle = colors.controlFill;
+     miniGameCtx.fillStyle = colors.touchFill;
      miniGameCtx.fill();
 
-     miniGameCtx.lineWidth = 2;
-     miniGameCtx.strokeStyle = colors.outlineStrong;
+     miniGameCtx.lineWidth = sizes.touchBorderWidth;
+     miniGameCtx.strokeStyle = colors.touchStroke;
      miniGameCtx.stroke();
 
      miniGameCtx.restore();
@@ -1109,12 +1199,30 @@ export function drawScore(theme) {
      }
 
      const levelY = sizes.starIconY + sizes.starSize + levelGapAbove;
-     miniGameCtx.font = `${statusLabelFontSize}px ${fonts.marquee}`;
-     miniGameCtx.fillText(levelText, sizes.scoreX, levelY);
+     drawGlowingCanvasText(
+          miniGameCtx,
+          levelText,
+          sizes.scoreX,
+          levelY,
+          colors.starFull,
+          `${statusLabelFontSize}px ${fonts.marquee}`,
+          "left",
+          "top",
+          theme
+     );
 
      const sparkleY = levelY + statusLabelFontSize + levelGapBelow;
-     miniGameCtx.font = `400 ${scoreDetailFontSize}px ${fonts.body}`;
-     miniGameCtx.fillText(sparkleText, sizes.scoreX, sparkleY);
+     drawGlowingCanvasText(
+          miniGameCtx,
+          sparkleText,
+          sizes.scoreX,
+          sparkleY,
+          colors.starFull,
+          `400 ${scoreDetailFontSize}px ${fonts.body}`,
+          "left",
+          "top",
+          theme
+     );
 
      miniGameCtx.restore();
 }
@@ -1179,8 +1287,17 @@ export function drawHealth(theme) {
 
      const statusLabelY = sizes.heartIconY + sizes.heartSize + statusGapAbove;
 
-     miniGameCtx.font = `${statusLabelFontSize}px ${fonts.marquee}`;
-     miniGameCtx.fillText(statusLabel, miniGameWidth - sizes.healthX, statusLabelY);
+     drawGlowingCanvasText(
+          miniGameCtx,
+          statusLabel,
+          miniGameWidth - sizes.healthX,
+          statusLabelY,
+          colors.statusText,
+          `${statusLabelFontSize}px ${fonts.marquee}`,
+          "right",
+          "top",
+          theme
+     );
 
      const statusDetailY = statusLabelY + statusLabelFontSize + statusGapBelow;
 
@@ -1191,13 +1308,41 @@ export function drawHealth(theme) {
           const iconFontSize = sizes.uiFontMd * statusIconScale;
           const iconX = miniGameWidth - sizes.healthX - statusTimeWidth;
 
-          miniGameCtx.fillText(statusTimeText, miniGameWidth - sizes.healthX, statusDetailY);
+          drawGlowingCanvasText(
+               miniGameCtx,
+               statusTimeText,
+               miniGameWidth - sizes.healthX,
+               statusDetailY,
+               colors.statusText,
+               `400 ${statusDetailFontSize}px ${fonts.body}`,
+               "right",
+               "top",
+               theme
+          );
 
-          miniGameCtx.font = `400 ${iconFontSize}px ${fonts.body}`;
-          miniGameCtx.fillText(statusIcon, iconX, statusDetailY - ((iconFontSize - sizes.uiFontMd) * 0.35));
+          drawGlowingCanvasText(
+               miniGameCtx,
+               statusIcon,
+               iconX,
+               statusDetailY - ((iconFontSize - sizes.uiFontMd) * 0.35),
+               colors.statusText,
+               `400 ${iconFontSize}px ${fonts.body}`,
+               "right",
+               "top",
+               theme
+          );
      } else {
-          miniGameCtx.font = `400 ${statusDetailFontSize}px ${fonts.body}`;
-          miniGameCtx.fillText("READY", miniGameWidth - sizes.healthX, statusDetailY);
+          drawGlowingCanvasText(
+               miniGameCtx,
+               "READY",
+               miniGameWidth - sizes.healthX,
+               statusDetailY,
+               colors.statusText,
+               `400 ${statusDetailFontSize}px ${fonts.body}`,
+               "right",
+               "top",
+               theme
+          );
      }
 
      miniGameCtx.restore();
@@ -1237,7 +1382,7 @@ export function drawTouchButtons(theme) {
           return;
      }
 
-     const { colors, fonts, glow, sizes } = theme;
+     const { colors, fonts, sizes } = theme;
      const button = touchControls.pauseButton;
 
      if (!button) {
@@ -1246,19 +1391,17 @@ export function drawTouchButtons(theme) {
 
      drawControlButton(button, button.isPressed, theme);
 
-     miniGameCtx.save();
-     miniGameCtx.fillStyle = colors.fontColor;
-     miniGameCtx.textAlign = "center";
-     miniGameCtx.textBaseline = "middle";
-     miniGameCtx.shadowColor = colors.controlGlow;
-     miniGameCtx.shadowBlur = glow.uiSoftGlow;
-     miniGameCtx.font = `400 ${button.height * sizes.touchButtonFontScale}px ${fonts.body}`;
-     miniGameCtx.fillText(
+     drawGlowingCanvasText(
+          miniGameCtx,
           button.label,
           button.x + (button.width / 2),
-          button.y + (button.height / 2) + 1
+          button.y + (button.height / 2) + 1,
+          colors.touchText,
+          `400 ${button.height * sizes.touchButtonFontScale}px ${fonts.body}`,
+          "center",
+          "middle",
+          theme
      );
-     miniGameCtx.restore();
 }
 
 // ==================================================
@@ -1316,7 +1459,8 @@ function drawTipsDetailScreen(theme, title, lines) {
      miniGameCtx.fillStyle = colors.fontColor;
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "top";
-     miniGameCtx.shadowBlur = 0;
+     miniGameCtx.shadowColor = colors.fontColor;
+     miniGameCtx.shadowBlur = theme.glow.uiSoftGlow;
      miniGameCtx.font = `400 ${fontSize}px ${fonts.body}`;
 
      lines.forEach((line) => {
@@ -1335,15 +1479,17 @@ function drawTipsDetailScreen(theme, title, lines) {
                const icon = getRichTextIcon(firstSegment.value);
 
                if (icon) {
-                    miniGameCtx.save();
-                    miniGameCtx.font = `400 ${sizes.uiFontMd * icon.scale}px ${fonts.body}`;
-                    miniGameCtx.fillStyle = colors.fontColor;
-                    miniGameCtx.fillText(
+                    drawGlowingCanvasText(
+                         miniGameCtx,
                          icon.char,
                          iconX + (icon.xOffset || 0),
-                         textY + (icon.yOffset || 0) - ((sizes.uiFontMd * icon.scale - sizes.uiFontMd) * 0.28)
+                         textY + (icon.yOffset || 0) - ((sizes.uiFontMd * icon.scale - sizes.uiFontMd) * 0.28),
+                         colors.fontColor,
+                         `400 ${sizes.uiFontMd * icon.scale}px ${fonts.body}`,
+                         "left",
+                         "top",
+                         theme
                     );
-                    miniGameCtx.restore();
                }
           }
 
@@ -1423,7 +1569,7 @@ function drawGameWelcomeOverlay(theme) {
           return;
      }
 
-     const { colors, fonts, glow, screens } = theme;
+     const { colors, fonts, screens, sizes } = theme;
      const isWelcomeScreen = isScreenWelcomeActive();
      const screenConfig = isWelcomeScreen ? screens.welcome : screens.result;
      const alpha = getGameWelcomeAlpha();
@@ -1434,8 +1580,6 @@ function drawGameWelcomeOverlay(theme) {
 
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "middle";
-     miniGameCtx.shadowColor = colors.controlGlow;
-     miniGameCtx.shadowBlur = glow.uiSoftGlow;
      miniGameCtx.font = `400 ${screenConfig.buttonTextSize}px ${fonts.body}`;
 
      const measuredActions = actionTexts.map((text) => ({
@@ -1498,10 +1642,17 @@ function drawGameWelcomeOverlay(theme) {
                const letter = line[i];
                const letterColor = colorsForLine[i] || colors.fontColor;
 
-               miniGameCtx.fillStyle = letterColor;
-               miniGameCtx.shadowColor = letterColor;
-               miniGameCtx.shadowBlur = glow.uiStrongGlow;
-               miniGameCtx.fillText(letter, x, y);
+               drawGlowingCanvasText(
+                    miniGameCtx,
+                    letter,
+                    x,
+                    y,
+                    letterColor,
+                    `${titleFontSize}px ${fonts.marquee}`,
+                    "left",
+                    "middle",
+                    theme
+               );
 
                x += letterWidths[i];
           }
@@ -1524,8 +1675,6 @@ function drawGameWelcomeOverlay(theme) {
 
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "middle";
-     miniGameCtx.shadowColor = colors.controlGlow;
-     miniGameCtx.shadowBlur = glow.uiSoftGlow;
      miniGameCtx.font = `400 ${screenConfig.buttonTextSize}px ${fonts.body}`;
 
      const totalActionWidth =
@@ -1550,22 +1699,32 @@ function drawGameWelcomeOverlay(theme) {
                (isOverlayScreenActive() && item.text === "NEW GAME");
 
           miniGameCtx.save();
-          miniGameCtx.fillStyle = colors.controlFill;
           miniGameCtx.strokeStyle = isFocused ? colors.fontColor : colors.outlineStrong;
-          miniGameCtx.lineWidth = isFocused ? 5 : 3;
+          miniGameCtx.lineWidth = isFocused ? sizes.borderWidthFocus : sizes.borderWidth;
           miniGameCtx.shadowColor = isFocused ? colors.fontColor : colors.controlGlow;
-          miniGameCtx.shadowBlur = isFocused ? glow.uiStrongGlow : glow.uiSoftGlow;
+          miniGameCtx.shadowBlur = isFocused ? theme.glow.uiStrongGlow : theme.glow.uiSoftGlow;
 
           drawRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, theme.sizes.controlRadius);
-          miniGameCtx.fill();
-          miniGameCtx.stroke();
 
-          miniGameCtx.fillStyle = colors.controlText;
-          miniGameCtx.textAlign = "center";
-          miniGameCtx.textBaseline = "middle";
-          miniGameCtx.font = `400 ${screenConfig.buttonTextSize}px ${fonts.body}`;
-          miniGameCtx.fillText(item.text, textX, actionY + 1);
+          if (isFocused) {
+               miniGameCtx.fillStyle = colors.controlFill;
+               miniGameCtx.fill();
+          }
+
+          miniGameCtx.stroke();
           miniGameCtx.restore();
+
+          drawGlowingCanvasText(
+               miniGameCtx,
+               item.text,
+               textX,
+               actionY + 1,
+               colors.controlText,
+               `400 ${screenConfig.buttonTextSize}px ${fonts.body}`,
+               "center",
+               "middle",
+               theme
+          );
 
           if (item.text === "NEW GAME") {
                screenActionUi.startButton.x = buttonX;
@@ -1599,7 +1758,7 @@ function drawPausedOverlay(theme) {
           return;
      }
 
-     const { colors, fonts, glow, screens } = theme;
+     const { colors, fonts, screens, sizes } = theme;
      const paused = screens.paused;
      const titleLines = ["PAUSED"];
      const actionTexts = getCurrentPausedActionTexts();
@@ -1659,10 +1818,17 @@ function drawPausedOverlay(theme) {
                const letter = line[i];
                const letterColor = colorsForLine[i] || colors.fontColor;
 
-               miniGameCtx.fillStyle = letterColor;
-               miniGameCtx.shadowColor = letterColor;
-               miniGameCtx.shadowBlur = glow.uiStrongGlow;
-               miniGameCtx.fillText(letter, x, y);
+               drawGlowingCanvasText(
+                    miniGameCtx,
+                    letter,
+                    x,
+                    y,
+                    letterColor,
+                    `${titleFontSize}px ${fonts.marquee}`,
+                    "left",
+                    "middle",
+                    theme
+               );
 
                x += letterWidths[i];
           }
@@ -1670,8 +1836,6 @@ function drawPausedOverlay(theme) {
 
      miniGameCtx.textAlign = "left";
      miniGameCtx.textBaseline = "middle";
-     miniGameCtx.shadowColor = colors.overlayGlow;
-     miniGameCtx.shadowBlur = glow.uiSoftGlow;
      miniGameCtx.font = `400 ${paused.buttonTextSize}px ${fonts.body}`;
 
      const measuredActions = actionTexts.map((text) => ({
@@ -1698,22 +1862,32 @@ function drawPausedOverlay(theme) {
                (item.text === "OPTIONS" && pausedSelection === 2);
 
           miniGameCtx.save();
-          miniGameCtx.fillStyle = colors.controlFill;
           miniGameCtx.strokeStyle = isFocused ? colors.fontColor : paused.buttonStroke;
-          miniGameCtx.lineWidth = isFocused ? 5 : 2;
+          miniGameCtx.lineWidth = isFocused ? sizes.borderWidthFocus : sizes.borderWidth;
           miniGameCtx.shadowColor = isFocused ? colors.fontColor : colors.controlGlow;
-          miniGameCtx.shadowBlur = isFocused ? glow.uiStrongGlow : glow.uiSoftGlow;
+          miniGameCtx.shadowBlur = isFocused ? theme.glow.uiStrongGlow : theme.glow.uiSoftGlow;
 
           drawRoundedRect(buttonX, buttonY, buttonWidth, buttonHeight, theme.sizes.controlRadius);
-          miniGameCtx.fill();
-          miniGameCtx.stroke();
 
-          miniGameCtx.fillStyle = colors.controlText;
-          miniGameCtx.textAlign = "center";
-          miniGameCtx.textBaseline = "middle";
-          miniGameCtx.font = `400 ${paused.buttonTextSize}px ${fonts.body}`;
-          miniGameCtx.fillText(item.text, textX, actionY);
+          if (isFocused) {
+               miniGameCtx.fillStyle = colors.controlFill;
+               miniGameCtx.fill();
+          }
+
+          miniGameCtx.stroke();
           miniGameCtx.restore();
+
+          drawGlowingCanvasText(
+               miniGameCtx,
+               item.text,
+               textX,
+               actionY,
+               colors.controlText,
+               `400 ${paused.buttonTextSize}px ${fonts.body}`,
+               "center",
+               "middle",
+               theme
+          );
 
           if (item.text === "RESUME") {
                pausedActionUi.resumeButton.x = buttonX;
@@ -1747,7 +1921,7 @@ function drawGameStatusOverlay(theme) {
           return;
      }
 
-     const { colors, sizes, fonts, glow, screens } = theme;
+     const { colors, sizes, fonts, screens } = theme;
      const overlay = screens.statusOverlay;
      const alpha = getGameOverlayAlpha();
      const titleY = miniGameHeight / 2;
@@ -1790,18 +1964,30 @@ function drawGameStatusOverlay(theme) {
 
      drawPanelBox(panelX, panelY, panelWidth, panelHeight, theme);
 
-     miniGameCtx.fillStyle = colors.fontColor;
-     miniGameCtx.textAlign = "center";
-     miniGameCtx.textBaseline = "middle";
-     miniGameCtx.shadowColor = colors.overlayGlow;
-     miniGameCtx.shadowBlur = glow.uiStrongGlow;
-     miniGameCtx.font = `${sizes.uiFontMd}px ${fonts.marquee}`;
-     miniGameCtx.fillText(gameOverlayText, miniGameWidth / 2, titleY);
+     drawGlowingCanvasText(
+          miniGameCtx,
+          gameOverlayText,
+          miniGameWidth / 2,
+          titleY,
+          colors.fontColor,
+          `${sizes.uiFontMd}px ${fonts.marquee}`,
+          "center",
+          "middle",
+          theme
+     );
 
      if (hasSubtext) {
-          miniGameCtx.shadowBlur = glow.uiSoftGlow;
-          miniGameCtx.font = `400 ${sizes.uiFontMd}px ${fonts.body}`;
-          miniGameCtx.fillText(gameOverlaySubtext, miniGameWidth / 2, titleY + subtextOffset);
+          drawGlowingCanvasText(
+               miniGameCtx,
+               gameOverlaySubtext,
+               miniGameWidth / 2,
+               titleY + subtextOffset,
+               colors.fontColor,
+               `400 ${sizes.uiFontMd}px ${fonts.body}`,
+               "center",
+               "middle",
+               theme
+          );
      }
 
      miniGameCtx.restore();
